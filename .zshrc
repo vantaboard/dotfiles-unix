@@ -2,6 +2,10 @@ LS_COLORS="rs=0:di=1;35:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd
 
 export ZSH="$HOME/.oh-my-zsh"
 export GIT_PAGER="diff-so-fancy"
+export NVM_DIR="$HOME/.nvm"
+
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 skip_global_compinit=1
 ZSH_DISABLE_COMPFIX=true
