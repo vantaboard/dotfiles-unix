@@ -3,14 +3,6 @@ LS_COLORS="rs=0:di=1;35:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd
 export ZSH="$HOME/.oh-my-zsh"
 export GIT_PAGER="diff-so-fancy"
 
-# /usr/bin/keychain $HOME/.ssh/id_ed25519
-# source $HOME/.keychain/DESKTOP-FATAHNH-sh
-
-# eval $(gpg-agent --daemon)
-
-# eval $(keychain --eval --agents gpg C18B76E620071D63)
-# source $HOME/.keychain/DESKTOP-FATAHNH-sh-gpg
-
 skip_global_compinit=1
 ZSH_DISABLE_COMPFIX=true
 ZSH_THEME="nanotech"
