@@ -31,3 +31,4 @@ for file in "${files[@]}"
 do
    source "$HOME/.$file"
 done
+eval $(thefuck --alias)

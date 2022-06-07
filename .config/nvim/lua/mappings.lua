@@ -18,6 +18,9 @@ vim.cmd[[
     map <nowait><silent> <leader>b <Plug>CamelCaseMotion_b
     map <nowait><silent> <leader>e <Plug>CamelCaseMotion_e
     map <nowait><silent> <leader>ge <Plug>CamelCaseMotion_ge
+
+    map <leader>j <C-E><C-E><C-E><C-E><C-E><C-E>
+    map <leader>k <C-Y><C-Y><C-Y><C-Y><C-Y><C-Y>
 ]]
 
 -- replace without yanking
@@ -35,20 +38,11 @@ vim.api.nvim_set_keymap('n', '<leader>w', ':w<CR>', optsrsw)
 vim.api.nvim_set_keymap('n', 'Q', ':q!<CR>', optsrsw)
 
 -- telescope
-vim.cmd[[
-" Find files using Telescope command-line sugar.
-nnoremap <leader>ff <cmd>Telescope find_files<cr>
-nnoremap <leader>fg <cmd>Telescope live_grep<cr>
-nnoremap <leader>fb <cmd>Telescope buffers<cr>
-nnoremap <leader>fh <cmd>Telescope help_tags<cr>
-nnoremap <nowait><leader>/ <cmd>Telescope current_buffer_fuzzy_find fuzzy=false case_mode=ignore_case<cr>
-
-" Using Lua functions
-nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
-nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
-nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
-nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
-]]
+vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>fg', "<cmd>lua require('telescope.builtin').live_grep()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>fh', "<cmd>lua require('telescope.builtin').help_tags()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>/', "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({ fuzzy = false, case_mode = 'ignore_case' })<cr>", optsrs)
 
 -- lua snippets
 vim.cmd[[
