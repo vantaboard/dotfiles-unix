@@ -1,6 +1,7 @@
 -- lua/plugins.lua
 
-require('packer').startup(function()
+require('packer').startup({
+    function()
     use 'wbthomason/packer.nvim'
     -- completion
     use 'folke/lua-dev.nvim'
@@ -28,37 +29,20 @@ require('packer').startup(function()
     -- ricing
     use 'rktjmp/lush.nvim'
     use 'shaeinst/roshnivim-cs'
-    use 'rafamadriz/neon'
     use 'tomasiser/vim-code-dark'
-    use 'Mofiqul/vscode.nvim'
     use 'marko-cerovac/material.nvim'
-    use 'bluz71/vim-nightfly-guicolors'
-    use 'bluz71/vim-moonfly-colors'
-    use 'ChristianChiarulli/nvcode-color-schemes.vim'
     use 'folke/tokyonight.nvim'
-    use 'sainnhe/sonokai'
     use 'kyazdani42/blue-moon'
-    use 'mhartington/oceanic-next'
-    use 'glepnir/zephyr-nvim'
     use 'rockerBOO/boo-colorscheme-nvim'
-    use 'jim-at-jibba/ariake-vim-colors'
-    use 'Th3Whit3Wolf/onebuddy'
     use 'RishabhRD/nvim-rdark'
     use 'ishan9299/modus-theme-vim'
     use 'sainnhe/edge'
     use 'theniceboy/nvim-deus'
-    use 'bkegley/gloombuddy'
-    use 'Th3Whit3Wolf/one-nvim'
     use 'PHSix/nvim-hybrid'
-    use 'Th3Whit3Wolf/space-nvim'
     use 'yonlu/omni.vim'
     use 'ray-x/aurora'
     use 'novakne/kosmikoa.nvim'
     use 'tanvirtin/monokai.nvim'
-    use 'nekonako/xresources-nvim'
-    use 'savq/melange'
-    use 'RRethy/nvim-base16'
-    use 'fenetikm/falcon'
     use 'andersevenrud/nordic.nvim'
     use 'shaunsingh/nord.nvim'
     use 'MordechaiHadad/nvim-papadark'
@@ -77,26 +61,15 @@ require('packer').startup(function()
     use 'projekt0n/github-nvim-theme'
     use 'kdheepak/monochrome.nvim'
     use 'rose-pine/neovim'
-    use 'mcchrish/zenbones.nvim'
-    use 'catppuccin/nvim'
-    use 'FrenzyExists/aquarium-vim'
-    use 'EdenEast/nightfox.nvim'
-    use 'kvrohit/substrata.nvim'
-    use 'ldelossa/vimdark'
-    use 'Mangeshrex/uwu.vim'
     use 'adisen99/apprentice.nvim'
     use 'olimorris/onedarkpro.nvim'
     use 'rmehri01/onenord.nvim'
     use 'RishabhRD/gruvy'
-    use 'echasnovski/mini.nvim'
     use 'luisiacc/gruvbox-baby'
     use 'titanzero/zephyrium'
-    use 'rebelot/kanagawa.nvim'
     use 'tiagovla/tokyodark.nvim'
     use 'cpea2506/one_monokai.nvim'
     use 'phha/zenburn.nvim'
-    use 'kvrohit/rasmus.nvim'
-    use 'chrsm/paramount-ng.nvim'
     use 'andweeb/presence.nvim'
     use 'kyazdani42/nvim-web-devicons'
     use 'startup-nvim/startup.nvim'
@@ -109,6 +82,7 @@ require('packer').startup(function()
     -- use 'styled-components/vim-styled-components'
     use 'jparise/vim-graphql'
     -- navigation
+    use 'tpope/vim-fugitive'
     use 'nacro90/numb.nvim'
     use {
         "luukvbaal/stabilize.nvim",
@@ -119,6 +93,7 @@ require('packer').startup(function()
     use 'ggandor/lightspeed.nvim'
     use 'kyazdani42/nvim-tree.lua'
     use 'feline-nvim/feline.nvim'
+    use 'jbyuki/instant.nvim'
     use 'akinsho/bufferline.nvim'
     use 'haya14busa/is.vim'
     use 'mbbill/undotree'
@@ -128,13 +103,11 @@ require('packer').startup(function()
     use 'michaeljsmith/vim-indent-object'
     use 'nvim-pack/nvim-spectre'
     use 'bkad/CamelCaseMotion'
-    use {
-      'rmagatti/goto-preview',
-      config = function()
-        require('goto-preview').setup {}
-      end
-    }
     use 'wellle/targets.vim'
     -- fun
     use 'wakatime/vim-wakatime'
-end)
+  end,
+  config = {
+    max_jobs = 10,
+  }
+  })

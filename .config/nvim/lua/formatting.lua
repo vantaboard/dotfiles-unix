@@ -16,8 +16,8 @@ vim.g.camelcasemotion_key = '<leader>'
 
 -- theme
 vim.cmd([[
-  colo base16-windows-nt
-  ]])
+    colo modus-operandi
+]])
 
 -- unicode
 vim.cmd([[
@@ -28,6 +28,7 @@ vim.cmd([[
 -- Make line numbers default
 vim.wo.number = true
 vim.wo.relativenumber = true
+vim.wo.scrolloff = 3
 
 -- Set clipboard
 vim.cmd('set clipboard=unnamedplus')

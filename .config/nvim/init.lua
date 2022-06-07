@@ -1,5 +1,4 @@
 -- init.lua
-
 require('formatting')
 require('initialize')
 -- require('windows')
@@ -23,7 +22,6 @@ require('plugins.numb')
 require('plugins.nvim-treesitter-textsubjects')
 require('plugins.nvimtree')
 require('plugins.presence')
-require('plugins.startup')
 require('plugins.telescope')
 require('plugins.treesitter')
 require('plugins.spectre')
