@@ -1,5 +1,3 @@
--- lua/plugins.lua
-
 require('packer').startup({
     function()
     use 'wbthomason/packer.nvim'
