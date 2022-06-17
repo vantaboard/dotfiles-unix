@@ -16,9 +16,12 @@ vim.g.camelcasemotion_key = '<leader>'
 
 -- theme
 vim.cmd([[
-    colo modus-operandi
+    au ColorScheme * hi Normal ctermbg=none guibg=none
+    au ColorScheme myspecialcolors hi Normal ctermbg=red guibg=red
+    au ColorScheme * hi clear EndOfBuffer
+    au ColorScheme * hi clear LineNR
+    colo lighthaus
 ]])
-
 -- unicode
 vim.cmd([[
     set encoding=utf8

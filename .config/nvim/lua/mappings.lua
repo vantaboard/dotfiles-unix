@@ -37,12 +37,18 @@ vim.api.nvim_set_keymap('n', '<leader>w', ':w<CR>', optsrsw)
 -- easy quit vim
 vim.api.nvim_set_keymap('n', 'Q', ':q!<CR>', optsrsw)
 
+-- harpoon
+vim.api.nvim_set_keymap('n', '<leader>H', "<cmd>lua require'harpoon.mark'.add_file()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>ch', "<cmd>lua require'harpoon.mark'.clear_all()<cr>", optsrs)
+
 -- telescope
+vim.api.nvim_set_keymap('n', '<leader>h', "<cmd>Telescope harpoon marks<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>fg', "<cmd>lua require('telescope.builtin').live_grep()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>fh', "<cmd>lua require('telescope.builtin').help_tags()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>/', "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({ fuzzy = false, case_mode = 'ignore_case' })<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<C-q>', "<cmd>lua require('telescope.builtin').quickfix()<cr>", optsrs)
 
 -- lua snippets
 vim.cmd[[
@@ -58,4 +64,9 @@ snoremap <silent> <S-Tab> <cmd>lua require('luasnip').jump(-1)<Cr>
 " For changing choices in choiceNodes (not strictly necessary for a basic setup).
 imap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
 smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' : '<C-E>'
+]]
+
+-- copilot
+vim.cmd[[
+    imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
 ]]
