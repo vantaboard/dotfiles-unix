@@ -1,5 +1,8 @@
 export MANPAGER='less -X';
 export EDITOR='nvim';
+
+export PATH="/usr/share/diff-so-fancy/:$PATH";
+
 # Enable persistent REPL history for `node`.
 export NODE_REPL_HISTORY=~/.node_history;
 # Allow 32³ entries; the default is 1000.
