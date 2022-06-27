@@ -27,7 +27,7 @@ bindsym $mod+d exec --no-startup-id dmenu_recency
 bindsym $mod+z exec --no-startup-id morc_menu
 bindsym $mod+shift+x exec betterlockscreen -l dim
 
-font xft:BigBlue_Terminal_437TT Nerd Font Mono:size=12
+font xft:BigBlue_Terminal_437TT Nerd Font Mono:size=10
 
 floating_modifier $mod
 
@@ -182,6 +182,7 @@ mode "resize" {
 
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec --no-startup-id nitrogen --restore; sleep 1; picom -b
+exec --no-startup-id nitrogen --set-zoom-fill --random
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id pamac-tray
@@ -243,7 +244,6 @@ client.background       #FFFFFF
 
 gaps inner 14
 gaps outer 2
-border_radius 3
 
 set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)

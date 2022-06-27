@@ -14,12 +14,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 /usr/bin/keychain $HOME/.ssh/id_ed25519
-source $HOME/.keychain/blade-sh
+source $HOME/.keychain/`hostname`-sh
 
-eval $(gpg-agent --daemon)
-
-eval $(keychain --eval --agents gpg C4FE921474F6C576)
-source $HOME/.keychain/blade-sh-gpg
 
 skip_global_compinit=1
 ZSH_DISABLE_COMPFIX=true
@@ -29,7 +25,9 @@ HYPHEN_INSENSITIVE="true"
 MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
 
-plugins=(git codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv)
+plugins=(git codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions)
+
+bindkey '^J' autosuggest-accept
 
 source $ZSH/oh-my-zsh.sh
 
@@ -46,3 +44,8 @@ do
    source "$HOME/.$file"
 done
 eval $(thefuck --alias)
+
+eval $(gpg-agent --daemon)
+
+eval $(keychain --eval --agents gpg $GIT_GPG_KEY)
+source $HOME/.keychain/`hostname`-sh-gpg

@@ -2,9 +2,27 @@ ARM_COMMON_FLAGS="-static"
 ARM_CC_AS_FLAGS="-g -mfpu=neon -march=armv8-a"
 ARM_CXX_FLAGS="std=c++17"
 
-alias sapp="cd ~/Code/sponsorcx/app"
-alias sapi="cd ~/Code/sponsorcx/api"
-alias snat="cd ~/Code/sponsorcx/native"
+function sapp() {
+   cd $HOME'/Code/sponsorcx/app/'$1
+}
+
+function sapi() {
+   cd $HOME'/Code/sponsorcx/api/'$1
+}
+
+function snat() {
+   cd $HOME'/Code/sponsorcx/native/'$1
+}
+
+function ssty() {
+   cd $HOME'/Code/sponsorcx/style/'$1
+}
+
+function sgor() {
+   cd $HOME'/Code/sponsorcx/gorgeous/'$1
+}
+
+alias gimmekeys='xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap'
 alias slackt="slack-term -config ~/.slack"
 alias mutt="neomutt"
 alias gd="git branch -D"
