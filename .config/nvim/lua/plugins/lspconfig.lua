@@ -107,6 +107,36 @@ local luadev = require("lua-dev").setup({})
 
 lspconfig.sumneko_lua.setup(luadev)
 
+lspconfig.texlab.setup({
+    capabilities = capabilities,
+    settings = {
+  texlab = {
+    auxDirectory = ".",
+    bibtexFormatter = "texlab",
+    build = {
+      args = { "-pdf", "-interaction=nonstopmode", "-synctex=1", "%f" },
+      executable = "pdflatex",
+      forwardSearchAfter = false,
+      onSave = true
+    },
+    chktex = {
+      onEdit = false,
+      onOpenAndSave = false
+    },
+    diagnosticsDelay = 300,
+    formatterLineLength = 80,
+    forwardSearch = {
+      args = {}
+    },
+    latexFormatter = "latexindent",
+    latexindent = {
+      modifyLineBreaks = false
+    }
+  }
+},
+    on_attach = on_attach
+})
+
 local null_ls = require("null-ls")null_ls.setup({
     sources = {
         null_ls.builtins.diagnostics.eslint_d.with({
@@ -122,4 +152,7 @@ local null_ls = require("null-ls")null_ls.setup({
     on_attach = on_attach
 })
 
-lspconfig.pyright.setup{}
+lspconfig.pyright.setup{
+    capabilities = capabilities,
+    on_attach = on_attach
+}

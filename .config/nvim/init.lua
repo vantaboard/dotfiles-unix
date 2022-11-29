@@ -72,11 +72,11 @@ require('packer').startup({
     use 'tiagovla/tokyodark.nvim'
     use 'cpea2506/one_monokai.nvim'
     use 'phha/zenburn.nvim'
-    use 'andweeb/presence.nvim'
+    -- use 'andweeb/presence.nvim'
     use 'kyazdani42/nvim-web-devicons'
     use 'startup-nvim/startup.nvim'
     use 'caglartoklu/borlandp.vim'
-    use 'mrjones2014/lighthaus.nvim'
+    -- use 'mrjones2014/lighthaus.nvim'
     use 'morhetz/gruvbox'
     use 'SmiteshP/nvim-gps'
     use 'lewis6991/gitsigns.nvim'
@@ -109,6 +109,7 @@ require('packer').startup({
     use 'wellle/targets.vim'
     -- fun
     use 'wakatime/vim-wakatime'
+    use 'jakewvincent/texmagic.nvim'
   end,
   config = {
     max_jobs = 10,
@@ -142,4 +143,11 @@ require('plugins.telescope')
 require('plugins.treesitter')
 require('plugins.spectre')
 require('plugins.autosave')
+require('plugins.texmagic')
 
+vim.cmd([[
+    autocmd BufReadPost *
+      \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
+      \ |   exe "normal! g`\""
+      \ | endif
+]])
