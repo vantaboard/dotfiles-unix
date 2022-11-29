@@ -12,6 +12,7 @@ general {
         color_good = "#2AA198"
         color_bad = "#586E75"
         color_degraded = "#DC322F"
+        markup = pango
 }
 
 # order += "ipv6"
@@ -24,7 +25,10 @@ order += "ethernet _first_"
 order += "battery all"
 # order += "load"
 order += "memory"
+order += "tztime date"
 order += "tztime local"
+order += "tztime ukraine"
+order += "tztime indonesia"
 
 # i3 status to track my calories
 
@@ -73,6 +77,21 @@ memory {
         format_degraded = "MEMORY < %available"
 }
 
+tztime date {
+        format = "%m.%d."
+}
+
+
 tztime local {
-        format = " %m.%d. %H:%M "
+        format = "<span color='#ff303b'>Pacific US </span><span color='#FFFFFF'>%l:%M</span><span color='#5e94ff'> %p</span>"
+}
+
+tztime ukraine {
+        format = "<span color='#5e94ff'>Ukraine </span><span color='#FFDD00'>%l:%M %p</span>"
+        timezone = "Europe/Kiev"
+}
+
+tztime indonesia {
+        format = "<span color='#ff303b'>Indonesia</span> %l:%M %p"
+        timezone = "Asia/Jakarta"
 }

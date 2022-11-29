@@ -16,11 +16,7 @@ vim.g.camelcasemotion_key = '<leader>'
 
 -- theme
 vim.cmd([[
-    au ColorScheme * hi Normal ctermbg=none guibg=none
-    au ColorScheme myspecialcolors hi Normal ctermbg=red guibg=red
-    au ColorScheme * hi clear EndOfBuffer
-    au ColorScheme * hi clear LineNR
-    colo lighthaus
+    colo tokyodark
 ]])
 -- unicode
 vim.cmd([[
@@ -29,9 +25,9 @@ vim.cmd([[
 ]])
 
 -- Make line numbers default
-vim.wo.number = true
-vim.wo.relativenumber = true
-vim.wo.scrolloff = 3
+vim.o.number = true
+vim.o.relativenumber = true
+vim.o.scrolloff = 3
 
 -- Set clipboard
 vim.cmd('set clipboard=unnamedplus')

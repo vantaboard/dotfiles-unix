@@ -6,6 +6,10 @@ exec xmodmap $HOME/.Xmodmap
 exec compton
 exec --no-startup-id betterlockscreen -w dim
 
+exec "sh /home/blackboardd/.screenlayout/main-one-monitor.sh"
+exec "sh /home/blackboardd/.screenlayout/main.sh"
+exec "sh /home/blackboardd/.screenlayout/force-composition-pipeline.sh"
+
 set $mod Mod4
 
 default_border pixel 4
@@ -26,6 +30,10 @@ bindsym $mod+Shift+q kill
 bindsym $mod+d exec --no-startup-id dmenu_recency
 bindsym $mod+z exec --no-startup-id morc_menu
 bindsym $mod+shift+x exec betterlockscreen -l dim
+
+bindsym $mod+shift+b move workspace to output eDP-1-1
+bindsym $mod+shift+n move workspace to output HDMI-0
+bindsym $mod+shift+m move workspace to output DP-0
 
 font xft:BigBlue_Terminal_437TT Nerd Font Mono:size=10
 
@@ -60,9 +68,9 @@ bindsym $mod+Shift+k move up
 bindsym $mod+Shift+l move right
 
 
-workspace_auto_back_and_forth yes
-bindsym $mod+b workspace back_and_forth
-bindsym $mod+Shift+b move container to workspace back_and_forth; workspace back_and_forth
+# workspace_auto_back_and_forth yes
+# bindsym $mod+b workspace back_and_forth
+# bindsym $mod+Shift+b move container to workspace back_and_forth; workspace back_and_forth
 
 bindsym $mod+x split h;exec notify-send 'tile horizontally'
 bindsym $mod+c split v;exec notify-send 'tile vertically'

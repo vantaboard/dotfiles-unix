@@ -13,9 +13,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
-/usr/bin/keychain $HOME/.ssh/id_ed25519
+/usr/bin/keychain --quiet $HOME/.ssh/id_ed25519
 source $HOME/.keychain/`hostname`-sh
-
 
 skip_global_compinit=1
 ZSH_DISABLE_COMPFIX=true
@@ -45,7 +44,5 @@ do
 done
 eval $(thefuck --alias)
 
-eval $(gpg-agent --daemon)
-
-eval $(keychain --eval --agents gpg $GIT_GPG_KEY)
+eval $(keychain --quiet --eval --agents gpg $GIT_GPG_KEY)
 source $HOME/.keychain/`hostname`-sh-gpg

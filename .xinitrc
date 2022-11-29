@@ -64,10 +64,4 @@ get_session(){
 	echo "dbus-launch ${dbus_args[*]}"
 }
 
-xmodmap -e "clear lock"
-setxkbmap -option ctrl:nocaps
-setxkbmap -option caps:escape
-xmodmap $HOME/.Xmodmap
-sh $HOME/.screenlayout/main.sh
-
 exec $(get_session "$1")
