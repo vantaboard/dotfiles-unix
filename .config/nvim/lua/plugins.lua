@@ -88,7 +88,7 @@ require('packer').startup({
     }
     use 'tpope/vim-repeat'
     use 'ThePrimeagen/harpoon'
-    use 'ggandor/lightspeed.nvim'
+    -- use 'ggandor/lightspeed.nvim'
     use 'kyazdani42/nvim-tree.lua'
     use 'feline-nvim/feline.nvim'
     use 'jbyuki/instant.nvim'

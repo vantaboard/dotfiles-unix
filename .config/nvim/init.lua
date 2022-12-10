@@ -72,7 +72,7 @@ require('packer').startup({
     use 'tiagovla/tokyodark.nvim'
     use 'cpea2506/one_monokai.nvim'
     use 'phha/zenburn.nvim'
-    -- use 'andweeb/presence.nvim'
+    use 'andweeb/presence.nvim'
     use 'kyazdani42/nvim-web-devicons'
     use 'startup-nvim/startup.nvim'
     use 'caglartoklu/borlandp.vim'
@@ -93,7 +93,7 @@ require('packer').startup({
     }
     use 'tpope/vim-repeat'
     use 'ThePrimeagen/harpoon'
-    use 'ggandor/lightspeed.nvim'
+    -- use 'ggandor/lightspeed.nvim'
     use 'kyazdani42/nvim-tree.lua'
     use 'feline-nvim/feline.nvim'
     use 'jbyuki/instant.nvim'
