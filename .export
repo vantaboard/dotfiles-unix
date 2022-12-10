@@ -16,3 +16,5 @@ export PYTHONIOENCODING='UTF-8';
 # Prefer US English and use UTF-8.
 export LANG='en_US.UTF-8';
 export LC_ALL='en_US.UTF-8';
+
+export CX_CONTAINER=$(sudo docker ps -a | grep sponsorcxdb | awk '{print $1}' | head -n 1);
