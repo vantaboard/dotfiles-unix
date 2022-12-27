@@ -11,12 +11,22 @@ vim.cmd([[
   set signcolumn=yes
   ]])
 
+-- inverted cursor please!
+vim.opt.guicursor = ""
+
 -- camelCaseMotion
 vim.g.camelcasemotion_key = '<leader>'
 
 -- theme
+-- ones that i like:
+--   aurora
+--   dracula
+--   lighthaus
+--   vn-night
 vim.cmd([[
-    colo tokyodark
+    colo carbonfox
+    highlight Normal guibg=none
+    highlight NonText guibg=none
 ]])
 -- unicode
 vim.cmd([[
@@ -27,7 +37,7 @@ vim.cmd([[
 -- Make line numbers default
 vim.o.number = true
 vim.o.relativenumber = true
-vim.o.scrolloff = 3
+vim.o.scrolloff = 8
 
 -- Set clipboard
 vim.cmd('set clipboard=unnamedplus')
