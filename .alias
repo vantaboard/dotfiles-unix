@@ -46,7 +46,8 @@ alias  vi="nvim"
 alias vim="nvim"
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias clip="clip.exe"
-alias cxds="sudo docker start $CX_CONTAINERsudo docker exec -it $CX_CONTAINER /bin/bash"
+alias rm="trash-put"
+alias cxds="sudo docker start $CX_CONTAINER"
 alias cxde="sudo docker exec -it $CX_CONTAINER /bin/bash"
 
 
