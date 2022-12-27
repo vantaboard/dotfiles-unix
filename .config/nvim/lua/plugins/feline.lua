@@ -334,7 +334,7 @@ components.active[3][6] = {
 -- lineInfo
 components.active[3][4] = {
   provider = function()
-    local pt = os.date('%I:%M', os.time() - 3600 * 2)
+    local pt = os.date('%I:%M', os.time())
     return 'PT: ' .. pt
   end,
   hl = {
@@ -346,7 +346,7 @@ components.active[3][4] = {
 }
 components.active[3][5] = {
   provider = function()
-    local mt = os.date('%I:%M', os.time() - 3600)
+    local mt = os.date('%I:%M', os.time() + 3600)
     return 'MT: ' .. mt
   end,
   hl = {
@@ -358,7 +358,7 @@ components.active[3][5] = {
 }
 components.active[3][6] = {
   provider = function()
-    local ct = os.date('%I:%M')
+    local ct = os.date('%I:%M', os.time() + 3600 * 2)
     return 'CT: ' .. ct
   end,
   hl = {
@@ -370,7 +370,7 @@ components.active[3][6] = {
 }
 components.active[3][7] = {
   provider = function()
-    local et = os.date('%I:%M', os.time() + 3600)
+    local et = os.date('%I:%M', os.time() + 3600 * 3)
     return 'ET: ' .. et
   end,
   hl = {

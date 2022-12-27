@@ -1,5 +1,19 @@
 -- lua/mappings.lua
 
+function get_visual_selection()
+  local s_start = vim.fn.getpos("'<")
+  local s_end = vim.fn.getpos("'>")
+  local n_lines = math.abs(s_end[2] - s_start[2]) + 1
+  local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
+  lines[1] = string.sub(lines[1], s_start[3], -1)
+  if n_lines == 1 then
+    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3] + 1)
+  else
+    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
+  end
+  return table.concat(lines, '\n')
+end
+
 local optsrsw = { noremap = true, silent = true, nowait = true }
 local optsrs = { noremap = true, silent = true }
 
@@ -11,6 +25,10 @@ vim.api.nvim_set_keymap('n', 'X', '"_d$', optsrsw)
 -- yank / replace-paste until end
 vim.api.nvim_set_keymap('n', '<leader><leader>y', 'v$hy', optsrsw)
 vim.api.nvim_set_keymap('n', '<leader>r', 'v$h"_dp`[', optsrsw)
+
+-- vim color scheme switcher
+vim.api.nvim_set_keymap('n', '<leader>cp', ':PrevColorScheme<CR>', optsrs)
+vim.api.nvim_set_keymap('n', '<leader>cn', ':NextColorScheme<CR>', optsrs)
 
 -- camelcasemotion
 vim.cmd[[
@@ -40,9 +58,9 @@ vim.api.nvim_set_keymap('n', 'Q', ':q!<CR>', optsrsw)
 -- harpoon
 vim.api.nvim_set_keymap('n', '<leader>H', "<cmd>lua require'harpoon.mark'.add_file()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>ch', "<cmd>lua require'harpoon.mark'.clear_all()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>h', "<cmd>Telescope harpoon marks<cr>", optsrs)
 
 -- telescope
-vim.api.nvim_set_keymap('n', '<leader>h', "<cmd>Telescope harpoon marks<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>fg', "<cmd>lua require('telescope.builtin').live_grep()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers()<cr>", optsrs)
@@ -70,3 +88,25 @@ smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' 
 vim.cmd[[
     imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
 ]]
+
+-- hide background
+-- function to run highlight Normal guibg=none
+-- and highlight NonText guibg=none
+vim.cmd[[
+    function! HideBackground()
+        highlight Normal guibg=none
+        highlight NonText guibg=none
+    endfunction
+]]
+function FormatSQL()
+    local sql = get_visual_selection()
+    -- replace ` with "
+    sql = string.gsub(sql, "`", '"')
+
+    local formatted_sql = vim.fn.system(string.format('echo "%s" | sqlformat --reindent --keywords upper --identifiers lower -', sql))
+    vim.fn.setreg('"', formatted_sql)
+    vim.cmd('normal! gv""P')
+end
+
+vim.api.nvim_set_keymap('v', '<leader>g', ':lua FormatSQL()<CR>', optsrs)
+-- vim.api.nvim_set_keymap('n', '<leader>N', ':call HideBackground()<CR>', optsrs)

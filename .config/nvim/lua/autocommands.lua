@@ -1,5 +1,13 @@
 -- lua/autocommands.lua
 
+vim.api.nvim_create_augroup('reload queries on query save', { clear = true })
+vim.api.nvim_create_autocmd('BufWrite', {
+    pattern = '*.scm',
+    callback = function()
+        require 'nvim-treesitter.query'.invalidate_query_cache()
+    end
+})
+--
 -- local group = vim.api.nvim_create_augroup("jump_last_position", { clear = true })
 -- vim.api.nvim_create_autocmd(
 -- 	"BufReadPost",
