@@ -56,7 +56,7 @@ foreground_bold = #ffffff
 background = rgba(0, 0, 0, 0.75)
 
 # black
-color0  = #6a493a
+color0  = #291c16
 color8  = #946551
 
 # red
