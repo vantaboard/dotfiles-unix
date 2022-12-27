@@ -189,8 +189,10 @@ mode "resize" {
 }
 
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec --no-startup-id nitrogen --restore; sleep 1; picom -b
-exec --no-startup-id nitrogen --set-zoom-fill --random
+# exec --no-startup-id nitrogen --restore; sleep 1; picom -b
+exec --no-startup-id nitrogen --set-zoom --head=0 ~/.wallpapers/frasier-sterling-cute-blur.jpg
+exec --no-startup-id nitrogen --set-zoom --head=1 ~/.wallpapers/frasier-sterling-cute-blur.jpg
+exec --no-startup-id nitrogen --set-zoom --head=2 ~/.wallpapers/frasier-sterling-cute-blur.jpg
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id pamac-tray
