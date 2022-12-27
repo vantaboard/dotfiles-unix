@@ -1,0 +1,18 @@
+[Unit]
+Description=Resume monitors
+Requires=network-online.target
+After=network-online.target
+Wants=network-online.target NetworkManager-wait-online.service
+StartLimitInterval=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sh /home/blackboardd/.screenlayout/main-one-monitor.sh && /usr/bin/sh /home/blackboardd/.screenlayout/main.sh
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=suspend.target
+WantedBy=hibernate.target
+WantedBy=hybrid-sleep.target
