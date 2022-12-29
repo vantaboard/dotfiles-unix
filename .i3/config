@@ -3,7 +3,7 @@ exec xmodmap -e "keysym Caps_Lock = Escape" #set caps_lock as escape
 exec setxkbmap -option ctrl:nocaps
 exec setxkbmap -option caps:escape
 exec xmodmap $HOME/.Xmodmap
-exec compton
+# exec compton
 exec --no-startup-id betterlockscreen -w dim
 
 exec "sh /home/blackboardd/.screenlayout/main-one-monitor.sh"
