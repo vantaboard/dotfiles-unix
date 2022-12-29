@@ -25,10 +25,11 @@ require('packer').startup({
         use 'norcalli/nvim-colorizer.lua'
         use 'L3MON4D3/LuaSnip'
         -- fuzzy
-        use 'nvim-telescope/telescope-fzf-native.nvim'
+        use { 'nvim-telescope/telescope-fzf-native.nvim',
+            run = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
         use 'nvim-telescope/telescope-ui-select.nvim'
         use 'nvim-telescope/telescope.nvim'
-        use({ "kelly-lin/telescope-ag", requires = { { "nvim-telescope/telescope.nvim" } } })
+        -- use({ "kelly-lin/telescope-ag", requires = { { "nvim-telescope/telescope.nvim" } } })
         use 'BurntSushi/ripgrep'
         use 'nvim-lua/plenary.nvim'
         -- lsp
@@ -179,7 +180,7 @@ require('plugins.cmp-buffer')
 require('plugins.colorizer')
 require('plugins.feline')
 require('plugins.goto-preview')
-    require('plugins.lspconfig')
+require('plugins.lspconfig')
 require('plugins.luasnip')
 require('plugins.numb')
 require('plugins.nvim-treesitter')

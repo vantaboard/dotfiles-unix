@@ -98,15 +98,6 @@ vim.cmd[[
         highlight NonText guibg=none
     endfunction
 ]]
-function FormatSQL()
-    local sql = get_visual_selection()
-    -- replace ` with "
-    sql = string.gsub(sql, "`", '"')
 
-    local formatted_sql = vim.fn.system(string.format('echo "%s" | sqlformat --reindent --keywords upper --identifiers lower -', sql))
-    vim.fn.setreg('"', formatted_sql)
-    vim.cmd('normal! gv""P')
-end
-
-vim.api.nvim_set_keymap('v', '<leader>g', ':lua FormatSQL()<CR>', optsrs)
+vim.api.nvim_set_keymap('v', '<leader>g', '!pg_format<CR>', optsrs)
 -- vim.api.nvim_set_keymap('n', '<leader>N', ':call HideBackground()<CR>', optsrs)

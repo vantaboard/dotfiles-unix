@@ -6,7 +6,7 @@ local open_in_nvim_tree = function(prompt_bufnr)
     local entry = action_state.get_selected_entry()[1]
     local entry_path = Path:new(entry):parent():absolute()
     actions._close(prompt_bufnr, true)
-    entry_path = Path:new(entry):parent():absolute() 
+    entry_path = Path:new(entry):parent():absolute()
     entry_path = entry_path:gsub("\\", "\\\\")
 
     vim.cmd("NvimTreeClose")
@@ -31,14 +31,23 @@ require("telescope").setup {
             },
         },
     },
-  extensions = {
-    ["ui-select"] = {
-      require("telescope.themes").get_dropdown {}
+    extensions = {
+        ["ui-select"] = {
+            require("telescope.themes").get_dropdown {}
+        },
+        fzf = {
+            fuzzy = true, -- false will only do exact matching
+            override_generic_sorter = true, -- override the generic sorter
+            override_file_sorter = true, -- override the file sorter
+            case_mode = "smart_case", -- or "ignore_case" or "respect_case"
+            -- the default case_mode is "smart_case"
+        }
     }
-  }
 }
+
 -- To get ui-select loaded and working with telescope, you need to call
 -- load_extension, somewhere after setup function:
+require('telescope').load_extension('fzf')
 require("telescope").load_extension("ui-select")
-require("telescope").load_extension("ag")
+-- require("telescope").load_extension("ag")
 require("telescope").load_extension("harpoon")
