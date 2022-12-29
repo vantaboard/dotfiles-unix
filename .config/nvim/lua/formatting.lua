@@ -25,8 +25,6 @@ vim.g.camelcasemotion_key = '<leader>'
 --   vn-night
 vim.cmd([[
     colo carbonfox
-    highlight Normal guibg=none
-    highlight NonText guibg=none
 ]])
 -- unicode
 vim.cmd([[
@@ -46,6 +44,7 @@ vim.cmd('set clipboard=unnamedplus')
 vim.wo.colorcolumn = "80"
 
 -- Tab stops
+vim.cmd('filetype plugin on')
 vim.cmd('filetype plugin indent on')
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
