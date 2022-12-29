@@ -2,53 +2,58 @@ ARM_COMMON_FLAGS="-static"
 ARM_CC_AS_FLAGS="-g -mfpu=neon -march=armv8-a"
 ARM_CXX_FLAGS="std=c++17"
 
-function sapp() {
-   cd $HOME'/Code/sponsorcx/app/'$1
-}
+# abbr cxds="sudo docker start $CX_CONTAINER"
+# abbr cxde="sudo docker exec -it $CX_CONTAINER /bin/bash"
+# abbr prapp='gh pr create -f -r creedmangrum -B staging'
+# abbr prapi='gh pr create -f -r creedmangrum -B staging'
+# abbr gD="git branch -D"
+# abbr gr="git_return"
+# abbr gs="git status"
+# abbr gl="git log --pretty=oneline | nvim -c 'set ft=git'"
+# abbr gp="git push"
+# abbr gpl="git pull"
+# abbr gimmekeys='xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap'
 
-function sapi() {
-   cd $HOME'/Code/sponsorcx/api/'$1
-}
+# abbreviation aliases
+alias automt='sudo mount -a'
+alias lsc="colorls"
 
-function snat() {
-   cd $HOME'/Code/sponsorcx/native/'$1
-}
+function catless() {
+    output=$(cat $1)
+    nvim_commands=()
 
-function ssty() {
-   cd $HOME'/Code/sponsorcx/style/'$1
-}
+    filename=$(echo $1 | sed -E 's/ /_/g' | sed -E 's/[^a-zA-Z0-9_\-\.]//g')
+    hash=$(date +%s%3N | base64)
 
-function sgor() {
-   cd $HOME'/Code/sponsorcx/gorgeous/'$1
+    ext=$(echo "$filename" | rev | cut -d'.' -f1 | rev)
+
+    if [ "$ext" = "json" ]; then
+        output=$($output | jq .)
+    fi
+
+    mkdir -p ~/.nvim-less-cache/"$hash"
+    echo "$output" > ~/.nvim-less-cache/"$hash"/"$filename"
+    nvim_commands+=(nvim -R ~/.nvim-less-cache/"$hash"/"$filename")
+
+
+    if [[ "$filename" == diff* ]]; then
+        nvim_commands+=(-c "'set filetype=diff'")
+    fi
+
+    eval "${nvim_commands[@]}"
 }
 
 # automt automatically mounts all available drives
 alias music='vlc --recursive expand /run/media/blackboardd/1A52C24752C226FB/music /home/blackboardd/Music /home/blackboardd/Soulseek\ Downloads &'
-alias automt='sudo mount -a'
-alias prapp='gh pr create -f -r creedmangrum -B staging'
-alias prapi='gh pr create -f -r creedmangrum -B staging'
-alias gimmekeys='xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap'
 alias slackt="slack-term -config ~/.slack"
 alias mutt="neomutt"
 alias sl="ls"
-alias gd="git branch -D"
-alias gl="git log --pretty=oneline | nvim"
-alias gr="git_return"
-alias gs="git status"
-alias ga="git add"
-alias gwa="git worktree add"
-alias gra="git worktree remove"
-alias gp="git push"
-alias gpu="git push -u origin"
-alias gpl="git pull"
 alias "cz commit"="ca"
 alias  vi="nvim"
 alias vim="nvim"
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias clip="clip.exe"
 alias rm="trash-put"
-alias cxds="sudo docker start $CX_CONTAINER"
-alias cxde="sudo docker exec -it $CX_CONTAINER /bin/bash"
 
 
 # alias ls="ls -a"
@@ -61,6 +66,8 @@ alias cxde="sudo docker exec -it $CX_CONTAINER /bin/bash"
 # alias gcc="arm-linux-gnueabihf-gcc $ARM_CC_AS_FLAGS $ARM_COMMON_FLAGS"
 # alias  ld="arm-linux-gnueabihf-ld $ARM_COMMON_FLAGS"
 # alias  as="arm-linux-gnueabihf-as $ARM_CC_AS_FLAGS"
+
+bindkey "^X" abbr-expand
 
 complete -F _complete_alias vi
 complete -F _complete_alias vim
