@@ -15,9 +15,17 @@ local use = require('packer').use
 require('packer').startup({
     function()
         use 'wbthomason/packer.nvim'
+        -- debugging
+        use 'ianding1/leetcode.vim'
+        use 'mfussenegger/nvim-dap'
+        use 'Pocco81/dap-buddy.nvim'
+        use({ 'gbrlsnchs/telescope-lsp-handlers.nvim', requires = { { "nvim-telescope/telescope.nvim" } } })
+        use({ 'nvim-telescope/telescope-dap.nvim', requires = { { "nvim-telescope/telescope.nvim" } } })
+        use 'theHamsta/nvim-dap-virtual-text'
+        use 'David-Kunz/jester'
         -- completion
         use 'folke/neodev.nvim'
-        use 'hrsh7th/cmp-nvim-lsp'
+        use { "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap" } }
         use 'hrsh7th/nvim-cmp'
         use 'petertriho/cmp-git'
         use 'hrsh7th/cmp-buffer'
@@ -176,7 +184,6 @@ require('undotree_conf')
 vim.cmd('source $HOME/.config/nvim/lua/restore_cursor.vim')
 
 -- plugin configurations
-require('plugins.cmp-buffer')
 require('plugins.colorizer')
 require('plugins.feline')
 require('plugins.goto-preview')
@@ -190,6 +197,10 @@ require('plugins.telescope')
 require('plugins.spectre')
 require('plugins.autosave')
 require('plugins.texmagic')
+require('plugins.jester')
+require('plugins.dap')
+
+vim.o.exrc = true
 
 vim.cmd([[
     autocmd BufReadPost *
