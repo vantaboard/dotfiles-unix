@@ -19,13 +19,24 @@ local open_in_nvim_tree = function(prompt_bufnr)
 
     vim.cmd("/" .. file_name)
 end
+
+actions = require("telescope.actions")
+require("telescope").load_extension("ui-select")
+require('telescope').load_extension('fzf')
+require("telescope").load_extension("harpoon")
 require('telescope').load_extension('dap')
+
+require('textcase').setup {}
+require('telescope').load_extension('textcase')
+vim.api.nvim_set_keymap('n', 'ga.', '<cmd>TextCaseOpenTelescope<CR>', { desc = "Telescope" })
+vim.api.nvim_set_keymap('v', 'ga.', "<cmd>TextCaseOpenTelescope<CR>", { desc = "Telescope" })
 
 require("telescope").setup {
     defaults = {
         mappings = {
             i = {
                 ["<c-s>"] = open_in_nvim_tree,
+                ["<C-w>"] = actions.send_selected_to_qflist + actions.open_qflist,
             },
             n = {
                 ["<c-s>"] = open_in_nvim_tree,
@@ -37,7 +48,7 @@ require("telescope").setup {
             require("telescope.themes").get_dropdown {}
         },
         fzf = {
-            fuzzy = true, -- false will only do exact matching
+            fuzzy = true,             -- false will only do exact matching
             override_generic_sorter = true, -- override the generic sorter
             override_file_sorter = true, -- override the file sorter
             case_mode = "smart_case", -- or "ignore_case" or "respect_case"
@@ -45,10 +56,3 @@ require("telescope").setup {
         }
     }
 }
-
--- To get ui-select loaded and working with telescope, you need to call
--- load_extension, somewhere after setup function:
-require('telescope').load_extension('fzf')
-require("telescope").load_extension("ui-select")
--- require("telescope").load_extension("ag")
-require("telescope").load_extension("harpoon")
