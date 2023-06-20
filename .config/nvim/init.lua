@@ -31,6 +31,9 @@ require('packer').startup({
         use 'hrsh7th/cmp-buffer'
         use 'github/copilot.vim'
         use 'norcalli/nvim-colorizer.lua'
+        use 'hrsh7th/cmp-nvim-lsp-signature-help'
+        use 'onsails/lspkind.nvim'
+        use 'hrsh7th/cmp-nvim-lsp'
         use 'L3MON4D3/LuaSnip'
         -- fuzzy
         use { 'nvim-telescope/telescope-fzf-native.nvim',
