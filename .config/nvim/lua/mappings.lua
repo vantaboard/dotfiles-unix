@@ -1,17 +1,17 @@
 -- lua/mappings.lua
 
 function get_visual_selection()
-  local s_start = vim.fn.getpos("'<")
-  local s_end = vim.fn.getpos("'>")
-  local n_lines = math.abs(s_end[2] - s_start[2]) + 1
-  local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
-  lines[1] = string.sub(lines[1], s_start[3], -1)
-  if n_lines == 1 then
-    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3] + 1)
-  else
-    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
-  end
-  return table.concat(lines, '\n')
+    local s_start = vim.fn.getpos("'<")
+    local s_end = vim.fn.getpos("'>")
+    local n_lines = math.abs(s_end[2] - s_start[2]) + 1
+    local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
+    lines[1] = string.sub(lines[1], s_start[3], -1)
+    if n_lines == 1 then
+        lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3] + 1)
+    else
+        lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
+    end
+    return table.concat(lines, '\n')
 end
 
 local optsrsw = { noremap = true, silent = true, nowait = true }
@@ -31,7 +31,7 @@ vim.api.nvim_set_keymap('n', '<leader>cp', ':PrevColorScheme<CR>', optsrs)
 vim.api.nvim_set_keymap('n', '<leader>cn', ':NextColorScheme<CR>', optsrs)
 
 -- camelcasemotion
-vim.cmd[[
+vim.cmd [[
     map <nowait><silent> <leader>w <Plug>CamelCaseMotion_w
     map <nowait><silent> <leader>b <Plug>CamelCaseMotion_b
     map <nowait><silent> <leader>e <Plug>CamelCaseMotion_e
@@ -74,10 +74,10 @@ vim.api.nvim_set_keymap('n', '<leader>/', "<cmd>lua require('telescope.builtin')
 vim.api.nvim_set_keymap('n', '<C-q>', "<cmd>lua require('telescope.builtin').quickfix()<cr>", optsrs)
 
 -- lua snippets
-vim.cmd[[
+vim.cmd [[
 " press <Tab> to expand or jump in a snippet. These can also be mapped separately
 " via <Plug>luasnip-expand-snippet and <Plug>luasnip-jump-next.
-imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' 
+imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>'
 " -1 for jumping backwards.
 inoremap <silent> <S-Tab> <cmd>lua require'luasnip'.jump(-1)<Cr>
 
@@ -90,14 +90,14 @@ smap <silent><expr> <C-E> luasnip#choice_active() ? '<Plug>luasnip-next-choice' 
 ]]
 
 -- copilot
-vim.cmd[[
+vim.cmd [[
     imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
 ]]
 
 -- hide background
 -- function to run highlight Normal guibg=none
 -- and highlight NonText guibg=none
-vim.cmd[[
+vim.cmd [[
     function! HideBackground()
         highlight Normal guibg=none
         highlight NonText guibg=none

@@ -47,6 +47,7 @@ vim.wo.colorcolumn = "80"
 -- Tab stops
 vim.cmd('filetype plugin on')
 vim.cmd('filetype plugin indent on')
+
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
 vim.o.expandtab = true
