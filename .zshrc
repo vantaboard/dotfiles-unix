@@ -55,13 +55,13 @@ source $HOME/.keychain/`hostname`-sh
 
 skip_global_compinit=1
 ZSH_DISABLE_COMPFIX=true
-ZSH_THEME="nanotech"
+ZSH_THEME="frontcube"
 DISABLE_UNTRACKED_FILES_DIRTY="true"
 HYPHEN_INSENSITIVE="true"
 MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
 
-plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv)
+plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions)
 
 bindkey '^J' autosuggest-accept
 
