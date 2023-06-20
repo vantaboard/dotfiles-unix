@@ -1,14 +1,5 @@
-exec xmodmap -e "clear lock" #disable caps lock switch
-exec xmodmap -e "keysym Caps_Lock = Escape" #set caps_lock as escape
-exec setxkbmap -option ctrl:nocaps
-exec setxkbmap -option caps:escape
-exec xmodmap $HOME/.Xmodmap
-# exec compton
 exec --no-startup-id betterlockscreen -w dim
-
-exec "sh /home/blackboardd/.screenlayout/main-one-monitor.sh"
-exec "sh /home/blackboardd/.screenlayout/main.sh"
-exec "sh /home/blackboardd/.screenlayout/force-composition-pipeline.sh"
+exec xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 345 -0.8
 
 set $mod Mod4
 
@@ -27,11 +18,11 @@ bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
 bindsym $mod+Return exec termite
 bindsym $mod+Shift+q kill
-bindsym $mod+d exec --no-startup-id dmenu_recency
+bindsym $mod+d exec --no-startup-id dmenu_run
 bindsym $mod+z exec --no-startup-id morc_menu
 bindsym $mod+shift+x exec betterlockscreen -l dim
 
-bindsym $mod+shift+b move workspace to output eDP-1-1
+bindsym $mod+shift+b move workspace to output eDP1
 bindsym $mod+shift+n move workspace to output HDMI-0
 bindsym $mod+shift+m move workspace to output DP-0
 
@@ -41,6 +32,7 @@ floating_modifier $mod
 
 exec --no-startup-id volumeicon
 exec --no-startup-id pulseaudio
+exec --no-startup-id dropbox
 exec --no-startup-id pa-applet
 bindsym $mod+Ctrl+m exec pavucontrol
 
@@ -50,13 +42,17 @@ bindsym $mod+F3 exec pcmanfm
 bindsym $mod+Shift+F3 exec pcmanfm_pkexec
 bindsym $mod+F5 exec terminal -e 'mocp'
 bindsym $mod+t exec --no-startup-id pkill picom
+bindsym $mod+Ctrl+Shift+s exec --no-startup-id systemctl suspend
+bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
+bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 bindsym $mod+Ctrl+t exec --no-startup-id picom -b
-bindsym $mod+Shift+d exec --no-startup-id sh /home/blackboardd/.screenlayout/main-one-monitor.sh && sh /home/blackboardd/.screenlayout/main.sh
+bindsym $mod+Shift+d exec --no-startup-id sh /usr/share/sessionsetup.sh
 # bindsym $mod+Shift+d --release exec "killall dunst; exec notify-send 'restart dunst'"
 bindsym Print exec --no-startup-id i3-scrot
 bindsym $mod+Print --release exec --no-startup-id i3-scrot -w
 bindsym $mod+Shift+Print --release exec --no-startup-id i3-scrot -s
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
+bindsym $mod+Shift+e exec --no-startup-id splatmoji copy
 
 bindsym $mod+h focus left
 bindsym $mod+j focus down
@@ -85,7 +81,7 @@ bindsym $mod+e layout toggle split
 
 bindsym $mod+Shift+space floating toggle
 bindsym $mod+space focus mode_toggle
-bindsym $mod+Shift+s sticky toggle
+bindsym $mod+Shift+f sticky toggle
 bindsym $mod+a focus parent
 bindsym $mod+Shift+minus move scratchpad
 bindsym $mod+minus scratchpad show
@@ -161,7 +157,7 @@ for_window [urgent=latest] focus
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+# bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 
 bindsym $mod+0 mode "$mode_system"
 set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
@@ -198,6 +194,7 @@ exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id pamac-tray
 exec --no-startup-id clipit
+exec_always --no-startup-id ~/.i3/i3-chrome-tab-dragging.py
 exec_always --no-startup-id ff-theme-util
 exec_always --no-startup-id fix_xcursor
 
@@ -223,6 +220,7 @@ set_from_resource $term_color15    color15
 bar {
 	i3bar_command i3bar
 	status_command py3status
+    tray_output primary
 	position bottom
 	bindsym button4 nop
 	bindsym button5 nop
