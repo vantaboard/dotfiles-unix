@@ -36,14 +36,14 @@ require('packer').startup({
         use 'hrsh7th/cmp-nvim-lsp'
         use 'L3MON4D3/LuaSnip'
         -- fuzzy
-        use { 'nvim-telescope/telescope-fzf-native.nvim',
-            run = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
         use 'nvim-telescope/telescope-ui-select.nvim'
-        use 'nvim-telescope/telescope.nvim'
-        -- use({ "kelly-lin/telescope-ag", requires = { { "nvim-telescope/telescope.nvim" } } })
-        use 'BurntSushi/ripgrep'
+        use {
+            'nvim-telescope/telescope.nvim',
+            tag = '0.1.2'
+        }
         use 'nvim-lua/plenary.nvim'
         -- lsp
+        use { 'nvim-telescope/telescope-fzf-native.nvim', run =
         -- use 'mhartington/formatter.nvim'
         use 'neovim/nvim-lspconfig'
         use 'nvim-treesitter/nvim-treesitter'
