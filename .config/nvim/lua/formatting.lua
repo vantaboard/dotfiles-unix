@@ -25,7 +25,7 @@ vim.g.camelcasemotion_key = '<leader>'
 --   lighthaus
 --   vn-night
 vim.cmd([[
-    colo carbonfox
+    colo brighten-light
 ]])
 -- unicode
 vim.cmd([[
