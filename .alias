@@ -2,21 +2,80 @@ ARM_COMMON_FLAGS="-static"
 ARM_CC_AS_FLAGS="-g -mfpu=neon -march=armv8-a"
 ARM_CXX_FLAGS="std=c++17"
 
-# abbr cxds="sudo docker start $CX_CONTAINER"
-# abbr cxde="sudo docker exec -it $CX_CONTAINER /bin/bash"
+alias firefox="firefox-nightly"
+
+# abbr mprapp='gh pr create -f -r creedmangrum -B master'
+# abbr mprapi='gh pr create -f -r creedmangrum -B master'
 # abbr prapp='gh pr create -f -r creedmangrum -B staging'
 # abbr prapi='gh pr create -f -r creedmangrum -B staging'
 # abbr gD="git branch -D"
 # abbr gr="git_return"
 # abbr gs="git status"
-# abbr gl="git log --pretty=oneline | nvim -c 'set ft=git'"
+# abbr gl="git log --reverse --pretty=format:'%h %s' | nvim -c 'set ft=git'"
 # abbr gp="git push"
 # abbr gpl="git pull"
 # abbr gimmekeys='xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap'
+# abbr gcp="git cherry-pick"
 
 # abbreviation aliases
+alias tz='sudo ntpd -qg'
 alias automt='sudo mount -a'
 alias lsc="colorls"
+
+alias gitl="git log --reverse --pretty=format:'%h %s' | nvim -c 'set ft=git'"
+
+function commit() {
+    hash=$1
+    route=$2
+    echo "https://github.com/$route/commit/$hash"
+}
+
+function whatproxy() {
+    sudo lsof -i :$1
+}
+
+function g() {
+    command=$1
+    branch=$2
+
+    if [ "$command" = "add" ]; then
+        git worktree add ../$branch $branch
+        cd ../$branch
+    elif [ "$command" = "create" ]; then
+        git worktree add ../$branch -b $branch
+        cd ../$branch
+    elif [ "$command" = "remove" ]; then
+        git worktree remove ../$branch
+    fi
+}
+
+function gche() {
+    suffix=$1
+    git checkout -b brighten/heap-overload-fix-$suffix
+}
+
+
+# recursively replace line in all files
+function recrep() {
+    FROM=$1
+    TO=$2
+    EXT=$3
+
+    if [ "$ext" = "" ]; then
+        find . -type f -print0 | xargs -0 sed -i '' -e "s/$FROM/$TO/g"
+    else
+        find . -type f -name "*.$ext" -print0 | xargs -0 sed -i '' -e "s/$FROM/$TO/g"
+    fi
+}
+
+function gaur() {
+    cd ~/.aur
+    git clone https://aur.archlinux.org/$1.git
+    cd $1
+    makepkg -si
+
+    echo "cd ~/.aur\ngit clone https://aur.archlinux.org/$1.git\ncd $1\nmakepkg -si" >> ~/.zsh_history
+}
 
 function catless() {
     output=$(cat $1)
@@ -50,11 +109,11 @@ alias mutt="neomutt"
 alias sl="ls"
 alias "cz commit"="ca"
 alias  vi="nvim"
-alias vim="nvim"
-alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+alias cfg='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias clip="clip.exe"
 alias rm="trash-put"
-
+alias v4l2reset="sudo rmmod v4l2loopback"
+alias cfgvim="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME nvim"
 
 # alias ls="ls -a"
 # alias sl="ls -a"
