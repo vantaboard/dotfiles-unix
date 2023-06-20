@@ -146,6 +146,7 @@ require('packer').startup({
         -- use 'gbprod/nord.nvim'
         use 'Yazeed1s/oh-lucy.nvim'
         -- navigation
+        use 's1n7ax/nvim-search-and-replace'
         use 'Pocco81/auto-save.nvim'
         use 'tpope/vim-fugitive'
         use 'nacro90/numb.nvim'
