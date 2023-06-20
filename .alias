@@ -113,7 +113,7 @@ alias cfg='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias clip="clip.exe"
 alias rm="trash-put"
 alias v4l2reset="sudo rmmod v4l2loopback"
-alias cfgvim="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME nvim"
+alias cvi="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME nvim"
 
 # alias ls="ls -a"
 # alias sl="ls -a"
