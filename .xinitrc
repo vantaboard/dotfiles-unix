@@ -26,7 +26,11 @@ if [ -f "$userresources" ]; then
 fi
 
 if [ -f "$usermodmap" ]; then
+    xmodmap -e "clear lock"
+    setxkbmap -option ctrl:nocaps
+    setxkbmap -option caps:escape
     xmodmap "$usermodmap"
+    xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 345 -0.8
 fi
 
 
