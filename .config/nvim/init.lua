@@ -44,7 +44,9 @@ require('packer').startup({
         use 'nvim-lua/plenary.nvim'
         -- lsp
         use { 'nvim-telescope/telescope-fzf-native.nvim', run =
-        -- use 'mhartington/formatter.nvim'
+        'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' }
+        use 'johmsalas/text-case.nvim'
+        use 'mhartington/formatter.nvim'
         use 'neovim/nvim-lspconfig'
         use 'nvim-treesitter/nvim-treesitter'
         use 'nvim-treesitter/nvim-treesitter-refactor'
@@ -92,7 +94,6 @@ require('packer').startup({
         use 'ray-x/aurora'
         use 'ray-x/starry.nvim'
         use 'tanvirtin/monokai.nvim'
-        use 'ofirgall/ofirkai.nvim'
         use 'savq/melange'
         use 'RRethy/nvim-base16'
         use 'fenetikm/falcon'
@@ -172,6 +173,8 @@ require('packer').startup({
         -- fun
         use 'wakatime/vim-wakatime'
         use 'jakewvincent/texmagic.nvim'
+        -- lang
+        use 'simrat39/rust-tools.nvim'
     end,
     config = {
         max_jobs = 10,
