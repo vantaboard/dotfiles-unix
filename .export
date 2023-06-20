@@ -1,6 +1,7 @@
 export MANPAGER='less -X';
 export EDITOR='nvim';
-export PATH="$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH";
+export PATH="{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:/home/blackboardd/.local/share/flatpak/exports/share:$PATH";
+# export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # Enable persistent REPL history for `node`.
 export NODE_REPL_HISTORY=~/.node_history;
