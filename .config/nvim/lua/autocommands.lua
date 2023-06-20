@@ -7,6 +7,11 @@ vim.api.nvim_create_autocmd('BufWrite', {
         require 'nvim-treesitter.query'.invalidate_query_cache()
     end
 })
+
+vim.cmd [[
+autocmd BufRead,BufNewFile tsconfig.json set filetype=jsonc
+]]
+
 --
 -- local group = vim.api.nvim_create_augroup("jump_last_position", { clear = true })
 -- vim.api.nvim_create_autocmd(
