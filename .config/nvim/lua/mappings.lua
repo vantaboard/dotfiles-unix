@@ -65,13 +65,55 @@ vim.api.nvim_set_keymap('n', '<leader>B', "<cmd>lua require'dap'.toggle_breakpoi
 vim.api.nvim_set_keymap('n', '<leader>c', "<cmd>lua require'dap'.continue()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader><leader>d', "<cmd>lua require'dapui'.toggle()<cr>", optsrs)
 
+-- create function that is a partial right of vim.keymap.set where the last arg is optsrs
+local function set_keymap(...)
+    local args = { ... }
+    table.insert(args, optsrs)
+    vim.keymap.set(unpack(args))
+end
+
 -- telescope
-vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<leader>fg', "<cmd>lua require('telescope.builtin').live_grep()<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers()<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<leader>fh', "<cmd>lua require('telescope.builtin').help_tags()<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<leader>/', "<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find({ fuzzy = false, case_mode = 'ignore_case' })<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<C-q>', "<cmd>lua require('telescope.builtin').quickfix()<cr>", optsrs)
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', function() builtin.find_files() end, optsrs)
+vim.keymap.set('n', '<leader>fg', function() builtin.live_grep() end, optsrs)
+vim.keymap.set('n', '<leader>fb', function() builtin.buffers() end, optsrs)
+vim.keymap.set('n', '<leader>fh', function() builtin.help_tags() end, optsrs)
+vim.keymap.set('n', '<leader>/',
+    function() builtin.current_buffer_fuzzy_find({ fuzzy = false, case_mode = 'ignore_case' }) end, optsrs)
+vim.keymap.set('n', '<leader>D', function() builtin.diagnostics({ bufnr = 0 }) end, optsrs)
+vim.keymap.set('n', '<leader>da', function() builtin.diagnostics() end, optsrs)
+vim.keymap.set('n', '<leader>dw', function()
+    builtin.diagnostics({
+        severity = vim.diagnostic.severity.WARN,
+    })
+end, optsrs)
+vim.keymap.set('n', '<leader>de', function()
+    builtin.diagnostics({
+        severity = vim.diagnostic.severity.ERROR,
+    })
+end, optsrs)
+vim.keymap.set('n', '<leader>gc', function() builtin.git_commits() end, optsrs)
+vim.keymap.set('n', '<leader>gC', function() builtin.git_bcommits() end, optsrs)
+vim.keymap.set('n', '<leader>gb', function() builtin.git_branches() end, optsrs)
+vim.keymap.set('n', '<leader>gs', function() builtin.git_status() end, optsrs)
+
+vim.cmd([[
+function!   QuickFixOpenAll()
+    if empty(getqflist())
+        return
+    endif
+    let s:prev_val = ""
+    for d in getqflist()
+        let s:curr_val = bufname(d.bufnr)
+        if (s:curr_val != s:prev_val)
+            exec "edit " . s:curr_val
+        endif
+        let s:prev_val = s:curr_val
+    endfor
+endfunction
+]])
+
+vim.api.nvim_set_keymap('n', '<leader>ka', ':call QuickFixOpenAll()<CR>', { noremap = true, silent = false })
 
 -- lua snippets
 vim.cmd [[
