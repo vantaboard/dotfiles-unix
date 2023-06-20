@@ -60,6 +60,11 @@ vim.api.nvim_set_keymap('n', '<leader>H', "<cmd>lua require'harpoon.mark'.add_fi
 vim.api.nvim_set_keymap('n', '<leader>ch', "<cmd>lua require'harpoon.mark'.clear_all()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>h', "<cmd>Telescope harpoon marks<cr>", optsrs)
 
+-- dap
+vim.api.nvim_set_keymap('n', '<leader>B', "<cmd>lua require'dap'.toggle_breakpoint()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader>c', "<cmd>lua require'dap'.continue()<cr>", optsrs)
+vim.api.nvim_set_keymap('n', '<leader><leader>d', "<cmd>lua require'dapui'.toggle()<cr>", optsrs)
+
 -- telescope
 vim.api.nvim_set_keymap('n', '<leader>ff', "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>fg', "<cmd>lua require('telescope.builtin').live_grep()<cr>", optsrs)
@@ -99,5 +104,15 @@ vim.cmd[[
     endfunction
 ]]
 
-vim.api.nvim_set_keymap('v', '<leader>g', '!pg_format<CR>', optsrs)
+-- leetcode
+vim.g.leetcode_browser = 'chrome'
+
+vim.cmd [[
+  nnoremap <leader>ll :LeetCodeList<cr>
+  nnoremap <leader>lt :LeetCodeTest<cr>
+  nnoremap <leader>ls :LeetCodeSubmit<cr>
+  nnoremap <leader>li :LeetCodeSignIn<cr>
+]]
+
+-- vim.api.nvim_set_keymap('v', '<leader>g', '!pg_format<CR>', optsrs)
 -- vim.api.nvim_set_keymap('n', '<leader>N', ':call HideBackground()<CR>', optsrs)

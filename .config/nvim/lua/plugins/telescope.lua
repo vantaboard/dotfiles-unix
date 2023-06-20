@@ -19,6 +19,7 @@ local open_in_nvim_tree = function(prompt_bufnr)
 
     vim.cmd("/" .. file_name)
 end
+require('telescope').load_extension('dap')
 
 require("telescope").setup {
     defaults = {

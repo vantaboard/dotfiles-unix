@@ -1,4 +1,5 @@
 -- lua/formatting.lua
+vim.g.copilot_filetypes = { VimspectorPrompt = false, TelescopePrompt = false, TelescopeResults = false }
 
 -- Remap space as leader key
 vim.cmd([[
