@@ -80,5 +80,8 @@
         "/home/blackboardd/.local/share/nvim/site/pack/packer/start/zenburn.nvim",
         "/home/blackboardd/.local/share/nvim/site/pack/packer/start/zephyrium",
         "${3rd}/luassert/library"
+    ],
+    "diagnostics.globals": [
+        "require"
     ]
 }
