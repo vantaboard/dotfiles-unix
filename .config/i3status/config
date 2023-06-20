@@ -30,8 +30,6 @@ order += "tztime local"
 order += "tztime ukraine"
 order += "tztime indonesia"
 
-# i3 status to track my calories
-
 cpu_usage {
         format = " cpu  %usage "
 }
