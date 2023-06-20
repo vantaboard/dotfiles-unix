@@ -1,5 +1,17 @@
 -- lua/mappings.lua
 
+-- function that grabs the name of the current file, and then formats it based on the git origin
+function gbu()
+    local branch = string.gsub(vim.fn.system('git rev-parse --abbrev-ref HEAD'), '\n', '')
+    local filename = string.gsub(string.gsub(vim.fn.expand('%'), vim.fn.system('git rev-parse --show-toplevel'), ''),
+        '\n', '')
+    local git_url = vim.fn.system('git remote get-url origin')
+    local git_url = string.gsub(git_url, ':', '/')
+    local git_url = string.gsub(git_url, 'git@', 'https://')
+    local git_url = string.gsub(git_url, '%.git', '/blob/' .. branch .. '/' .. filename)
+    vim.fn.system('firefox ' .. git_url)
+end
+
 function get_visual_selection()
     local s_start = vim.fn.getpos("'<")
     local s_end = vim.fn.getpos("'>")
@@ -14,6 +26,18 @@ function get_visual_selection()
     return table.concat(lines, '\n')
 end
 
+-- function that starts a pull request
+-- function pr(repo)
+function pr()
+    local branch = string.gsub(vim.fn.system('git rev-parse --abbrev-ref HEAD'), '\n', '')
+    local git_url = vim.fn.system('git remote get-url origin')
+    local git_url = string.gsub(git_url, ':', '/')
+    local git_url = string.gsub(git_url, 'git@', 'https://')
+    local git_url = string.gsub(git_url, '%.git', '/compare/' .. branch .. '?expand=1')
+    print(git_url)
+    vim.fn.system('firefox ' .. git_url)
+end
+
 local optsrsw = { noremap = true, silent = true, nowait = true }
 local optsrs = { noremap = true, silent = true }
 
@@ -26,9 +50,13 @@ vim.api.nvim_set_keymap('n', 'X', '"_d$', optsrsw)
 vim.api.nvim_set_keymap('n', '<leader><leader>y', 'v$hy', optsrsw)
 vim.api.nvim_set_keymap('n', '<leader>r', 'v$h"_dp`[', optsrsw)
 
+-- paste above or below
+vim.api.nvim_set_keymap('n', '<leader><leader>p', 'o<Esc>p', optsrsw)
+vim.api.nvim_set_keymap('n', '<leader><leader>P', 'O<Esc>p', optsrsw)
+
 -- vim color scheme switcher
-vim.api.nvim_set_keymap('n', '<leader>cp', ':PrevColorScheme<CR>', optsrs)
-vim.api.nvim_set_keymap('n', '<leader>cn', ':NextColorScheme<CR>', optsrs)
+-- vim.api.nvim_set_keymap('n', '<leader>cp', ':PrevColorScheme<CR>', optsrs)
+-- vim.api.nvim_set_keymap('n', '<leader>cn', ':NextColorScheme<CR>', optsrs)
 
 -- camelcasemotion
 vim.cmd [[
