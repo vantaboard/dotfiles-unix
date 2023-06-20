@@ -55,6 +55,7 @@ require('packer').startup({
         use 'jose-elias-alvarez/null-ls.nvim'
         use 'jose-elias-alvarez/typescript.nvim'
         -- ricing
+        use 'vantaboard/brighten-lush'
         use 'rktjmp/lush.nvim'
         use 'xolox/vim-misc'
         use 'vantaboard/vim-colorscheme-switcher'
