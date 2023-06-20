@@ -112,6 +112,10 @@ local on_attach = function(client, bufnr)
         buf_map(bufnr, "n", "<leader>q", ":!sqlfluff fix -fq --dialect=postgres %<cr>")
     end
 
+    if client.server_capabilities.inlayHintProvider then
+        vim.lsp.buf.inlay_hint(bufnr, true)
+    end
+
     -- if client.server_capabilities.document_formatting then
     --     vim.cmd("autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
     -- end
@@ -226,6 +230,26 @@ require('lspconfig').yamlls.setup {
     }
 }
 
+lspconfig.tsserver.setup({
+    root_dir = util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
+    init_options = {
+        preferences = {
+            includeInlayParameterNameHints = "all",
+            includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+            includeInlayFunctionParameterTypeHints = true,
+            includeInlayVariableTypeHints = true,
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayFunctionLikeReturnTypeHints = true,
+            includeInlayEnumMemberValueHints = true,
+            importModuleSpecifierPreference = 'non-relative'
+        },
+    },
+    on_attach = function(client, bufnr)
+        client.server_capabilities.document_formatting = false
+        client.server_capabilities.document_range_formatting = false
+        on_attach(client, bufnr)
+    end,
+})
 
 local null_ls = require("null-ls");
 
