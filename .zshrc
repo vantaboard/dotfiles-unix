@@ -84,3 +84,9 @@ eval $(thefuck --alias)
 
 eval $(keychain --quiet --eval --agents gpg $GIT_GPG_KEY)
 source $HOME/.keychain/`hostname`-sh-gpg
+
+export PATH=$PATH:/home/blackboardd/.go/bin
+
+export GOPATH=/home/blackboardd/go
+
+export PATH=$PATH:/home/blackboardd/go/bin
