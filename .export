@@ -1,7 +1,10 @@
 export MANPAGER='less -X';
 export EDITOR='nvim';
-export PATH="{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:/home/blackboardd/.local/share/flatpak/exports/share:$PATH";
-# export KUBECONFIG=/etc/kubernetes/admin.conf
+export PATH="{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:/home/blackboardd/.local/share/flatpak/exports/share:/home/blackboardd/.go/bin:/home/blackboardd/go/bin:$PATH";
+export HISTORY_PATH="$HOME/.local/share/zsh/history";
+export BROWSER=/usr/bin/google-chrome-stable-main
+export GIT_PAGER="diff-so-fancy"
+GIT_ALIAS=git
 
 # Enable persistent REPL history for `node`.
 export NODE_REPL_HISTORY=~/.node_history;
