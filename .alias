@@ -1,59 +1,27 @@
-ARM_COMMON_FLAGS="-static"
-ARM_CC_AS_FLAGS="-g -mfpu=neon -march=armv8-a"
-ARM_CXX_FLAGS="std=c++17"
+alias firefox=false
+alias gs=false
+alias rm=false
+alias gm=false
+alias vi=false
 
-alias firefox="firefox-nightly"
+abbr --quiet -S firefox="firefox-nightly"
+abbr --quiet -S fk='fuck'
+abbr --quiet -S gimmekeys='xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap'
+abbr --quiet -S tz='sudo ntpd -qg'
 
-# abbr mprapp='gh pr create -f -r creedmangrum -B master'
-# abbr mprapi='gh pr create -f -r creedmangrum -B master'
-# abbr prapp='gh pr create -f -r creedmangrum -B staging'
-# abbr prapi='gh pr create -f -r creedmangrum -B staging'
-# abbr gD="git branch -D"
-# abbr gr="git_return"
-# abbr gs="git status"
-# abbr gl="git log --reverse --pretty=format:'%h %s' | nvim -c 'set ft=git'"
-# abbr gp="git push"
-# abbr gpl="git pull"
-# abbr gimmekeys='xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap'
-# abbr gcp="git cherry-pick"
-
-# abbreviation aliases
-alias tz='sudo ntpd -qg'
-alias automt='sudo mount -a'
-alias lsc="colorls"
-
-alias gitl="git log --reverse --pretty=format:'%h %s' | nvim -c 'set ft=git'"
+# automt automatically mounts all available drives
+abbr --quiet -S automt='sudo mount -a'
+abbr --quiet -S lsc="colorls"
 
 function commit() {
-    hash=$1
-    route=$2
+    hash=$2
+    route=$1
     echo "https://github.com/$route/commit/$hash"
 }
 
 function whatproxy() {
     sudo lsof -i :$1
 }
-
-function g() {
-    command=$1
-    branch=$2
-
-    if [ "$command" = "add" ]; then
-        git worktree add ../$branch $branch
-        cd ../$branch
-    elif [ "$command" = "create" ]; then
-        git worktree add ../$branch -b $branch
-        cd ../$branch
-    elif [ "$command" = "remove" ]; then
-        git worktree remove ../$branch
-    fi
-}
-
-function gche() {
-    suffix=$1
-    git checkout -b brighten/heap-overload-fix-$suffix
-}
-
 
 # recursively replace line in all files
 function recrep() {
@@ -66,15 +34,6 @@ function recrep() {
     else
         find . -type f -name "*.$ext" -print0 | xargs -0 sed -i '' -e "s/$FROM/$TO/g"
     fi
-}
-
-function gaur() {
-    cd ~/.aur
-    git clone https://aur.archlinux.org/$1.git
-    cd $1
-    makepkg -si
-
-    echo "cd ~/.aur\ngit clone https://aur.archlinux.org/$1.git\ncd $1\nmakepkg -si" >> ~/.zsh_history
 }
 
 function catless() {
@@ -102,32 +61,29 @@ function catless() {
     eval "${nvim_commands[@]}"
 }
 
-# automt automatically mounts all available drives
-alias music='vlc --recursive expand /run/media/blackboardd/1A52C24752C226FB/music /home/blackboardd/Music /home/blackboardd/Soulseek\ Downloads &'
-alias slackt="slack-term -config ~/.slack"
-alias mutt="neomutt"
-alias sl="ls"
-alias "cz commit"="ca"
-alias  vi="nvim"
-alias cfg='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
-alias clip="clip.exe"
-alias rm="trash-put"
-alias v4l2reset="sudo rmmod v4l2loopback"
-alias vic="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME nvim"
+abbr --quiet -S slackt="slack-term -config ~/.slack"
+abbr --quiet -S mutt="neomutt"
+abbr --quiet -S sl="ls"
+alias vi=nvim
 
-# alias ls="ls -a"
-# alias sl="ls -a"
-# alias lsh="ls"
-# alias slh="ls"
+function move_to_config_env {
+  if [ "$1" = "on" ]; then
+    export GIT_DIR=$HOME/.cfg
+    export GIT_WORK_TREE=$HOME
+    return
+  fi
 
-# alias gdb="gdb-multiarch"
-# alias g++="arm-linux-gnueabihf-g++ $ARM_CXX_FLAGS $ARM_CC_FLAGS $ARM_COMMON_FLAGS"
-# alias gcc="arm-linux-gnueabihf-gcc $ARM_CC_AS_FLAGS $ARM_COMMON_FLAGS"
-# alias  ld="arm-linux-gnueabihf-ld $ARM_COMMON_FLAGS"
-# alias  as="arm-linux-gnueabihf-as $ARM_CC_AS_FLAGS"
+  if [ "$1" = "off" ]; then
+    export GIT_DIR=
+    export GIT_WORK_TREE=
+    return
+  fi
+}
 
-bindkey "^X" abbr-expand
+abbr --quiet -S "cfg"="move_to_config_env"
 
-complete -F _complete_alias vi
-complete -F _complete_alias vim
-complete -F _complete_alias config
+abbr --quiet -S clip="clip.exe"
+abbr --quiet -S rm="trash-put"
+abbr --quiet -S v4l2reset="sudo rmmod v4l2loopback"
+
+bindkey " " abbr-expand-and-space
