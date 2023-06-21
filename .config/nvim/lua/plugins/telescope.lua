@@ -25,6 +25,7 @@ require("telescope").load_extension("ui-select")
 require('telescope').load_extension('fzf')
 require("telescope").load_extension("harpoon")
 require('telescope').load_extension('dap')
+require("telescope").load_extension("undo")
 
 require('textcase').setup {}
 require('telescope').load_extension('textcase')
@@ -56,3 +57,14 @@ require("telescope").setup {
         }
     }
 }
+
+-- disable backups
+vim.cmd([[
+    set noswapfile
+    set nobackup
+    set undofile
+    set undodir=~/.vim/undo
+]])
+
+local optsrws = { noremap = true, silent = true, nowait = true }
+vim.keymap.set("n", "<leader>u", "<cmd>Telescope undo<cr>")

@@ -163,7 +163,7 @@ require('packer').startup({
         use 'jbyuki/instant.nvim'
         use 'akinsho/bufferline.nvim'
         use 'haya14busa/is.vim'
-        use 'mbbill/undotree'
+        use 'debugloop/telescope-undo.nvim'
         use 'tpope/vim-surround'
         use 'tpope/vim-commentary'
         use 'famiu/bufdelete.nvim'
@@ -188,7 +188,6 @@ require('autocommands')
 require('mappings')
 require('tsconfig')
 
-require('undotree_conf')
 vim.cmd('source $HOME/.config/nvim/lua/restore_cursor.vim')
 
 -- plugin configurations
