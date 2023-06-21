@@ -260,7 +260,9 @@ null_ls.setup({
         null_ls.builtins.diagnostics.sqlfluff.with({
             extra_args = { "--dialect=postgres" },
         }),
+        null_ls.builtins.diagnostics.eslint_d.with({}),
         null_ls.builtins.code_actions.eslint_d.with({}),
+        null_ls.builtins.formatting.eslint_d.with({}),
         null_ls.builtins.formatting.prettier.with({}),
     },
     on_attach = function(client, bufnr)
