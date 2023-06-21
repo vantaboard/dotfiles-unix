@@ -15,6 +15,11 @@ vim.cmd([[
 -- inverted cursor please!
 vim.opt.guicursor = ""
 
+-- wrap
+vim.opt.wrap = true
+vim.opt.linebreak = true
+vim.opt.showbreak = "↳  "
+
 -- camelCaseMotion
 vim.g.camelcasemotion_key = '<leader>'
 
