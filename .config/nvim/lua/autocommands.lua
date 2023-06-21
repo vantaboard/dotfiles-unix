@@ -9,5 +9,7 @@ vim.api.nvim_create_autocmd('BufWrite', {
 })
 
 vim.cmd [[
-autocmd BufRead,BufNewFile tsconfig.json set filetype=jsonc
+autocmd BufNewFile,BufRead tsconfig.json setfiletype jsonc
+autocmd BufNewFile,BufRead ~/.alias-git setfiletype csh
+autocmd BufNewFile,BufRead ~/.bindings setfiletype csh
 ]]
