@@ -184,5 +184,8 @@ vim.cmd [[
   nnoremap <leader>li :LeetCodeSignIn<cr>
 ]]
 
+-- undotree
+vim.api.nvim_set_keymap('n', '<leader>u', ':UndotreeToggle<CR>', optsrsw)
+
 -- vim.api.nvim_set_keymap('v', '<leader>g', '!pg_format<CR>', optsrs)
 -- vim.api.nvim_set_keymap('n', '<leader>N', ':call HideBackground()<CR>', optsrs)

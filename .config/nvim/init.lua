@@ -39,7 +39,10 @@ require('packer').startup({
         use 'nvim-telescope/telescope-ui-select.nvim'
         use {
             'nvim-telescope/telescope.nvim',
-            tag = '0.1.2'
+            tag = '0.1.2',
+            dependencies = {
+                'debugloop/telescope-undo.nvim',
+            }
         }
         use 'nvim-lua/plenary.nvim'
         -- lsp
@@ -163,7 +166,7 @@ require('packer').startup({
         use 'jbyuki/instant.nvim'
         use 'akinsho/bufferline.nvim'
         use 'haya14busa/is.vim'
-        use 'debugloop/telescope-undo.nvim'
+        use 'mbbill/undotree'
         use 'tpope/vim-surround'
         use 'tpope/vim-commentary'
         use 'famiu/bufdelete.nvim'
