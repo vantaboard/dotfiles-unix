@@ -196,7 +196,6 @@ vim.cmd('source $HOME/.config/nvim/lua/restore_cursor.vim')
 -- plugin configurations
 require('plugins.colorizer')
 require('plugins.feline')
-require('plugins.goto-preview')
 require('plugins.lspconfig')
 require('plugins.luasnip')
 require('plugins.numb')
