@@ -1,15 +1,23 @@
 -- lua/mappings.lua
 
+local Job = require('plenary.job')
+
 -- function that grabs the name of the current file, and then formats it based on the git origin
-function gbu()
+function gbu(clipboard)
     local branch = string.gsub(vim.fn.system('git rev-parse --abbrev-ref HEAD'), '\n', '')
     local filename = string.gsub(string.gsub(vim.fn.expand('%'), vim.fn.system('git rev-parse --show-toplevel'), ''),
         '\n', '')
     local git_url = vim.fn.system('git remote get-url origin')
-    local git_url = string.gsub(git_url, ':', '/')
-    local git_url = string.gsub(git_url, 'git@', 'https://')
-    local git_url = string.gsub(git_url, '%.git', '/blob/' .. branch .. '/' .. filename)
-    vim.fn.system('firefox ' .. git_url)
+    git_url = string.gsub(git_url, ':', '/')
+    git_url = string.gsub(git_url, 'git@', 'https://')
+    git_url = string.gsub(git_url, '%.git', '/blob/' .. branch .. '/' .. filename)
+    git_url = string.gsub(git_url, '\n', '')
+
+    print(git_url)
+
+    if (clipboard) then
+        vim.fn.setreg('+', git_url)
+    end
 end
 
 function get_visual_selection()
@@ -28,18 +36,63 @@ end
 
 -- function that starts a pull request
 -- function pr(repo)
-function pr()
-    local branch = string.gsub(vim.fn.system('git rev-parse --abbrev-ref HEAD'), '\n', '')
-    local git_url = vim.fn.system('git remote get-url origin')
-    local git_url = string.gsub(git_url, ':', '/')
-    local git_url = string.gsub(git_url, 'git@', 'https://')
-    local git_url = string.gsub(git_url, '%.git', '/compare/' .. branch .. '?expand=1')
-    print(git_url)
-    vim.fn.system('firefox ' .. git_url)
+function pr(clipboard)
+    local function clipboard_job(url)
+        return Job:new({
+            command = 'xclip',
+            args = { '-selection', 'clipboard' },
+            writer = url,
+        })
+    end
+
+    local function branch_job(url)
+        return Job:new({
+            command = 'git',
+            args = { 'rev-parse', '--abbrev-ref', 'HEAD' },
+            on_stdout = function(_, branch)
+                url = url:gsub(':', '/')
+                url = url:gsub('git@', 'https://')
+                url = url:gsub('%.git', '/compare/' .. branch .. '?expand=1')
+                url = url:gsub('\n', '')
+
+                print(url)
+
+                if (clipboard) then
+                    clipboard_job(url):start()
+                end
+            end,
+        })
+    end
+
+    local git_url_job = Job:new({
+        command = 'git',
+        args = { 'remote', 'get-url', 'origin' },
+        on_stdout = function(_, url)
+            branch_job(url):start()
+        end
+    })
+
+    Job:new({
+        command = 'gh',
+        args = { 'pr', 'view', '--json', 'url' },
+        on_stdout = function(_, url)
+            url = url:gsub('^{"url":"', ''):gsub('"}$', '')
+            print(url)
+
+            if (clipboard) then
+                clipboard_job(url):start()
+            end
+        end,
+        on_stderr = function()
+            git_url_job:start()
+        end,
+    }):start()
 end
 
 local optsrsw = { noremap = true, silent = true, nowait = true }
 local optsrs = { noremap = true, silent = true }
+
+vim.api.nvim_set_keymap('n', '<leader>p', '<cmd>lua pr(true)<CR>', optsrs)
 
 -- x removes
 vim.api.nvim_set_keymap('n', '<leader>x', '"_d', optsrs)
