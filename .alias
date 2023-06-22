@@ -1,8 +1,8 @@
 alias firefox=false
 alias gs=false
-alias rm=false
 alias gm=false
 alias vi=false
+alias rm="trash-put"
 
 abbr --quiet -S firefox="firefox-nightly"
 abbr --quiet -S fk='fuck'
@@ -19,7 +19,7 @@ function commit() {
     echo "https://github.com/$route/commit/$hash"
 }
 
-function whatproxy() {
+function whatport() {
     sudo lsof -i :$1
 }
 
@@ -83,7 +83,6 @@ function move_to_config_env {
 abbr --quiet -S "cfg"="move_to_config_env"
 
 abbr --quiet -S clip="clip.exe"
-abbr --quiet -S rm="trash-put"
 abbr --quiet -S v4l2reset="sudo rmmod v4l2loopback"
 
 bindkey " " abbr-expand-and-space
