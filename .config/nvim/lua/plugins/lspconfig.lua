@@ -112,9 +112,9 @@ local on_attach = function(client, bufnr)
         buf_map(bufnr, "n", "<leader>q", ":!sqlfluff fix -fq --dialect=postgres %<cr>")
     end
 
-    if client.server_capabilities.inlayHintProvider then
-        vim.lsp.buf.inlay_hint(bufnr, true)
-    end
+    -- if client.server_capabilities.inlayHintProvider then
+    --     vim.lsp.buf.inlay_hint(bufnr, true)
+    -- end
 
     -- if client.server_capabilities.document_formatting then
     --     vim.cmd("autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
