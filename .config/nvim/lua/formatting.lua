@@ -32,6 +32,9 @@ vim.g.camelcasemotion_key = '<leader>'
 vim.cmd([[
     colo brighten-light
 ]])
+
+vim.api.nvim_set_hl(0, 'LspInlayHint', { fg = "#002b80" })
+
 -- unicode
 vim.cmd([[
     set encoding=utf8
