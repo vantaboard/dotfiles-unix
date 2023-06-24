@@ -1,0 +1,22 @@
+#!/usr/bin/bash
+declare -a commands=(
+    // commands go here
+)
+
+function edit_script ()
+{
+    texec="nvim ${BASH_SOURCE[0]}"
+    term="termite -e \"$texec\""
+    /usr/bin/zsh -c "$term"
+}
+
+
+commands_string="${commands[*]}"
+collated="${commands_string// /\\n}"
+selection=$(echo -e "$collated" | dmenu)
+
+if [ $? = 4 ]; then
+    edit_script
+fi
+
+/usr/bin/zsh -c "$selection"
