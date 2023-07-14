@@ -141,11 +141,6 @@ vim.api.nvim_set_keymap('n', '<leader>H', "<cmd>lua require'harpoon.mark'.add_fi
 vim.api.nvim_set_keymap('n', '<leader>ch', "<cmd>lua require'harpoon.mark'.clear_all()<cr>", optsrs)
 vim.api.nvim_set_keymap('n', '<leader>h', "<cmd>Telescope harpoon marks<cr>", optsrs)
 
--- dap
-vim.api.nvim_set_keymap('n', '<leader>B', "<cmd>lua require'dap'.toggle_breakpoint()<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<leader>c', "<cmd>lua require'dap'.continue()<cr>", optsrs)
-vim.api.nvim_set_keymap('n', '<leader><leader>d', "<cmd>lua require'dapui'.toggle()<cr>", optsrs)
-
 -- create function that is a partial right of vim.keymap.set where the last arg is optsrs
 local function set_keymap(...)
     local args = { ... }
