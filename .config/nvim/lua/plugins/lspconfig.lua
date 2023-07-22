@@ -2,47 +2,37 @@ require("neodev").setup({})
 local util = require("lspconfig/util")
 
 local lspconfig = require("lspconfig")
-local buf_map = function(bufnr, mode, lhs, rhs, opts)
-    vim.api.nvim_buf_set_keymap(bufnr, mode, lhs, rhs, opts or {
-        silent = true,
-    })
-end
 
-local cmp = require 'cmp'
-local lspkind = require('lspkind')
+local cmp = require("cmp")
+local lspkind = require("lspkind")
 
 cmp.setup({
     snippet = {
         expand = function(args)
-            require('luasnip').lsp_expand(args.body)
+            require("luasnip").lsp_expand(args.body)
         end,
     },
     mapping = cmp.mapping.preset.insert({
-        ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-        ['<C-f>'] = cmp.mapping.scroll_docs(4),
-        ['<C-Space>'] = cmp.mapping.complete(),
-        ['<C-e>'] = cmp.mapping.abort(),
-        ['<C-J>'] = cmp.mapping.confirm({ select = true }),
+        ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+        ["<C-f>"] = cmp.mapping.scroll_docs(4),
+        ["<C-Space>"] = cmp.mapping.complete(),
+        ["<C-e>"] = cmp.mapping.abort(),
+        ["<C-j>"] = cmp.mapping.confirm({ select = true }),
     }),
     sources = cmp.config.sources({
-        { name = 'nvim_lsp_signature_help' },
-        { name = 'nvim_lsp' },
-        { name = 'luasnip' },
+        { name = "luasnip" },
+        { name = "nvim_lsp_signature_help" },
+        { name = "nvim_lsp" },
     }, {
-        { name = 'buffer' },
+        { name = "buffer" },
     }),
     formatting = {
         format = lspkind.cmp_format({
-            mode = 'symbol', -- show only symbol annotations
-            maxwidth = 50,   -- prevent the popup from showing more than provided characters (e.g 50 will not show more than 50 characters)
+            mode = "symbol",
+            maxwidth = 50,
             with_text = true,
-            -- The function below will be called before any actual modifications from lspkind
-            -- so that you can provide more controls on popup customization. (See [#30](https://github.com/onsails/lspkind-nvim/pull/30))
-            before = function(entry, vim_item)
-                return vim_item
-            end
-        })
-    }
+        }),
+    },
 })
 
 vim.cmd [[
@@ -77,6 +67,8 @@ cmp.setup.cmdline(':', {
     })
 })
 
+vim.cmd('highlight! default link CmpItemKind CmpItemMenuDefault')
+vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 
 
 -- Setup lspconfig.
@@ -107,18 +99,44 @@ local on_attach = function(client, bufnr)
     buf_map(bufnr, "n", "<Leader>va", "<cmd>lua vim.diagnostic.open_float()<cr>")
     buf_map(bufnr, "i", "<C-x><C-x>", "<cmd>lua vim.lsp.buf.signature_help()<cr>")
 
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+local on_attach = function()
+    vim.keymap.set("n", "<leader>d", vim.lsp.buf.definition)
+    vim.keymap.set("n", "gr", vim.lsp.buf.rename)
+    vim.keymap.set("n", "gy", vim.lsp.buf.type_definition)
+    vim.keymap.set("n", "K", vim.lsp.buf.hover)
+    vim.keymap.set("n", "<leader>r", vim.lsp.buf.references)
+    vim.keymap.set("n", "<leader>q", function()
+        vim.lsp.buf.format({ async = true })
+    end)
+    vim.keymap.set("v", "<leader>q", vim.lsp.buf.format)
+    vim.keymap.set("n", "<leader>,", function()
+        vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+    end)
+    vim.keymap.set("n", "<leader>.", function()
+        vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+    end)
+    vim.keymap.set("n", "<leader><leader>,", function()
+        vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.WARN })
+    end)
+    vim.keymap.set("n", "<leader><leader>.", function()
+        vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.WARN })
+    end)
+    vim.keymap.set("n", "<leader><", vim.diagnostic.goto_prev)
+    vim.keymap.set("n", "<leader>>", vim.diagnostic.goto_next)
+    vim.keymap.set("n", "<leader>a", vim.lsp.buf.code_action)
+    vim.keymap.set("n", "<Leader>va", vim.diagnostic.open_float)
+    vim.keymap.set("i", "<C-x><C-x>", vim.lsp.buf.signature_help)
+
     -- if the file is .sql
-    if (vim.bo.filetype == "sql") then
-        buf_map(bufnr, "n", "<leader>q", ":!sqlfluff fix -fq --dialect=postgres %<cr>")
+    if vim.bo.filetype == "sql" then
+        vim.keymap.set(
+            "n",
+            "<leader>q",
+            ":!sqlfluff fix -fq --dialect=postgres %<cr>"
+        )
     end
-
-    -- if client.server_capabilities.inlayHintProvider then
-    --     vim.lsp.buf.inlay_hint(bufnr, true)
-    -- end
-
-    -- if client.server_capabilities.document_formatting then
-    --     vim.cmd("autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_sync()")
-    -- end
 end
 
 lspconfig.jsonls.setup({
@@ -135,12 +153,14 @@ local rt = require("rust-tools")
 
 rt.setup({
     server = {
-        on_attach = function(_, bufnr)
-            -- Hover actions
-            vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions, { buffer = bufnr })
-            -- Code action groups
-            vim.keymap.set("n", "<leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
-            on_attach(_, bufnr)
+        on_attach = function()
+            vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions)
+            vim.keymap.set(
+                "n",
+                "<leader>a",
+                rt.code_action_group.code_action_group
+            )
+            on_attach()
         end,
     },
 })
@@ -196,39 +216,44 @@ lspconfig.texlab.setup({
             auxDirectory = ".",
             bibtexFormatter = "texlab",
             build = {
-                args = { "-pdf", "-interaction=nonstopmode", "-synctex=1", "%f" },
+                args = {
+                    "-pdf",
+                    "-interaction=nonstopmode",
+                    "-synctex=1",
+                    "%f",
+                },
                 executable = "pdflatex",
                 forwardSearchAfter = false,
-                onSave = true
+                onSave = true,
             },
             chktex = {
                 onEdit = false,
-                onOpenAndSave = false
+                onOpenAndSave = false,
             },
             diagnosticsDelay = 300,
             formatterLineLength = 80,
             forwardSearch = {
-                args = {}
+                args = {},
             },
             latexFormatter = "latexindent",
             latexindent = {
-                modifyLineBreaks = false
-            }
-        }
-    },
-    on_attach = on_attach
-})
-
-require('lspconfig').yamlls.setup {
-    settings = {
-        yaml = {
-            schemas = {
-                ["https://json.schemastore.org/github-workflow.json"] = "/.github/workflows/*",
-                ["https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json"] = "docker-compose.yml"
+                modifyLineBreaks = false,
             },
         },
-    }
-}
+    },
+    on_attach = on_attach,
+})
+
+require("lspconfig").yamlls.setup({
+    settings = {
+        yaml = {
+            schemaStore = {
+                enable = false,
+            },
+            schemas = require("schemastore").yaml.schemas(),
+        },
+    },
+})
 
 lspconfig.tsserver.setup({
     root_dir = util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
@@ -251,7 +276,7 @@ lspconfig.tsserver.setup({
     end,
 })
 
-local null_ls = require("null-ls");
+local null_ls = require("null-ls")
 
 null_ls.setup({
     root_dir = require("null-ls.utils").root_pattern("tsconfig.json"),
@@ -284,7 +309,7 @@ null_ls.setup({
     end
 })
 
-lspconfig.clangd.setup {
+lspconfig.clangd.setup({
     cmd = {
         "clangd",
         "--background-index",
@@ -294,9 +319,9 @@ lspconfig.clangd.setup {
     filetypes = { "c", "cc", "cpp", "objc", "objcpp", "cuda", "proto" },
     capabilities = capabilities,
     on_attach = on_attach,
-}
+})
 
-lspconfig.pyright.setup {
+lspconfig.pyright.setup({
     capabilities = capabilities,
-    on_attach = on_attach
-}
+    on_attach = on_attach,
+})
