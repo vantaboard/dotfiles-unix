@@ -147,7 +147,7 @@ end)
 vim.keymap.set("n", "<leader>R", ":Telescope resume<cr>")
 
 -- get all pickers
-vim.keymap.set("n", "<leader>g", ":Telescope<cr>")
+vim.keymap.set("n", "<leader>p", ":Telescope<cr>")
 
 -- yank history
 vim.keymap.set("n", "<leader>y", ":Telescope yank_history<cr>")
