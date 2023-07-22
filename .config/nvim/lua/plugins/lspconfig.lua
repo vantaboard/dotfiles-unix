@@ -1,4 +1,6 @@
 require("neodev").setup({})
+require("neoconf").setup({})
+
 local util = require("lspconfig/util")
 
 local lspconfig = require("lspconfig")
@@ -6,6 +8,7 @@ local lspconfig = require("lspconfig")
 local cmp = require("cmp")
 local lspkind = require("lspkind")
 
+require("luasnip.loaders.from_vscode").lazy_load()
 cmp.setup({
     snippet = {
         expand = function(args)
@@ -35,69 +38,56 @@ cmp.setup({
     },
 })
 
-vim.cmd [[
-    set completeopt=menuone,noinsert,noselect
-    highlight! default link CmpItemKind CmpItemMenuDefault
-]]
-
--- Set configuration for specific filetype.
-cmp.setup.filetype('gitcommit', {
+cmp.setup.filetype("gitcommit", {
     sources = cmp.config.sources({
-        { name = 'cmp_git' }, -- You can specify the `cmp_git` source if you were installed it.
+        { name = "git" },
     }, {
-        { name = 'buffer' },
-    })
+        { name = "buffer" },
+    }),
 })
 
--- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
-cmp.setup.cmdline({ '/', '?' }, {
+cmp.setup.cmdline({ "/", "?" }, {
     mapping = cmp.mapping.preset.cmdline(),
     sources = {
-        { name = 'buffer' }
-    }
+        { name = "buffer" },
+    },
 })
 
--- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
-cmp.setup.cmdline(':', {
+cmp.setup.cmdline(":", {
     mapping = cmp.mapping.preset.cmdline(),
     sources = cmp.config.sources({
-        { name = 'path' }
+        { name = "path" },
     }, {
-        { name = 'cmdline' }
-    })
+        { name = "cmdline" },
+    }),
 })
 
 vim.cmd('highlight! default link CmpItemKind CmpItemMenuDefault')
 vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 
+cmp.setup.filetype("gitcommit", {
+    sources = cmp.config.sources({
+        { name = "cmp_git" },
+    }, {
+        { name = "buffer" },
+    }),
+})
 
--- Setup lspconfig.
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+cmp.setup.cmdline({ "/", "?" }, {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = {
+        { name = "buffer" },
+    },
+})
 
-local on_attach = function(client, bufnr)
-    vim.cmd("command! LspImplementation lua vim.lsp.buf.implementation()")
-    buf_map(bufnr, "n", "<leader>d", "<cmd>lua vim.lsp.buf.definition()<cr>")
-    buf_map(bufnr, "n", "gr", "<cmd>lua vim.lsp.buf.rename()<cr>")
-    buf_map(bufnr, "n", "gy", "<cmd>lua vim.lsp.buf.type_definition()<cr>")
-    buf_map(bufnr, "n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>")
-    buf_map(bufnr, "n", "<leader>r", "<cmd>lua vim.lsp.buf.references()<cr>")
-    buf_map(bufnr, "n", "<leader>q",
-        '<cmd>lua vim.lsp.buf.format({ async = true })<cr>')
-    buf_map(bufnr, "v", "<leader>q",
-        '<cmd>lua vim.lsp.buf.format()<cr>')
-    buf_map(bufnr, "n", "<leader>,",
-        "<cmd>lua vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })<cr>")
-    buf_map(bufnr, "n", "<leader>.",
-        "<cmd>lua vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })<cr>")
-    buf_map(bufnr, "n", "<leader><leader>,",
-        "<cmd>lua vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.WARN })<cr>")
-    buf_map(bufnr, "n", "<leader><leader>.",
-        "<cmd>lua vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.WARN })<cr>")
-    buf_map(bufnr, "n", "<leader><", "<cmd>lua vim.diagnostic.goto_prev()<cr>")
-    buf_map(bufnr, "n", "<leader>>", "<cmd>lua vim.diagnostic.goto_next()<cr>")
-    buf_map(bufnr, "n", "<leader>a", "<cmd>lua vim.lsp.buf.code_action()<cr>")
-    buf_map(bufnr, "n", "<Leader>va", "<cmd>lua vim.diagnostic.open_float()<cr>")
-    buf_map(bufnr, "i", "<C-x><C-x>", "<cmd>lua vim.lsp.buf.signature_help()<cr>")
+cmp.setup.cmdline(":", {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = cmp.config.sources({
+        { name = "path" },
+    }, {
+        { name = "cmdline" },
+    }),
+})
 
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
@@ -165,7 +155,22 @@ rt.setup({
     },
 })
 
-lspconfig.gopls.setup {
+lspconfig.lua_ls.setup({
+    capabilities = capabilities,
+    on_attach = on_attach,
+    settings = {
+        Lua = {
+            diagnostics = {
+                globals = { "vim" },
+            },
+            completion = {
+                callSnippet = "Replace",
+            },
+        },
+    },
+})
+
+lspconfig.gopls.setup({
     capabilities = capabilities,
     on_attach = on_attach,
     cmd = { "gopls", "serve" },
@@ -177,34 +182,6 @@ lspconfig.gopls.setup {
                 unusedparams = true,
             },
             staticcheck = true,
-        },
-    },
-}
-
-lspconfig.lua_ls.setup({
-    capabilities = capabilities,
-    on_attach = function(client, bufnr)
-        client.server_capabilities.document_formatting = false
-        client.server_capabilities.document_range_formatting = false
-        on_attach(client, bufnr)
-    end,
-    settings = {
-        Lua = {
-            format = {
-                enable = true,
-            },
-            diagnostics = {
-                neededFileStatus = {
-                    ["codestyle-check"] = "Any",
-                },
-                groupSeverity = { ["codestyle-check"] = "Warning", },
-            },
-            workspace = {
-                checkThirdParty = false,
-            },
-            completion = {
-                callSnippet = "Replace",
-            },
         },
     },
 })
@@ -255,25 +232,44 @@ require("lspconfig").yamlls.setup({
     },
 })
 
-lspconfig.tsserver.setup({
-    root_dir = util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
-    init_options = {
-        preferences = {
-            includeInlayParameterNameHints = "all",
-            includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-            includeInlayFunctionParameterTypeHints = true,
-            includeInlayVariableTypeHints = true,
-            includeInlayPropertyDeclarationTypeHints = true,
-            includeInlayFunctionLikeReturnTypeHints = true,
-            includeInlayEnumMemberValueHints = true,
-            importModuleSpecifierPreference = 'non-relative'
+require("typescript").setup({
+    server = {
+        root_dir = util.root_pattern(
+            "package.json",
+            "tsconfig.json",
+            "jsconfig.json",
+            ".git"
+        ),
+        on_attach = function()
+            on_attach()
+        end,
+        settings = {
+            javascript = {
+                inlayHints = {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
+                    importModuleSpecifierPreference = "non-relative",
+                },
+            },
+            typescript = {
+                inlayHints = {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
+                    importModuleSpecifierPreference = "non-relative",
+                },
+            },
         },
     },
-    on_attach = function(client, bufnr)
-        client.server_capabilities.document_formatting = false
-        client.server_capabilities.document_range_formatting = false
-        on_attach(client, bufnr)
-    end,
 })
 
 local null_ls = require("null-ls")
@@ -285,28 +281,26 @@ null_ls.setup({
         null_ls.builtins.diagnostics.sqlfluff.with({
             extra_args = { "--dialect=postgres" },
         }),
-        null_ls.builtins.diagnostics.eslint_d.with({}),
-        null_ls.builtins.code_actions.eslint_d.with({}),
-        null_ls.builtins.formatting.eslint_d.with({}),
-        null_ls.builtins.formatting.prettier.with({}),
+        null_ls.builtins.completion.luasnip,
+        null_ls.builtins.formatting.uncrustify,
+        null_ls.builtins.formatting.clang_format,
+        null_ls.builtins.diagnostics.cpplint,
+        null_ls.builtins.diagnostics.cppcheck,
+        null_ls.builtins.hover.printenv,
+        null_ls.builtins.formatting.shellharden,
+        null_ls.builtins.diagnostics.shellcheck,
+        null_ls.builtins.code_actions.shellcheck,
+        null_ls.builtins.formatting.beautysh,
+        null_ls.builtins.formatting.stylua,
+        null_ls.builtins.diagnostics.eslint_d,
+        null_ls.builtins.code_actions.eslint_d,
+        null_ls.builtins.formatting.eslint_d,
+        null_ls.builtins.formatting.prettier,
     },
-    on_attach = function(client, bufnr)
-        -- https://www.reddit.com/r/neovim/comments/zv91wz/range_formatting/
-        local range_formatting = function()
-            local start_row, _ = unpack(vim.api.nvim_buf_get_mark(0, "<"))
-            local end_row, _ = unpack(vim.api.nvim_buf_get_mark(0, ">"))
-            vim.lsp.buf.format({
-                range = {
-                    ["start"] = { start_row, 0 },
-                    ["end"] = { end_row, 0 },
-                },
-                async = true,
-            })
-        end
-
+    on_attach = function()
         vim.keymap.set("v", "<leader>f", vim.lsp.buf.format)
-        on_attach(client, bufnr)
-    end
+        on_attach()
+    end,
 })
 
 lspconfig.clangd.setup({
