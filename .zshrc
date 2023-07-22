@@ -16,6 +16,7 @@ zplug "aubreypwd/zsh-plugin-fd"
 zplug "urbainvaes/fzf-marks"
 zplug "sobolevn/wakatime-zsh-plugin"
 zplug "olets/zsh-abbr"
+zplug "marlonrichert/zsh-edit"
 zplug "wfxr/forgit", defer:2
 zplug "Aloxaf/fzf-tab", defer:2
 zplug "zdharma-continuum/fast-syntax-highlighting", defer:3
@@ -40,7 +41,6 @@ export ZSH="$HOME/.oh-my-zsh"
 /usr/bin/keychain --quiet $HOME/.ssh/id_ed25519
 source $HOME/.keychain/`hostname`-sh
 
-skip_global_compinit=1
 ZSH_DISABLE_COMPFIX=true
 ZSH_THEME="frontcube"
 DISABLE_UNTRACKED_FILES_DIRTY="true"
@@ -48,7 +48,7 @@ HYPHEN_INSENSITIVE="true"
 MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
 
-plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions)
+plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist)
 
 bindkey -r ^s
 bindkey ^j autosuggest-accept
@@ -57,22 +57,24 @@ fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
 source $ZSH/oh-my-zsh.sh
 
 declare -a files=(
-  "export"
-  "env"
-  "alias"
-  "alias-git"
-  "bindings"
-  "inputrc"
-  "fzf.zsh"
+    "export"
+    "env"
+    "functions"
+    "alias"
+    "alias-git"
+    "bindings"
+    "inputrc"
+    "fzf.zsh"
+    "bash_functions"
 )
 
 function source_files {
-  files=("$@")
+    files=("$@")
 
-  for file in "${files[@]}"
-  do
-     source "$HOME/.$file"
-  done
+    for file in "${files[@]}"
+    do
+        source "$HOME/.$file"
+    done
 }
 
 source_files $files
@@ -80,3 +82,46 @@ source_files $files
 eval $(thefuck --alias)
 eval $(keychain --quiet --eval --agents gpg $GIT_GPG_KEY)
 source $HOME/.keychain/`hostname`-sh-gpg
+
+export WORKON_HOME=~/.virtualenvs
+source /usr/bin/virtualenvwrapper.sh
+
+# kdesrc-build #################################################################
+
+## Add kdesrc-build to PATH
+export PATH="$HOME/kde/src/kdesrc-build:$PATH"
+
+
+## Autocomplete for kdesrc-run
+function _comp_kdesrc_run
+{
+    local cur
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    # Complete only the first argument
+    if [[ $COMP_CWORD != 1 ]]; then
+        return 0
+    fi
+
+    # Retrieve build modules through kdesrc-run
+    # If the exit status indicates failure, set the wordlist empty to avoid
+    # unrelated messages.
+    local modules
+    if ! modules=$(kdesrc-run --list-installed);
+    then
+        modules=""
+    fi
+
+    # Return completions that match the current word
+    COMPREPLY=( $(compgen -W "${modules}" -- "$cur") )
+
+    return 0
+}
+
+## Register autocomplete function
+complete -o nospace -F _comp_kdesrc_run kdesrc-run
+
+################################################################################
+
+autoload -U +X bashcompinit && bashcompinitcompinit=1
