@@ -1,13 +1,17 @@
 export MANPAGER='less -X';
 export EDITOR='nvim';
-export PATH="{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:/home/blackboardd/.local/share/flatpak/exports/share:/home/blackboardd/.go/bin:/home/blackboardd/go/bin:$PATH";
+export WORKON_HOME=$HOME/.virtualenvs
+export PATH="{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:/home/blackboardd/.local/share/flatpak/exports/share:/home/blackboardd/.go/bin:/home/blackboardd/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:$PATH";
 export HISTORY_PATH="$HOME/.local/share/zsh/history";
-export BROWSER=/usr/bin/google-chrome-stable-main
+export BROWSER=/usr/bin/chromium
+export LIBAVCODEC_VERSION_MAJOR=60
 export GIT_PAGER="diff-so-fancy"
+# ignore ones with a length greater than 50 -- thanks to https://github.com/Aloxaf
+export ZSH_AUTOSUGGEST_HISTORY_IGNORE='?(#c50,)'
 GIT_ALIAS=git
 
 # Enable persistent REPL history for `node`.
-export NODE_REPL_HISTORY=~/.node_history;
+export NODE_REPL_HISTORY=$HOME/.node_history;
 # Allow 32³ entries; the default is 1000.
 export NODE_REPL_HISTORY_SIZE='32768';
 # Use sloppy mode by default, matching web browsers.
@@ -21,6 +25,8 @@ export LANG='en_US.UTF-8';
 export LC_ALL='en_US.UTF-8';
 
 export CX_CONTAINER=$(sudo docker ps -a | grep sponsorcxdb | awk '{print $1}' | head -n 1);
+
+export ACLOCAL_FLAGS="-I /opt/gnome/share/aclocal -I /usr/share/aclocal"
 
 # Path to the emoji-fzf executable
 EMOJI_FZF_BIN_PATH="emoji-fzf"
