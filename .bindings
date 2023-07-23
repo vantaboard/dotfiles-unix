@@ -1,0 +1,50 @@
+function copy-path {
+    cwd=$(pwd | tr -d '\n')
+
+    echo $cwd | xclip -selection clipboard
+    notify-send "$cwd copied to clipboard"
+}
+
+function paste-clipboard-r {
+    RBUFFER="${BUFFER}  $(xclip -selection clipboard -o)"
+}
+
+function paste-clipboard {
+    LBUFFER="${BUFFER}$(xclip -selection clipboard -o)"
+}
+
+function copy-clipboard {
+    if [ -z $BUFFER ]; then
+        return
+    fi
+
+    echo $BUFFER | xclip -selection clipboard
+    notify-send "$BUFFER copied to clipboard"
+}
+
+function fzf-dir {
+    cd "$(fzf_dirs)" || return
+    zle reset-prompt
+    zle redisplay
+}
+
+zle -N paste-clipboard
+bindkey ^s paste-clipboard
+
+zle -N paste-clipboard-r
+bindkey ^w paste-clipboard-r
+
+zle -N copy-path
+bindkey ^a copy-path
+
+zle -N copy-clipboard
+bindkey ^x copy-clipboard
+
+zle -N fzf-dir
+bindkey ^u fzf-dir
+
+bindkey -r '^o'
+bind ^o popd
+
+bind ^e mark
+bind ^f fzm
