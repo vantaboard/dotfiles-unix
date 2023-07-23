@@ -1,0 +1,74 @@
+#!/usr/bin/bash
+
+function gimmekeys() {
+    xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps
+    setxkbmap -option caps:escape
+    xmodmap "$HOME/.Xmodmap"
+
+    mouse=$(xinput --list --short | grep -oP '(?=Razer.+V2\s\s).+' | head -n 1 | grep -oP '(?<=id=)\d+')
+    speed=$(xinput --list-props 15 | grep -oP '(?<=Speed \()\d+')
+    xinput --set-prop "$mouse" "$speed" -0.8
+}
+
+
+function commit() {
+    hash=$2
+    route=$1
+    echo "https://github.com/$route/commit/$hash"
+}
+
+function whatport() {
+    sudo lsof -i :"$1"
+}
+
+function move_to_config_env {
+    if [ "$1" = "on" ]; then
+        export GIT_DIR=$HOME/.cfg
+        export GIT_WORK_TREE=$HOME
+        return
+    fi
+
+    if [ "$1" = "off" ]; then
+        export GIT_DIR=
+        export GIT_WORK_TREE=
+        return
+    fi
+}
+
+# recursively replace line in all files
+function recrep() {
+    FROM=$1
+    TO=$2
+    EXT=$3
+
+    if [ "$EXT" = "" ]; then
+        find . -type f -print0 | xargs -0 sed -i '' -e "s/$FROM/$TO/g"
+    else
+        find . -type f -name "*.$EXT" -print0 | xargs -0 sed -i '' -e "s/$FROM/$TO/g"
+    fi
+}
+
+function catless() {
+    output=$(cat "$1")
+    nvim_commands=()
+
+    filename=$(echo "$1" | sed -E 's/ /_/g' | sed -E 's/[^a-zA-Z0-9_\-\.]//g')
+    hash=$(date +%s%3N | base64)
+
+    ext=$(echo "$filename" | rev | cut -d'.' -f1 | rev)
+
+    if [ "$ext" = "json" ]; then
+        output=$("$output" | jq .)
+    fi
+
+    mkdir -p ~/.nvim-less-cache/"$hash"
+    echo "$output" > ~/.nvim-less-cache/"$hash"/"$filename"
+    nvim_commands+=(nvim -R ~/.nvim-less-cache/"$hash"/"$filename")
+
+
+    if [[ "$filename" == diff* ]]; then
+        nvim_commands+=(-c "'set filetype=diff'")
+    fi
+
+    "${nvim_commands[@]}"
+}
