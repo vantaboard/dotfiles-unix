@@ -10,6 +10,8 @@ export GIT_PAGER="diff-so-fancy"
 export ZSH_AUTOSUGGEST_HISTORY_IGNORE='?(#c50,)'
 GIT_ALIAS=git
 
+export RAZER_MOUSE_SPEED_PROP=$(xinput --list-props 'pointer:Razer Razer DeathAdder V2' | grep -oP '(?<=Speed \()\d+')
+
 # Enable persistent REPL history for `node`.
 export NODE_REPL_HISTORY=$HOME/.node_history;
 # Allow 32³ entries; the default is 1000.
