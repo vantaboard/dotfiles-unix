@@ -1,4 +1,6 @@
 #!/usr/bin/bash
+source "$HOME/.env"
+
 declare -a commands=(
     // commands go here
 )
