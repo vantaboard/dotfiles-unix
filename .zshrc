@@ -65,7 +65,6 @@ declare -a files=(
     "bindings"
     "inputrc"
     "fzf.zsh"
-    "bash_functions"
 )
 
 function source_files {
