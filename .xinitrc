@@ -30,7 +30,7 @@ if [ -f "$usermodmap" ]; then
     setxkbmap -option ctrl:nocaps
     setxkbmap -option caps:escape
     xmodmap "$usermodmap"
-    xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 345 -0.8
+    xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 348 -0.8
 fi
 
 
