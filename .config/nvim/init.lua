@@ -249,5 +249,5 @@ require("plugins.texmagic")
 require("plugins.dap")
 
 vim.o.exrc = true
-vim.g.python3_host_prog = "/usr/bin/python"
-vim.g.python_host_prog = "/usr/bin/python2"
+vim.g.python3_host_prog = "/data/data/com.termux/files/usr/bin/python"
+vim.g.python_host_prog = "/data/data/com.termux/files/usr/bin/python2"
