@@ -36,9 +36,6 @@ vim.o.number = true
 vim.o.relativenumber = true
 vim.o.scrolloff = 8
 
--- Set clipboard
-vim.opt.clipboard = "unnamedplus"
-
 -- Set color column
 vim.wo.colorcolumn = "80"
 
