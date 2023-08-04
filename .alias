@@ -5,7 +5,6 @@ alias gm=false
 alias vi=false
 alias help=false
 # alias vlc=false
-alias rm="trash-put"
 alias craftenv="source ~/CraftRoot/craft/craftenv.sh"
 alias help=run-help
 alias gimmekeys=false
