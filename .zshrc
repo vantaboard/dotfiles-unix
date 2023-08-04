@@ -1,5 +1,8 @@
 source ~/.zplug/init.zsh
 
+GPG_TTY=$(tty)
+export GPG_TTY
+
 NVIM_ALIAS="/usr/local/bin/nvim"
 GIT_ALIAS="git"
 nvim_cfg_alias="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME /usr/local/bin/nvim"
@@ -26,20 +29,19 @@ zplug check || zplug install
 zplug load
 
 # Append a command directly
+[[ -f $HOME/.fzf.zsh ]] && source $HOME/.fzf.zsh
 zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
-[ -z "$NVM_DIR" ] && export NVM_DIR="$HOME/.nvm"
-source /usr/share/nvm/nvm.sh
-source /usr/share/nvm/bash_completion
-source /usr/share/nvm/install-nvm-exec
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 export ZSH="$HOME/.oh-my-zsh"
 
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
-/usr/bin/keychain --quiet $HOME/.ssh/id_ed25519
-source $HOME/.keychain/`hostname`-sh
+# keychain --quiet $HOME/.ssh/id_ed25519
+# [[ -f "$HOME/.keychain/`hostname`-sh" ]] && source $HOME/.keychain/`hostname`-sh
 
 ZSH_DISABLE_COMPFIX=true
 ZSH_THEME="frontcube"
@@ -78,12 +80,8 @@ function source_files {
 
 source_files $files
 
-eval $(thefuck --alias)
-eval $(keychain --quiet --eval --agents gpg $GIT_GPG_KEY)
-source $HOME/.keychain/`hostname`-sh-gpg
-
-export WORKON_HOME=~/.virtualenvs
-source /usr/bin/virtualenvwrapper.sh
+# eval $(keychain --quiet --eval --agents gpg $GIT_GPG_KEY)
+# [[ -f $HOME/.keychain/`hostname`-sh-gpg ]] && source $HOME/.keychain/`hostname`-sh-gpg
 
 # kdesrc-build #################################################################
 
@@ -124,3 +122,14 @@ complete -o nospace -F _comp_kdesrc_run kdesrc-run
 ################################################################################
 
 autoload -U +X bashcompinit && bashcompinitcompinit=1
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+bindkey "$terminfo[kcuu1]" up-history
+bindkey "$terminfo[kcud1]" down-history
+
+
+PATH="/data/data/com.termux/files/home/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/data/data/com.termux/files/home/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/data/data/com.termux/files/home/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/data/data/com.termux/files/home/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/data/data/com.termux/files/home/perl5"; export PERL_MM_OPT;
