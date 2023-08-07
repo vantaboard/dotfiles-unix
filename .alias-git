@@ -1,4 +1,4 @@
-abbr --quiet -S gc="git clean -xfd"
+abbr --quiet -S gc="git commit -m "
 abbr --quiet -S gwkrm="git worktree remove"
 abbr --quiet -S gwkls="git worktree list"
 abbr --quiet -S gwkpr="git worktree prune"
