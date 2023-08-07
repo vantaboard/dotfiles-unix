@@ -62,7 +62,7 @@ cmp.setup.cmdline(":", {
     }),
 })
 
-vim.cmd('highlight! default link CmpItemKind CmpItemMenuDefault')
+vim.cmd("highlight! default link CmpItemKind CmpItemMenuDefault")
 vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 
 cmp.setup.filetype("gitcommit", {
