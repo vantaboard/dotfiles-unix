@@ -13,6 +13,7 @@ focus_follows_mouse no
 exec --no-startup-id unclutter -idle 0.5 -root
 exec --no-startup-id unclutter
 exec --no-startup-id webcam
+exec_always --no-startup-id picom -b
 
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3

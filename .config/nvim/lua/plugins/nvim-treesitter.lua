@@ -32,7 +32,7 @@ require("nvim-treesitter.configs").setup({
     },
 
     autotag = {
-        enable = 'disable',
+        enable = disable,
     },
     playground = {
         enable = true,

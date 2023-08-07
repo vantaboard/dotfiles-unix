@@ -12,9 +12,9 @@ function gimmekeys() {
 
 
 function commit() {
-    hash=$2
     route=$1
-    echo "https://github.com/$route/commit/$hash"
+    hash=$2
+    echo "https://github.com/$route/commit/$hash" | xclip -selection clipboard
 }
 
 function whatport() {
