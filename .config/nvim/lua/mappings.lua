@@ -2,16 +2,16 @@
 
 local Job = require("plenary.job")
 
+local function clipboard_job(url)
+    return Job:new({
+        command = "xclip",
+        args = { "-selection", "clipboard" },
+        writer = url,
+    })
+end
+
 -- function that starts a pull request
 local function pr(clipboard)
-    local function clipboard_job(url)
-        return Job:new({
-            command = "xclip",
-            args = { "-selection", "clipboard" },
-            writer = url,
-        })
-    end
-
     local function branch_job(url)
         return Job:new({
             command = "git",
@@ -66,26 +66,58 @@ local function pr(clipboard)
     vim.cmd("Octo pr edit " .. pr_number)
 end
 
-vim.keymap.set("n", "<leader>p", function()
+-- https://gitlab.com/jrop/dotfiles/-/blob/master/.config/nvim/lua/my/utils.lua#L13
+local function buf_vtext()
+    local a_orig = vim.fn.getreg("a")
+    local mode = vim.fn.mode()
+    if mode ~= "v" and mode ~= "V" then
+        vim.cmd([[normal! gv]])
+    end
+    vim.cmd([[silent! normal! "aygv]])
+    local text = vim.fn.getreg("a")
+    vim.fn.setreg("a", a_orig)
+    return text
+end
+
+local function copy_commit()
+    local hash = buf_vtext()
+
+    Job:new({
+        command = "git",
+        args = { "remote", "get-url", "origin" },
+        on_stdout = function(_, url)
+            print(url)
+            url = url:gsub(":", "/")
+            url = url:gsub("git@", "https://")
+            url = url:gsub("%.git", "/commit/")
+            url = url:gsub("\n", "")
+            url = url .. hash
+
+            print(url)
+
+            clipboard_job(url):start()
+        end,
+    }):start()
+end
+
+vim.keymap.set("v", "<leader>c", copy_commit)
+
+vim.keymap.set("n", "<leader>P", function()
     pr(true)
 end)
 
 -- camelcasemotion
-vim.keymap.set("n", "w", "<Plug>CamelCaseMotion_w")
-vim.keymap.set("n", "b", "<Plug>CamelCaseMotion_b")
-vim.keymap.set("n", "e", "<Plug>CamelCaseMotion_e")
-vim.keymap.set("n", "ge", "<Plug>CamelCaseMotion_ge")
+vim.keymap.set("n", "<leader>w", "<Plug>CamelCaseMotion_w")
+vim.keymap.set("n", "<leader>b", "<Plug>CamelCaseMotion_b")
+vim.keymap.set("n", "<leader>e", "<Plug>CamelCaseMotion_e")
+vim.keymap.set("n", "<leader>ge", "<Plug>CamelCaseMotion_ge")
 
 -- pan up and down
 vim.keymap.set("n", "<leader>j", "<C-E><C-E><C-E><C-E><C-E><C-E>")
 vim.keymap.set("n", "<leader>k", "<C-Y><C-Y><C-Y><C-Y><C-Y><C-Y>")
 
 -- retain cursor pos on visual yank: https://stackoverflow.com/questions/22923951/retaining-cursor-position-when-yanking
-vim.keymap.set("v", "y", "mcy`c")
-
--- replace without yanking
-vim.keymap.set("n", "<leader><leader>p", '"_dp')
-vim.keymap.set("n", "<leader>P", '"_dP')
+-- vim.keymap.set("v", "y", "mcy`c")
 
 -- replace until with current yank
 vim.keymap.set(
@@ -120,3 +152,41 @@ vim.keymap.set("n", "<leader>u", ":UndotreeToggle<cr>")
 
 -- octo
 vim.keymap.set("n", "<leader>o", ":Octo actions<cr>")
+
+local colorschemes = vim.fn.getcompletion("", "color")
+local colorschemes_idx = vim.fn.index(
+    colorschemes,
+    vim.api.nvim_cmd({ cmd = "colorscheme" }, { output = true })
+)
+
+local function change_colorscheme(forward)
+    if forward then
+        colorschemes_idx = colorschemes_idx + 1
+    else
+        colorschemes_idx = colorschemes_idx - 1
+    end
+
+    if colorschemes_idx > #colorschemes then
+        colorschemes_idx = 1
+    elseif colorschemes_idx < 1 then
+        colorschemes_idx = #colorschemes
+    end
+
+    local ok = pcall(function()
+        vim.cmd("colorscheme " .. colorschemes[colorschemes_idx])
+    end)
+
+    if not ok then
+        change_colorscheme(forward)
+    end
+
+    print(colorschemes[colorschemes_idx])
+end
+
+vim.keymap.set("n", "<C-h>", function()
+    change_colorscheme(true)
+end)
+
+vim.keymap.set("n", "<C-l>", function()
+    change_colorscheme(false)
+end)
