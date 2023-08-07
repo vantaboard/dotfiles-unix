@@ -22,8 +22,10 @@ vim.opt.showbreak = "↳  "
 -- camelCaseMotion
 vim.g.camelcasemotion_key = "<leader>"
 
--- favorites: aurora, dracula, lighthaus, vn-night, oxocarbon
-vim.cmd('colo oxocarbon')
+-- favorites: aurora, dracula, lighthaus, vn-night, oxocarbon, omni, zaibatsu
+--     tokyonight, snazzy, nvimgelion, nightfox, nightfly, murphy, moonfly
+--     middlenight_blue, kimbox, industry
+vim.cmd('colo middlenight_blue')
 
 vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
 
