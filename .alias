@@ -4,6 +4,7 @@ alias gs=false
 alias gm=false
 alias vi=false
 alias help=false
+alias fzm=false
 # alias vlc=false
 alias rm="trash-put"
 alias craftenv="source ~/CraftRoot/craft/craftenv.sh"
@@ -12,6 +13,7 @@ alias gimmekeys=false
 alias expowebcam="webcam exposure"
 
 # abbr --quiet -S vlc="/usr/bin/vlc --intf http --http-host 127.0.0.1:9090"
+abbr --quiet -S fzm='cd "$(fzf_dirs)"'
 abbr --quiet -S p="paru -S --noconfirm"
 abbr --quiet -S s="abbr clear-session && source_files $files"
 abbr --quiet -S firefox="firefox-nightly -start-debugger-server"
