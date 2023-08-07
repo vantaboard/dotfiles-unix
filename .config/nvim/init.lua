@@ -27,11 +27,16 @@ require("packer").startup({
         use("vitalk/vim-shebang")
         -- debugging
         use("ianding1/leetcode.vim")
+        use("mfussenegger/nvim-dap")
         use({
             "mxsdev/nvim-dap-vscode-js",
             requires = { "mfussenegger/nvim-dap" },
         })
-        use("mfussenegger/nvim-dap")
+        use({
+            "microsoft/vscode-js-debug",
+            opt = true,
+            run = "npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out",
+        })
         use("Pocco81/dap-buddy.nvim")
         use({
             "gbprod/yanky.nvim",
@@ -90,6 +95,12 @@ require("packer").startup({
         use("jose-elias-alvarez/null-ls.nvim")
         use("jose-elias-alvarez/typescript.nvim")
         -- ricing
+        use({
+            "iamcco/markdown-preview.nvim",
+            run = function()
+                vim.fn["mkdp#util#install"]()
+            end,
+        })
         use("vantaboard/brighten-lush")
         use("rktjmp/lush.nvim")
         use("xolox/vim-misc")
@@ -241,6 +252,7 @@ require("tsconfig")
 require("plugins.colorizer")
 require("plugins.feline")
 require("plugins.lspconfig")
+require("plugins.markdown-preview")
 require("plugins.numb")
 require("plugins.nvim-treesitter")
 require("plugins.nvimtree")
