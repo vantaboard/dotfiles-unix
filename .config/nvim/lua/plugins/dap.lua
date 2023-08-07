@@ -2,6 +2,17 @@ local dap, dapui = require("dap"), require("dapui")
 
 require("nvim-dap-virtual-text").setup()
 
+require("dap-vscode-js").setup({
+    adapters = {
+        "pwa-node",
+        "pwa-chrome",
+        "pwa-msedge",
+        "node-terminal",
+        "pwa-extensionHost",
+    },
+    log_console_level = false,
+})
+
 dap.adapters.cppdbg = {
     id = "cppdbg",
     type = "executable",
@@ -52,16 +63,16 @@ dap.adapters.chrome = {
     },
 }
 
-require("dap-vscode-js").setup({
-    debugger_path = "/home/blackboardd/Code/vscode-js-debug",
-    adapters = { "pwa-node", "node-terminal", "pwa-extensionHost" },
-})
-
-for _, language in ipairs({ "typescript", "javascript" }) do
+for _, language in ipairs({
+    "typescript",
+    "javascript",
+    "typescriptreact",
+    "javascriptreact",
+}) do
     dap.configurations[language] = {
         {
-            name = "Debug Attach to Remote",
             type = "pwa-node",
+            name = "Debug Attach to Remote",
             request = "attach",
             port = 9229,
             autoAttachChildProcesses = true,
@@ -69,43 +80,22 @@ for _, language in ipairs({ "typescript", "javascript" }) do
             cwd = "${workspaceFolder}",
         },
         {
-            name = "Debug with Chrome",
-            type = "chrome",
+            type = "pwa-chrome",
             request = "launch",
-            protocol = "inspector",
-            port = 9229,
             runtimeExecutable = "/usr/bin/chromium",
             runtimeArgs = {
-                "--remote-debugging-port=9222",
                 "--user-data-dir=/home/blackboardd/.config/chromium-remote",
-                "http://localhost:3000",
             },
+            name = "Launch: Chrome (9222)",
+            url = "http://localhost:3000",
             sourceMaps = true,
-            skipFiles = {
-                "<node_internals>/**",
-                "${workspaceFolder}/node_modules/**/*.js",
-                "**/@vite/*",
-            },
-            webRoot = "${workspaceFolder}",
-        },
-        {
-            name = "Debug with Firefox (attach)",
-            type = "firefox",
-            request = "attach",
-            reAttach = true,
-            url = "localhost:3000",
-            resolveSourceMapLocations = {
-                "${workspaceFolder}/**",
-                "!**/node_modules/**",
-            },
-            firefoxExecutable = "/usr/bin/firefox-nightly",
+            webRoot = "${workspaceFolder}/src",
+            protocol = "inspector",
+            port = 9222,
         },
     }
 end
 
-dap.listeners.after.event_initialized["dapui_config"] = function()
-    dapui.open()
-end
 dap.listeners.before.event_terminated["dapui_config"] = function()
     dapui.close()
 end
@@ -116,19 +106,6 @@ end
 dapui.setup({})
 
 -- dap
-vim.keymap.set(
-    "n",
-    "<leader>B",
-    dap.toggle_breakpoint
-)
-vim.keymap.set(
-    "n",
-    "<leader>c",
-    dap.continue,
-    { nowait = true }
-)
-vim.keymap.set(
-    "n",
-    "<leader><leader>d",
-    dapui.toggle
-)
+vim.keymap.set("n", "<leader>B", dap.toggle_breakpoint)
+vim.keymap.set("n", "<leader>c", dap.continue, { nowait = true })
+vim.keymap.set("n", "<leader><leader>d", dapui.toggle)
