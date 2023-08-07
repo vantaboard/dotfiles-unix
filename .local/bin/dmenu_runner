@@ -2,7 +2,41 @@
 source "$HOME/.env"
 
 declare -a commands=(
-    // commands go here
+    'xournalpp'
+    'webcam'
+    'ew'
+    'zoom'
+    'inkscape'
+    'chromium'
+    'chromium-debug'
+    'steam'
+    'qbittorrent'
+    'edge'
+    'office'
+    'vlc'
+    'scrcpy'
+    'virtualbox'
+    'code-insiders'
+    'firefox-nightly'
+    'obsidian'
+    'protonvpn'
+    'tor-browser'
+    'avidemux3_qt5'
+    'gimp'
+    'kdevelop'
+    'obs'
+    'keepassxc'
+    'kdenlive'
+    'gimmekeys'
+    'peek'
+    'discord'
+    'thunderbird'
+    'snapchat'
+    'dolphin'
+    'suspend'
+    'hibernate'
+    'reboot'
+    'chrome'
 )
 
 function edit_script ()
@@ -19,6 +53,35 @@ selection=$(echo -e "$collated" | dmenu)
 
 if [ $? = 4 ]; then
     edit_script
+fi
+
+if [ "$selection" = 'chrome' ]; then
+    selection="google-chrome-stable"
+fi
+
+if [ "$selection" = 'ew' ]; then
+    "$HOME"/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
+    return
+fi
+
+if [ "$selection" = 'chromium-debug' ]; then
+    selection="chromium --remote-debugging-port=9222 --user-data-dir=/home/blackboardd/.config/chromium-remote"
+fi
+
+if [ "$selection" = 'edge' ]; then
+    selection="microsoft-edge-stable"
+fi
+
+if [ "$selection" = 'firefox-nightly' ]; then
+    selection="$selection -start-debugger-server"
+fi
+
+if [ "$selection" = 'office' ]; then
+    selection="openoffice4"
+fi
+
+if [ "$selection" = 'suspend' ]  || [ "$selection" = 'hibernate' ]; then
+    selection="systemctl $selection"
 fi
 
 /usr/bin/zsh -c "$selection"

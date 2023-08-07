@@ -1,4 +1,9 @@
 #!/usr/bin/bash
+termite=$HOME/.config/termite/config
+
+function update_font {
+    perl -pe "s/font = .+(?=\d\d)/font = $1 /" -i "$termite"
+}
 
 function adjust_webcam() {
     if [[ $1 == 'exposure' ]]; then
@@ -96,10 +101,10 @@ function fzf_dirs {
     rm "$hist_path"
     touch "$hist_path"
 
-    get_files_dirs_lines "$HOME/.zdirs" "$HOME/.zdirs" | fzf --height=20% --no-sort \
+    get_files_dirs_lines "$HOME/.zdirs" "$HOME/.zdirs" | fzf --cycle --height=20% --no-sort \
         --header-lines=1 \
         --preview "get_files_dirs {}" \
-        --bind "enter:reload(get_files_dirs_lines {} {} -d)" \
+        --bind "ctrl-j:reload(get_files_dirs_lines {} {} -d)" \
         --bind "ctrl-o:reload{get_files_dirs_lines {} {} -d --pop}" \
-        --bind "ctrl-j:accept"
+        --bind "enter:accept"
 }
