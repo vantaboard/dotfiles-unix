@@ -1,5 +1,7 @@
 exec --no-startup-id betterlockscreen -w dim
 exec xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 345 -0.8
+exec --no-startup-id gxkb
+exec_always setxkbmap -layout en,es
 
 set $mod Mod4
 
