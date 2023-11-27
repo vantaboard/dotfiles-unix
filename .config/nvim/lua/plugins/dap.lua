@@ -46,6 +46,31 @@ dap.configurations.cpp = {
     },
 }
 
+dap.configurations.rust = {
+    {
+        name = "Debug",
+        type = "rt_lldb",
+        request = "launch",
+        program = function()
+            local path = vim.fn.input(
+                "Path to executable " .. vim.fn.getcwd() .. " : "
+            )
+
+            if path:sub(1, 1) == "/" then
+                path = path:sub(2)
+            end
+
+            return vim.fn.resolve(vim.fn.getcwd() .. "/" .. path)
+        end,
+        cwd = "${workspaceFolder}",
+        stopOnEntry = false,
+        args = function()
+            local args = vim.fn.input("Arguments: ")
+            return vim.split(args, " ")
+        end,
+    },
+}
+
 dap.adapters.firefox = {
     type = "executable",
     command = "node",

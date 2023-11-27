@@ -16,14 +16,22 @@ vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
 })
 
 vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
-    pattern = "~/.alias-git",
+    pattern = ".alias-secret",
+    callback = function()
+        print("alias secret")
+        vim.bo.filetype = "csh"
+    end,
+})
+
+vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
+    pattern = ".alias-git",
     callback = function()
         vim.bo.filetype = "csh"
     end,
 })
 
 vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
-    pattern = "~/.bindings",
+    pattern = ".bindings",
     callback = function()
         vim.bo.filetype = "csh"
     end,
@@ -41,3 +49,11 @@ vim.api.nvim_create_autocmd("BufReadPost", {
         end
     end,
 })
+
+vim.cmd([[
+autocmd BufNewFile,BufRead tsconfig.json setfiletype jsonc
+autocmd BufNewFile,BufRead ~/.alias-secret setfiletype csh
+autocmd BufNewFile,BufRead ~/.alias-git setfiletype csh
+autocmd BufNewFile,BufRead ~/.bindings setfiletype csh
+]])
+

@@ -183,10 +183,10 @@ local function change_colorscheme(forward)
     print(colorschemes[colorschemes_idx])
 end
 
-vim.keymap.set("n", "<C-h>", function()
-    change_colorscheme(true)
-end)
-
-vim.keymap.set("n", "<C-l>", function()
-    change_colorscheme(false)
-end)
+-- vim.keymap.set("n", "<C-h>", function()
+--     change_colorscheme(true)
+-- end)
+-- 
+-- vim.keymap.set("n", "<C-l>", function()
+--     change_colorscheme(false)
+-- end)
