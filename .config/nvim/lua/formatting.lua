@@ -22,12 +22,37 @@ vim.opt.showbreak = "↳  "
 -- camelCaseMotion
 vim.g.camelcasemotion_key = "<leader>"
 
--- favorites: aurora, dracula, lighthaus, vn-night, oxocarbon, omni, zaibatsu
---     tokyonight, snazzy, nvimgelion, nightfox, nightfly, murphy, moonfly
---     middlenight_blue, kimbox, industry
-vim.cmd('colo middlenight_blue')
+local favorite_colorschemes = {
+    "aurora",
+    "dracula",
+    "vn-night",
+    "oxocarbon",
+    "omni",
+    "tokyonight",
+    "snazzy",
+    "nvimgelion",
+    "nightfox",
+    "nightfly",
+    "moonfly",
+    "middlenight_blue",
+    "kimbox",
+    "brighten",
+}
 
-vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
+-- random colorscheme
+-- seed based on the current hour, so that it changes every 5 minutes
+-- math.randomseed(tonumber(os.date("%H")) * 300)
+-- vim.cmd(
+--     "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
+-- )
+-- vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
+
+vim.cmd(
+    "colorscheme brighten-light"
+)
+
+-- make it a semitransparent black instead of 
+-- vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
 
 -- unicode
 vim.opt.encoding = "utf8"

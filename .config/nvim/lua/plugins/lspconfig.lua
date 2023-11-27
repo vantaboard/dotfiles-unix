@@ -8,6 +8,24 @@ local lspconfig = require("lspconfig")
 local cmp = require("cmp")
 local lspkind = require("lspkind")
 
+local function get_yarn_root(root_dir, sdk_path)
+    local project_root = util.find_git_ancestor(root_dir)
+
+    while (util.path.is_file(util.path.join(project_root, '.git'))) do
+        project_root = util.path.dirname(project_root)
+        project_root = util.find_git_ancestor(project_root)
+    end
+
+    return project_root
+            and (util.path.join(
+                project_root,
+                ".yarn",
+                "sdks",
+                sdk_path
+            ))
+        or ""
+end
+
 require("luasnip.loaders.from_vscode").lazy_load()
 cmp.setup({
     snippet = {
@@ -115,7 +133,7 @@ local on_attach = function()
     end)
     vim.keymap.set("n", "<leader><", vim.diagnostic.goto_prev)
     vim.keymap.set("n", "<leader>>", vim.diagnostic.goto_next)
-    vim.keymap.set("n", "<leader>a", vim.lsp.buf.code_action)
+    vim.keymap.set("n", "<leader>a", require("actions-preview").code_actions)
     vim.keymap.set("n", "<Leader>va", vim.diagnostic.open_float)
     vim.keymap.set("i", "<C-x><C-x>", vim.lsp.buf.signature_help)
 
@@ -232,45 +250,45 @@ require("lspconfig").yamlls.setup({
     },
 })
 
-require("typescript").setup({
-    server = {
-        root_dir = util.root_pattern(
-            "package.json",
-            "tsconfig.json",
-            "jsconfig.json",
-            ".git"
-        ),
-        on_attach = function()
-            on_attach()
-        end,
-        settings = {
-            javascript = {
-                inlayHints = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayEnumMemberValueHints = true,
-                    importModuleSpecifierPreference = "non-relative",
-                },
-            },
-            typescript = {
-                inlayHints = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-                    includeInlayFunctionParameterTypeHints = true,
-                    includeInlayVariableTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayEnumMemberValueHints = true,
-                    importModuleSpecifierPreference = "non-relative",
-                },
-            },
-        },
-    },
-})
+-- require("typescript").setup({
+--     server = {
+--         root_dir = util.root_pattern(
+--             "package.json",
+--             "tsconfig.json",
+--             "jsconfig.json",
+--             ".git"
+--         ),
+--         on_attach = function()
+--             on_attach()
+--         end,
+--         settings = {
+--             javascript = {
+--                 inlayHints = {
+--                     includeInlayParameterNameHints = "all",
+--                     includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+--                     includeInlayFunctionParameterTypeHints = true,
+--                     includeInlayVariableTypeHints = true,
+--                     includeInlayPropertyDeclarationTypeHints = true,
+--                     includeInlayFunctionLikeReturnTypeHints = true,
+--                     includeInlayEnumMemberValueHints = true,
+--                     importModuleSpecifierPreference = "non-relative",
+--                 },
+--             },
+--             typescript = {
+--                 inlayHints = {
+--                     includeInlayParameterNameHints = "all",
+--                     includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+--                     includeInlayFunctionParameterTypeHints = true,
+--                     includeInlayVariableTypeHints = true,
+--                     includeInlayPropertyDeclarationTypeHints = true,
+--                     includeInlayFunctionLikeReturnTypeHints = true,
+--                     includeInlayEnumMemberValueHints = true,
+--                     importModuleSpecifierPreference = "non-relative",
+--                 },
+--             },
+--         },
+--     },
+-- })
 
 local null_ls = require("null-ls")
 
@@ -281,6 +299,12 @@ null_ls.setup({
         null_ls.builtins.diagnostics.sqlfluff.with({
             extra_args = { "--dialect=postgres" },
         }),
+        null_ls.builtins.diagnostics.golangci_lint,
+        null_ls.builtins.formatting.gofmt,
+        null_ls.builtins.formatting.goimports,
+        -- null_ls.builtins.diagnostics.revive,
+        -- null_ls.builtins.diagnostics.semgrep,
+        -- null_ls.builtins.diagnostics.staticcheck,
         null_ls.builtins.completion.luasnip,
         null_ls.builtins.formatting.uncrustify,
         null_ls.builtins.formatting.clang_format,
@@ -292,14 +316,35 @@ null_ls.setup({
         null_ls.builtins.code_actions.shellcheck,
         null_ls.builtins.formatting.beautysh,
         null_ls.builtins.formatting.stylua,
-        null_ls.builtins.diagnostics.eslint_d,
-        null_ls.builtins.code_actions.eslint_d,
-        null_ls.builtins.formatting.eslint_d,
-        null_ls.builtins.formatting.prettierd.with({
-            env = {
-                PRETTIERD_DEFAULT_CONFIG = false,
-            },
+        -- null_ls.builtins.diagnostics.eslint_d.with({
+        --     prefer_local = get_yarn_root(vim.fn.getcwd(), "eslint"),
+        -- }),
+        -- null_ls.builtins.code_actions.eslint_d.with({
+        --     prefer_local = get_yarn_root(vim.fn.getcwd(), "eslint"),
+        -- }),
+        -- null_ls.builtins.formatting.eslint_d.with({
+        --     prefer_local = get_yarn_root(vim.fn.getcwd(), "eslint"),
+        -- }),
+        null_ls.builtins.diagnostics.flake8,
+        -- null_ls.builtins.diagnostics.mypy,
+        -- null_ls.builtins.diagnostics.pycodestyle,
+        -- null_ls.builtins.diagnostics.pydocstyle,
+        -- null_ls.builtins.diagnostics.vulture,
+        null_ls.builtins.formatting.autoflake,
+        null_ls.builtins.formatting.autopep8,
+
+        null_ls.builtins.diagnostics.pylint.with({
+            diagnostics_postprocess = function(diagnostic)
+                diagnostic.code = diagnostic.message_id
+            end,
         }),
+        null_ls.builtins.formatting.isort,
+        null_ls.builtins.formatting.black,
+        null_ls.builtins.formatting.pyflyby,
+        null_ls.builtins.formatting.pyink,
+        -- null_ls.builtins.formatting.prettier.with({
+        --     prefer_local = get_yarn_root(vim.fn.getcwd(), "prettier"),
+        -- }),
     },
     on_attach = function()
         vim.keymap.set("v", "<leader>f", vim.lsp.buf.format)
@@ -319,7 +364,114 @@ lspconfig.clangd.setup({
     on_attach = on_attach,
 })
 
-lspconfig.pyright.setup({
-    capabilities = capabilities,
+lspconfig.jedi_language_server.setup({
     on_attach = on_attach,
+    capabilities = capabilities,
 })
+
+lspconfig.prismals.setup({
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
+
+lspconfig.tailwindcss.setup({
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
+
+-- https://github.com/johnsoncodehk/volar/blob/20d713b/packages/shared/src/types.ts
+local volar_init_options = {
+    typescript = {
+        tsdk = "",
+        vue = {
+            autoInsert = {
+                bracketSpacing = true,
+                dotValue = true,
+                parentheses = true,
+            },
+            codeActions = {
+                enabled = true,
+                savingTimeLimit = 1000,
+            },
+            codeLens = {
+                enabled = true,
+            },
+            complete = {
+                casing = {
+                    props = "autoKebab",
+                    status = true,
+                    tags = "autoPascal",
+                },
+                normalizeComponentImportName = false,
+            },
+            doctor = {
+                status = true,
+            },
+            inlayHints = {
+                inlineHandlerLeading = true,
+                missingProps = true,
+                optionsWrapper = true,
+            },
+            server = {
+                diagnosticModel = "push",
+                fullCompletionList = false,
+                maxFileSize = 20971520,
+                petiteVue = {
+                    supportHtmlFile = false,
+                },
+                reverseConfigFilePriority = false,
+                runtime = "node",
+                vitePress = {
+                    supportMdFile = false,
+                },
+            },
+        },
+    },
+}
+
+require 'lspconfig'.eslint.setup({
+  settings = {
+    nodePath = get_yarn_root(vim.fn.getcwd()),
+  },
+  on_attach = function(client, bufnr)
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      buffer = bufnr,
+      command = "EslintFixAll",
+    })
+  end,
+})
+
+lspconfig.tsserver.setup({
+    on_attach = on_attach,
+    capabilities = capabilities,
+    init_options = {
+        hostInfo = "neovim",
+        preferences = {
+            importModuleSpecifierPreference = "non-relative",
+        },
+    },
+})
+
+-- lspconfig.volar.setup({
+--     filetypes = {
+--         "vue",
+--         "typescript",
+--         "javascript",
+--         "javascriptreact",
+--         "typescriptreact",
+--     },
+--     cmd = { "yarn", "run", "-T", "vue-language-server", "--stdio" },
+--     on_attach = on_attach,
+--     capabilities = capabilities,
+--     init_options = volar_init_options,
+--     on_new_config = function(new_config, new_root_dir)
+--         if
+--             new_config.init_options
+--             and new_config.init_options.typescript
+--             and new_config.init_options.typescript.tsdk == ""
+--         then
+--             new_config.init_options.typescript.tsdk =
+--                 get_yarn_root(new_root_dir, "typescript/lib")
+--         end
+--     end,
+-- })
