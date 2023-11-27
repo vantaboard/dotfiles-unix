@@ -1,5 +1,7 @@
 exec --no-startup-id betterlockscreen -w dim
 exec xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 345 -0.8
+exec --no-startup-id gxkb
+exec_always setxkbmap -layout en,es
 
 set $mod Mod4
 
@@ -50,7 +52,7 @@ bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 bindsym $mod+Ctrl+t exec --no-startup-id picom -b
 bindsym $mod+Shift+d exec --no-startup-id sh /usr/share/sessionsetup.sh
-bindsym $mod+Shift+n --release exec "killall dunst; exec notify-send 'restart dunst'"
+bindsym $mod+Ctrl+Shift+n exec --no-startup-id xkb-switch -n
 bindsym Print exec --no-startup-id i3-scrot
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
 bindsym $mod+Shift+e exec --no-startup-id splatmoji copy
