@@ -1,3 +1,4 @@
+export TSS_LOG="-level verbose -file /home/blackboardd/.tsserver_temp/tsserver.log";
 export MANPAGER='less -X';
 export EDITOR='nvim';
 export WORKON_HOME=$HOME/.virtualenvs
@@ -9,8 +10,6 @@ export GIT_PAGER="diff-so-fancy"
 # ignore ones with a length greater than 50 -- thanks to https://github.com/Aloxaf
 export ZSH_AUTOSUGGEST_HISTORY_IGNORE='?(#c50,)'
 GIT_ALIAS=git
-
-export RAZER_MOUSE_SPEED_PROP=$(xinput --list-props 'pointer:Razer Razer DeathAdder V2' | grep -oP '(?<=Speed \()\d+')
 
 # Enable persistent REPL history for `node`.
 export NODE_REPL_HISTORY=$HOME/.node_history;
