@@ -38,11 +38,6 @@ require("packer").startup({
             "mxsdev/nvim-dap-vscode-js",
             requires = { "mfussenegger/nvim-dap" },
         })
-        use({
-            "microsoft/vscode-js-debug",
-            opt = true,
-            run = "npm install --legacy-peer-deps && npx gulp vsDebugServerBundle && mv dist out",
-        })
         use("Pocco81/dap-buddy.nvim")
         use({
             "gbprod/yanky.nvim",
@@ -126,7 +121,6 @@ require("packer").startup({
         use("dasupradyumna/midnight.nvim")
         use("sekke276/dark_flat.nvim")
         use("zootedb0t/citruszest.nvim")
-        use("xero/miasma.nvim")
         use("shaeinst/roshnivim-cs")
         use("tomasiser/vim-code-dark")
         use("Mofiqul/vscode.nvim")
