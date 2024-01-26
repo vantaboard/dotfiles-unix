@@ -42,14 +42,8 @@ bindkey ^w paste-clipboard-r
 zle -N copy-path
 bindkey ^a copy-path
 
-zle -N copy-clipboard
-bindkey ^x copy-clipboard
-
 zle -N fzf-dir
 bindkey ^u fzf-dir
-
-bindkey -r '^o'
-bind ^o popd
 
 bind ^e mark
 bind ^f fzm
