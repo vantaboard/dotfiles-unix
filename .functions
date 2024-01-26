@@ -1,14 +1,5 @@
 #!/usr/bin/bash
 
-function gimmekeys() {
-    xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps
-    setxkbmap -option caps:escape
-    xmodmap "$HOME/.Xmodmap"
-
-    mouse=$(xinput --list --short | grep -oP '(?=Razer.+V2\s\s).+' | head -n 1 | grep -oP '(?<=id=)\d+')
-    speed=$(xinput --list-props 15 | grep -oP '(?<=Speed \()\d+')
-    xinput --set-prop "$mouse" "$speed" -0.8
-}
 
 
 function commit() {
