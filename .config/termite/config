@@ -1,12 +1,12 @@
 [options]
 allow_bold = true
 #audible_bell = false
-#bold_is_bright = true
+bold_is_bright = true
 #cell_height_scale = 1.0
 #cell_width_scale = 1.0
 clickable_url = true
 dynamic_title = true
-font = Hack Nerd Font Mono 10
+font = MesloLGS Nerd Font Mono Bold 10
 #fullscreen = true
 #icon_name = terminal
 #mouse_autohide = false
@@ -51,7 +51,7 @@ cursor_shape = block
 
 # special
 foreground = #b5b4c9
-background = #191c25
+background = rgba(25, 28, 37, 0.8)
 # cursor: #b5b4c9
 
 # black
