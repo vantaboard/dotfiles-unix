@@ -1,21 +1,53 @@
 exec --no-startup-id betterlockscreen -w dim
-exec xinput --set-prop 'pointer:Razer Razer DeathAdder V2' 345 -0.8
+exec --no-startup-id dunst
 exec --no-startup-id gxkb
-exec_always setxkbmap -layout en,es
+exec_always --no-startup-id $HOME/.local/bin/gimmekeys
+exec_always setxkbmap -layout us,es
+exec_always setxkbmap -option ctrl:nocaps
+exec_always setxkbmap -option caps:escape
+exec_always xmodmap -e "clear lock"
+exec_always xset dpms 600 1200 1800
+
+set $ws1 1:web
+set $ws2 2:code
+set $ws3 3:media
+set $ws4 4:comms
+set $ws5 5:misc
+set $ws6 6:av
+set $ws7 7:other
+set $ws8 8:other
+
+exec --no-startup-id /usr/bin/python $HOME/.local/bin/i3_startup
+exec --no-startup-id i3-msg 'workspace $ws2; exec /usr/bin/termite'
+exec --no-startup-id i3-msg 'workspace $ws3; exec /usr/bin/chromium --profile-directory="Personal" --new-window https://www.youtube.com'
+exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/thunderbird'
+exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/slack'
+exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/chromium --profile-directory="Default" --new-window'
+exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/chromium --profile-directory="Default" https://mail.google.com/mail/u/0/#inbox --new-window'
+
+set $screen1 DP-0.3.1
+set $screen2 DP-0.1
+set $screen3 DP-0.2
+
+workspace $ws3 output $screen1
+workspace $ws2 output $screen2
+workspace $ws1 output $screen3
+workspace $ws4 output $screen3
 
 set $mod Mod4
 
-default_border pixel 4
+default_border pixel 8
 default_floating_border normal
-for_window [class=".*"] border pixel 4
+for_window [class=".*"] border pixel 5
 
 hide_edge_borders none
 
 focus_follows_mouse no
+
 exec --no-startup-id unclutter -idle 0.5 -root
-exec --no-startup-id unclutter
+exec --no-startup-id unclutte0
 exec --no-startup-id webcam
-exec_always --no-startup-id picom -b
+exec_always --no-startup-id picom -b -c
 
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
@@ -25,24 +57,21 @@ bindsym $mod+Shift+q kill
 bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
 bindsym $mod+d exec $HOME/.local/bin/dmenu_runner
 bindsym $mod+z exec --no-startup-id morc_menu
-bindsym $mod+shift+x exec betterlockscreen -l dim
 
-bindsym $mod+shift+b move workspace to output eDP1
-bindsym $mod+shift+n move workspace to output HDMI-0
-bindsym $mod+shift+m move workspace to output DP-0
+bindsym $mod+shift+b move workspace to output $screen1
+bindsym $mod+shift+n move workspace to output $screen2
+bindsym $mod+shift+m move workspace to output $screen3
 
-font xft:BigBlue_Terminal_437TT Nerd Font Mono:size=10
+font pango:FiraCode Nerd Font Mono 10
 
 floating_modifier $mod
 
 exec --no-startup-id volumeicon
 exec --no-startup-id pulseaudio
-exec --no-startup-id dropbox
 exec --no-startup-id pa-applet
 bindsym $mod+Ctrl+m exec pavucontrol
 
 bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
-bindsym $mod+F2 exec palemoon
 bindsym $mod+F3 exec pcmanfm
 bindsym $mod+Shift+F3 exec pcmanfm_pkexec
 bindsym $mod+F5 exec terminal -e 'mocp'
@@ -50,6 +79,7 @@ bindsym $mod+t exec --no-startup-id pkill picom
 bindsym $mod+Ctrl+Shift+s exec --no-startup-id systemctl suspend
 bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
+bindsym $mod+Shift+a exec --no-startup-id normcap
 bindsym $mod+Ctrl+t exec --no-startup-id picom -b
 bindsym $mod+Shift+d exec --no-startup-id sh /usr/share/sessionsetup.sh
 bindsym $mod+Ctrl+Shift+n exec --no-startup-id xkb-switch -n
@@ -66,11 +96,6 @@ bindsym $mod+Shift+h move left
 bindsym $mod+Shift+j move down
 bindsym $mod+Shift+k move up
 bindsym $mod+Shift+l move right
-
-
-# workspace_auto_back_and_forth yes
-# bindsym $mod+b workspace back_and_forth
-# bindsym $mod+Shift+b move container to workspace back_and_forth; workspace back_and_forth
 
 bindsym $mod+x split h;exec notify-send 'tile horizontally'
 bindsym $mod+c split v;exec notify-send 'tile vertically'
@@ -91,14 +116,9 @@ bindsym $mod+minus scratchpad show
 bindsym $mod+Ctrl+Right workspace next
 bindsym $mod+Ctrl+Left workspace prev
 
-set $ws1 1
-set $ws2 2
-set $ws3 3
-set $ws4 4
-set $ws5 5
-set $ws6 6
-set $ws7 7
-set $ws8 8
+exec --no-startup-id $HOME/.local/bin/betterlockscreen --display 1 --nofx --position center --update $HOME/.wallpapers/outono-for-the-neo.jpg
+
+bindsym $mod+Ctrl+Shift+k exec --no-startup-id xkb-switch -s us && $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#DC3E80 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
 
 bindsym $mod+1 workspace $ws1
 bindsym $mod+2 workspace $ws2
@@ -155,13 +175,12 @@ for_window [class="Timeset-gui"] floating enable border normal
 for_window [class="(?i)virtualbox"] floating enable border normal
 for_window [class="Xfburn"] floating enable
 for_window [title="Cameractrls Slider"] floating enable
+for_window [title="SILK"] move position 3500px 200px
 
 for_window [urgent=latest] focus
 
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
-
-# bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 
 bindsym $mod+0 mode "$mode_system"
 set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
@@ -190,10 +209,6 @@ mode "resize" {
 }
 
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-# exec --no-startup-id nitrogen --restore; sleep 1; picom -b
-exec --no-startup-id nitrogen --set-zoom --head=0 ~/.wallpapers/frasier-sterling-cute-blur.jpg
-exec --no-startup-id nitrogen --set-zoom --head=1 ~/.wallpapers/frasier-sterling-cute-blur.jpg
-exec --no-startup-id nitrogen --set-zoom --head=2 ~/.wallpapers/frasier-sterling-cute-blur.jpg
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id pamac-tray
@@ -228,35 +243,34 @@ bar {
 	position bottom
 	bindsym button4 nop
 	bindsym button5 nop
-	strip_workspace_numbers yes
 
     colors {
         background #222D31
         statusline #F9FAF9
         separator  #454947
 
-#                      border  backgr. text
-        focused_workspace  #F9FAF9 #16a085 #292F34
-        active_workspace   #595B5B #353836 #FDF6E3
-        inactive_workspace #595B5B #222D31 #EEE8D5
-        binding_mode       #16a085 #2C2C2C #F9FAF9
-        urgent_workspace   #16a085 #FDF6E3 #E5201D
+#                          border  backgr. text
+        focused_workspace  #F9FAF9 #E56CA7 #F9FAF9
+        active_workspace   #595b5b #2C2C2C #FDF6E3
+        inactive_workspace #595b5b #222D31 #EEE8D5
+        binding_mode       #E56CA7 #2C2C2C #F9FAF9
+        urgent_workspace   #E56CA7 #FDF6E3 #E5201D
     }
 }
 
 bindsym $mod+m bar mode toggle
 
 # class                 border  bground text    indicator child_border
-client.focused          #009931 #20770C #FFFFFF #34F434   #2C7722
-client.focused_inactive #41B1C4 #345D6A #FFFFFF #3EC2C6   #22646A
-client.unfocused        #2D43A5 #4C42B2 #FFFFFF #404987   #3C4287
+client.focused          #BA618F #E56CA7 #FFFFFF #E64FF4   #FF94E1
+client.focused_inactive #330F29 #C45C8F #FFFFFF #B936C6   #511C6A
+client.unfocused        #330F29 #A34C77 #FFFFFF   #9e568a
 client.urgent           #2F343A #900000 #FFFFFF #900000   #900000
 client.placeholder      #000000 #0C0C0C #FFFFFF #000000   #0C0C0C
 
 client.background       #FFFFFF
 
-gaps inner 14
-gaps outer 2
+gaps inner 60
+gaps outer 20
 
 set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)
