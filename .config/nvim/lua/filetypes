@@ -1,0 +1,4 @@
+autocmd BufNewFile,BufRead tsconfig.json setfiletype jsonc
+autocmd BufNewFile,BufRead ~/.bash_functions setfiletype csh
+autocmd BufNewFile,BufRead ~/.alias-git setfiletype csh
+autocmd BufNewFile,BufRead ~/.bindings setfiletype csh

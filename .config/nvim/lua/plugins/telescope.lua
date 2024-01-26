@@ -1,4 +1,5 @@
 require("textcase").setup({})
+local telescope = require("telescope")
 
 local open_in_nvim_tree = function(prompt_bufnr)
     local action_state = require("telescope.actions.state")
@@ -56,14 +57,14 @@ require("yanky").setup({
 })
 
 local actions = require("telescope.actions")
-require("telescope").load_extension("fzf")
-require("telescope").load_extension("harpoon")
-require("telescope").load_extension("dap")
-require("telescope").load_extension("yank_history")
-require("telescope").load_extension("undo")
-require("telescope").load_extension("textcase")
+telescope.load_extension("fzf")
+telescope.load_extension("harpoon")
+telescope.load_extension("dap")
+telescope.load_extension("yank_history")
+telescope.load_extension("undo")
+telescope.load_extension("textcase")
 
-require("telescope").setup({
+telescope.setup({
     defaults = {
         mappings = {
             i = {
@@ -159,3 +160,13 @@ vim.keymap.set("n", "<leader>dv", ":Telescope dap variables<cr>")
 
 -- harpoon
 vim.keymap.set("n", "<leader>h", ":Telescope harpoon marks<cr>")
+
+-- color scheme
+vim.keymap.set("n", "<leader><leader>o", function()
+    builtin.colorscheme({
+        enable_preview = true,
+    })
+end)
+
+-- command history
+vim.keymap.set("n", "<leader>:", ":Telescope command_history<cr>")
