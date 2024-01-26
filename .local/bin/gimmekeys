@@ -1,0 +1,21 @@
+setxkbmap -option ctrl:nocaps
+setxkbmap -option caps:escape
+xmodmap -e "clear lock"
+xmodmap -e "keycode 64 = Mode_switch"
+xmodmap -e "keycode 43 = h H Left H"
+xmodmap -e "keycode 44 = j J Down J"
+xmodmap -e "keycode 45 = k K Up K"
+xmodmap -e "keycode 46 = l L Right L"
+xmodmap -e "keycode 66 = Escape NoSymbol Escape"
+
+VERTI_MOUSE_SPEED_PROP=$(xinput --list-props 'MOSART Semi. 2.4G Wireless Mouse' 2>/dev/null | grep -oP '(?<=Speed \()\d+')
+RAZER_MOUSE_SPEED_PROP=$(xinput --list-props 'pointer:Razer Razer DeathAdder V2' 2>/dev/null | grep -oP '(?<=Speed \()\d+')
+
+# if RAZER_MOUSE_SPEED_PROP exists, run the below command
+if [ "$RAZER_MOUSE_SPEED_PROP" != "" ]; then
+    xinput --set-prop "pointer:Razer Razer DeathAdder V2" "$RAZER_MOUSE_SPEED_PROP" -0.8 2>/dev/null
+fi
+
+if [ "$VERTI_MOUSE_SPEED_PROP" != "" ]; then
+    xinput --set-prop "MOSART Semi. 2.4G Wireless Mouse" "$VERTI_MOUSE_SPEED_PROP" -0.8 2>/dev/null
+fi
