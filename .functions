@@ -1,6 +1,12 @@
 #!/usr/bin/bash
 
 
+function gitlab-path() {
+    PROJECT_ROOT=$(git remote get-url origin | grep -oP '(?<=:).+(?=\.git)')
+    PROJECT_BRANCH=$(git branch --show-current)
+
+    echo "https://gitlab.com/$PROJECT_ROOT/-/tree/$PROJECT_BRANCH"
+}
 
 function commit() {
     route=$1
