@@ -9,17 +9,17 @@ alias fzm=false
 alias rm="trash-put"
 alias craftenv="source ~/CraftRoot/craft/craftenv.sh"
 alias help=run-help
-alias gimmekeys=false
 alias expowebcam="webcam exposure"
+alias log=false
 
 # abbr --quiet -S vlc="/usr/bin/vlc --intf http --http-host 127.0.0.1:9090"
+abbr --quiet -S log='tail -f -n 5'
 abbr --quiet -S fzm='cd "$(fzf_dirs)"'
 abbr --quiet -S p="paru -S --noconfirm"
 abbr --quiet -S s="abbr clear-session && source_files $files"
 abbr --quiet -S firefox="firefox-nightly -start-debugger-server"
 abbr --quiet -S fk='fuck'
 abbr --quiet -S tz='sudo ntpd -qg'
-abbr --quiet -S 'gimmekeys=sudo xmodmap -e "clear lock" && setxkbmap -option ctrl:nocaps && setxkbmap -option caps:escape && xmodmap $HOME/.Xmodmap && xinput --set-prop "pointer:Razer Razer DeathAdder V2" $RAZER_MOUSE_SPEED_PROP -0.8'
 
 # automt automatically mounts all available drives
 abbr --quiet -S automt='sudo mount -a'
@@ -36,5 +36,6 @@ abbr --quiet -S "cfg"="move_to_config_env"
 
 abbr --quiet -S clip="clip.exe"
 abbr --quiet -S v4l2reset="sudo rmmod v4l2loopback"
+abbr --quiet -S murder="killall -s SIGKILL"
 
 bindkey " " abbr-expand-and-space
