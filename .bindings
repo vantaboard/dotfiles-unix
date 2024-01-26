@@ -1,6 +1,11 @@
 function copy-path {
     cwd=$(pwd | tr -d '\n')
 
+    # if there are spaces in the path, wrap it in quotes
+    if [[ $cwd == *" "* ]]; then
+        cwd="\"$cwd\""
+    fi
+
     echo $cwd | xclip -selection clipboard
     notify-send "$cwd copied to clipboard"
 }
