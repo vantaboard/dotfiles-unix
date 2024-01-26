@@ -2,12 +2,22 @@
 source "$HOME/.env"
 
 declare -a commands=(
+    'anki'
+    'blueman-manager'
+    'headphones'
+    'qtcreator'
+    'normcap'
+    'designer'
     'xournalpp'
     'webcam'
+    'postman'
+    'filezilla'
+    'drawio'
     'ew'
     'zoom'
     'inkscape'
     'chromium'
+    'chromium-personal'
     'chromium-debug'
     'steam'
     'qbittorrent'
@@ -28,6 +38,9 @@ declare -a commands=(
     'keepassxc'
     'kdenlive'
     'gimmekeys'
+    'gimmekeysvert'
+    'pavucontrol'
+    'nvidia-settings'
     'peek'
     'discord'
     'thunderbird'
@@ -35,6 +48,7 @@ declare -a commands=(
     'dolphin'
     'suspend'
     'hibernate'
+    'slack'
     'reboot'
     'chrome'
 )
@@ -49,14 +63,26 @@ function edit_script ()
 
 commands_string="${commands[*]}"
 collated="${commands_string// /\\n}"
-selection=$(echo -e "$collated" | dmenu)
+selection=$(echo -e "$collated" | dmenu -nb '#000000' -nf '#FF84BB' -sb '#ffffff' -sf '#000000' -fn 'MesloLGS Nerd Font Mono Bold-14' -p '    Run    ')
 
 if [ $? = 4 ]; then
     edit_script
 fi
 
+if [ "$selection" = 'chromium' ]; then
+    selection="chromium --profile-directory='Default'"
+fi
+
+if [ "$selection" = 'chromium-personal' ]; then
+    selection="chromium --profile-directory='Personal'"
+fi
+
 if [ "$selection" = 'chrome' ]; then
     selection="google-chrome-stable"
+fi
+
+if [ "$selection" = 'headphones' ]; then
+    selection="SonyHeadphonesClient"
 fi
 
 if [ "$selection" = 'ew' ]; then
