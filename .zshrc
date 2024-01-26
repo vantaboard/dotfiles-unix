@@ -14,7 +14,6 @@ zplug "pschmitt/emoji-fzf.zsh"
 zplug "QuarticCat/zsh-smartcache"
 zplug "aubreypwd/zsh-plugin-fd"
 zplug "urbainvaes/fzf-marks"
-zplug "sobolevn/wakatime-zsh-plugin"
 zplug "olets/zsh-abbr"
 zplug "marlonrichert/zsh-edit"
 zplug "wfxr/forgit", defer:2
