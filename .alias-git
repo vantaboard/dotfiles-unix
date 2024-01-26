@@ -1,5 +1,8 @@
 alias gc=false
 
+abbr --quiet -S gf="git fetch --all --tags"
+abbr --quiet -S gsshp='git config core.sshCommand "ssh -i ~/.ssh/id_ed25519_git_personal -F /dev/null"'
+abbr --quiet -S gsup="git submodule foreach 'git fetch && git checkout main && git rebase origin/main | :'"
 abbr --quiet -S gc="git commit -m"
 abbr --quiet -S gwkrm="git worktree remove"
 abbr --quiet -S gwkls="git worktree list"
@@ -28,8 +31,12 @@ abbr --quiet -S gm="git merge"
 abbr --quiet -S gma="git merge --abort"
 abbr --quiet -S gmc="git merge --continue"
 abbr --quiet -S gms="git merge --skip"
-abbr --quiet -S gp="git push"
+abbr --quiet -S gp="git push --follow-tags"
+abbr --quiet -S gpd='git push --follow-tags -o ci.variable="CI_NO_TEST=true" -o ci.variable="CI_NO_FORMAT=true" -o ci.variable="CI_NO_DOCS=true"'
+abbr --quiet -S gps='git push --follow-tags -o ci.skip'
 abbr --quiet -S gr="git remote"
+abbr --quiet -S grgo="git remote get-url origin"
+abbr --quiet -S grso="git remote set-url origin"
 abbr --quiet -S grb="git rebase"
 abbr --quiet -S grba="git rebase --abort"
 abbr --quiet -S grbc="git rebase --continue"
