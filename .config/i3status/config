@@ -15,7 +15,6 @@ order += "battery all"
 order += "memory"
 order += "tztime date"
 order += "tztime local"
-order += "tztime ukraine"
 
 wireless _first_ {
         format_up = "📡 %essid"
@@ -59,10 +58,5 @@ tztime date {
 }
 
 tztime local {
-        format = "PT 🇺🇸 <span color='#FFFFFF'>%l:%M %p</span>"
-}
-
-tztime ukraine {
-        format = "🇺🇦 <span color='#FFDD00'>%l:%M %p </span>"
-        timezone = "Europe/Kiev"
+        format = "<span color='#FFFFFF'>%l:%M %p</span>"
 }
