@@ -153,40 +153,41 @@ vim.keymap.set("n", "<leader>u", ":UndotreeToggle<cr>")
 -- octo
 vim.keymap.set("n", "<leader>o", ":Octo actions<cr>")
 
-local colorschemes = vim.fn.getcompletion("", "color")
-local colorschemes_idx = vim.fn.index(
-    colorschemes,
-    vim.api.nvim_cmd({ cmd = "colorscheme" }, { output = true })
-)
-
-local function change_colorscheme(forward)
-    if forward then
-        colorschemes_idx = colorschemes_idx + 1
-    else
-        colorschemes_idx = colorschemes_idx - 1
-    end
-
-    if colorschemes_idx > #colorschemes then
-        colorschemes_idx = 1
-    elseif colorschemes_idx < 1 then
-        colorschemes_idx = #colorschemes
-    end
-
-    local ok = pcall(function()
-        vim.cmd("colorscheme " .. colorschemes[colorschemes_idx])
-    end)
-
-    if not ok then
-        change_colorscheme(forward)
-    end
-
-    print(colorschemes[colorschemes_idx])
-end
-
--- vim.keymap.set("n", "<C-h>", function()
---     change_colorscheme(true)
--- end)
+-- local function jump(forward)
+--     local buf_cur = vim.api.nvim_get_current_buf()
+--     local jumplist = vim.fn.getjumplist()
 -- 
--- vim.keymap.set("n", "<C-l>", function()
---     change_colorscheme(false)
--- end)
+--     if jumplist == nil or #jumplist == 0 then
+--         return
+--     end
+-- 
+--     local jumps = jumplist[1]
+--     local idx_cur = jumplist[2] + 1
+-- 
+--     print(vim.inspect(jumps))
+--     print(idx_cur)
+--     local function is_target(buf)
+--         return buf ~= buf_cur and vim.api.nvim_buf_is_loaded(buf)
+--     end
+-- 
+--     if forward then
+--         for i = 1, #jumps - idx_cur do
+--             if is_target(jumps[idx_cur + i].bufnr) then
+--                 return i .. "<C-I>"
+--             end
+--         end
+--     else
+--         for i = 1, idx_cur - 1 do
+--             if is_target(jumps[idx_cur - i].bufnr) then
+--                 return i .. "<C-O>"
+--             end
+--         end
+--     end
+-- end
+-- 
+-- vim.keymap.set("n", "g<C-O>", function()
+--     return jump(false)
+-- end, { expr = true })
+-- vim.keymap.set("n", "g<C-I>", function()
+--     return jump(true)
+-- end, { expr = true })

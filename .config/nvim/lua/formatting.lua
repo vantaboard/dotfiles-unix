@@ -1,8 +1,43 @@
 -- lua/formatting.lua
+vim.filetype.add({
+    extension = {
+        vert = "glsl",
+        frag = "glsl",
+    },
+})
+
 vim.g.copilot_filetypes = {
+    glsl = false,
+    vert = false,
+    frag = false,
+    tesc = false,
+    tese = false,
+    geom = false,
+    comp = false,
     VimspectorPrompt = false,
     TelescopePrompt = false,
     TelescopeResults = false,
+}
+
+vim.g.fzf_colors = {
+    fg = { "fg", "Normal" },
+    bg = { "bg", "Normal" },
+    ['preview-fg'] = { "bg", "Normal" },
+    ['preview-bg'] = { "bg", "NormalFloat" },
+    hl = { "fg", "Comment" },
+    ['fg+'] = { "fg", "CursorLine", "CursorColumn", "Normal" },
+    ['bg+'] = { "bg", "CursorLine", "CursorColumn" },
+    ['hl+'] = { "fg", "Statement" },
+    info = { "fg", "PreProc" },
+    border = { "fg", "Ignore" },
+    prompt = { "fg", "Conditional" },
+    pointer = { "fg", "Exception" },
+    marker = { "fg", "Keyword" },
+    spinner = { "fg", "Label" },
+    gutter = { "bg", "SignColumn" },
+    query = { "fg", "Comment" },
+    disabled = { "fg", "Ignore" },
+    header = { "fg", "Comment" },
 }
 
 vim.keymap.set("n", ";", "<Nop>")
@@ -25,33 +60,44 @@ vim.g.camelcasemotion_key = "<leader>"
 local favorite_colorschemes = {
     "aurora",
     "dracula",
-    "vn-night",
+    -- "vn-night",
     "oxocarbon",
     "omni",
     "tokyonight",
     "snazzy",
     "nvimgelion",
-    "nightfox",
+    -- "nightfox",
     "nightfly",
     "moonfly",
-    "middlenight_blue",
-    "kimbox",
-    "brighten",
+    "OceanicNext",
+    "catppuccin-mocha",
+    "terafox",
+    "solarized-high",
+    "rose-pine-main",
+    "fluoromachine",
+    "zenburned",
+    "wildcharm",
+    -- "abscs",
+    "codeschool",
+    -- "brighten",
 }
 
 -- random colorscheme
 -- seed based on the current hour, so that it changes every 5 minutes
 -- math.randomseed(tonumber(os.date("%H")) * 300)
--- vim.cmd(
---     "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
--- )
--- vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
+
+math.randomseed(os.time())
 
 vim.cmd(
-    "colorscheme brighten-light"
+    "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
 )
+vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
 
--- make it a semitransparent black instead of 
+-- vim.cmd(
+--     "colorscheme brighten-light"
+-- )
+
+-- make it a semitransparent black instead of
 -- vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
 
 -- unicode
@@ -90,3 +136,85 @@ vim.o.gdefault = true
 
 -- Set colorscheme
 vim.o.termguicolors = true
+
+local util = require "formatter.util"
+
+local format_glsl = function()
+    return {
+        exe = "clang-format",
+        args = { "-style=chromium" },
+        stdin = true,
+    }
+end
+
+-- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
+require("formatter").setup {
+    -- Enable or disable logging
+    logging = true,
+    -- Set the log level
+    log_level = vim.log.levels.WARN,
+    -- All formatter configurations are opt-in
+    filetype = {
+        glsl = format_glsl,
+        frag = format_glsl,
+        vert = format_glsl,
+        tesc = format_glsl,
+        tese = format_glsl,
+        geom = format_glsl,
+        comp = format_glsl,
+        css = {
+            -- prettier
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end,
+        },
+        yml = {
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end,
+        },
+        yaml = {
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end,
+        },
+        toml = {
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end,
+        },
+        liquid = {
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end,
+        },
+        rst = {
+            function()
+                return {
+                    exe = "rstfmt",
+                    stdin = true,
+                }
+            end,
+        },
+    }
+}

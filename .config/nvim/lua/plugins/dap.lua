@@ -96,15 +96,6 @@ for _, language in ipairs({
 }) do
     dap.configurations[language] = {
         {
-            type = "pwa-node",
-            name = "Debug Attach to Remote",
-            request = "attach",
-            port = 9229,
-            autoAttachChildProcesses = true,
-            sourceMaps = true,
-            cwd = "${workspaceFolder}",
-        },
-        {
             type = "pwa-chrome",
             request = "launch",
             runtimeExecutable = "/usr/bin/chromium",
@@ -119,6 +110,29 @@ for _, language in ipairs({
             port = 9222,
         },
     }
+
+
+    -- loop over remote_ports and use debug_attach_to_remote
+    for _, port in ipairs({
+    "9229",
+    "9230",
+    "9231",
+    "9232",
+    "9233",
+    "9234",
+    "9235",
+    "9236",
+}) do
+        dap.configurations[language][#dap.configurations[language] + 1] = {
+            type = "pwa-node",
+            name = "Attach: Chrome (" .. port .. ")",
+            request = "attach",
+            port = port,
+            autoAttachChildProcesses = true,
+            sourceMaps = true,
+            cwd = "${workspaceFolder}",
+        }
+    end
 end
 
 dap.listeners.before.event_terminated["dapui_config"] = function()
@@ -133,4 +147,5 @@ dapui.setup({})
 -- dap
 vim.keymap.set("n", "<leader>B", dap.toggle_breakpoint)
 vim.keymap.set("n", "<leader>c", dap.continue, { nowait = true })
+vim.keymap.set("n", "<leader>s", dap.step_into, { nowait = true })
 vim.keymap.set("n", "<leader><leader>d", dapui.toggle)

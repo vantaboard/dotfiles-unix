@@ -1,5 +1,3 @@
--- lua/autocommands.lua
-
 vim.api.nvim_create_augroup("reload queries on query save", { clear = true })
 vim.api.nvim_create_autocmd("BufWrite", {
     pattern = "*.scm",
@@ -8,14 +6,20 @@ vim.api.nvim_create_autocmd("BufWrite", {
     end,
 })
 
-vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
+vim.api.nvim_create_autocmd("ColorScheme", {
+    callback = function()
+        vim.cmd("TransparentEnable")
+    end,
+})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = "tsconfig.json",
     callback = function()
         vim.bo.filetype = "jsonc"
     end,
 })
 
-vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = ".alias-secret",
     callback = function()
         print("alias secret")
@@ -23,14 +27,14 @@ vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
     end,
 })
 
-vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = ".alias-git",
     callback = function()
         vim.bo.filetype = "csh"
     end,
 })
 
-vim.api.nvim_create_autocmd("BufNewFile,BufRead", {
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = ".bindings",
     callback = function()
         vim.bo.filetype = "csh"
@@ -49,11 +53,3 @@ vim.api.nvim_create_autocmd("BufReadPost", {
         end
     end,
 })
-
-vim.cmd([[
-autocmd BufNewFile,BufRead tsconfig.json setfiletype jsonc
-autocmd BufNewFile,BufRead ~/.alias-secret setfiletype csh
-autocmd BufNewFile,BufRead ~/.alias-git setfiletype csh
-autocmd BufNewFile,BufRead ~/.bindings setfiletype csh
-]])
-

@@ -24,9 +24,9 @@ require("packer").startup({
     function()
         use("wbthomason/packer.nvim")
         -- misc
-        -- use("lbrayner/vim-rzip")
+        use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
-        -- use("lambdalisue/suda.vim")
+        use("lambdalisue/suda.vim")
         -- debugging
         use("ianding1/leetcode.vim")
         use("mfussenegger/nvim-dap")
@@ -59,6 +59,7 @@ require("packer").startup({
         use("theHamsta/nvim-dap-virtual-text")
         -- completion
         use("b0o/SchemaStore.nvim")
+        use("wakatime/vim-wakatime")
         use("folke/neodev.nvim")
         use("folke/neoconf.nvim")
         use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap" } })
@@ -85,42 +86,37 @@ require("packer").startup({
             },
         })
         use("nvim-lua/plenary.nvim")
+        -- formatting
+        use("mhartington/formatter.nvim")
+        -- linting
+        use("mfussenegger/nvim-lint")
         -- lsp
+        use("simrat39/rust-tools.nvim")
         use("williamboman/mason.nvim")
-        use("williamboman/mason-lspconfig.nvim")
-        use({
-            "nvim-telescope/telescope-fzf-native.nvim",
-            run =
-            "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build",
-        })
-        use("johmsalas/text-case.nvim")
-        use("/home/blackboardd/Code/nvim-lspconfig")
-        use("/home/blackboardd/Code/typescript-tools.nvim")
-        use {'neoclide/coc.nvim', branch = 'release'}
-        use("nvim-treesitter/nvim-treesitter")
-        use("nvim-treesitter/nvim-treesitter-refactor")
-        use("nvim-treesitter/nvim-treesitter-textobjects")
-        use("nvim-treesitter/playground")
-        use("RRethy/nvim-treesitter-textsubjects")
-        use("windwp/nvim-ts-autotag")
-        use("jose-elias-alvarez/null-ls.nvim")
-        use("jose-elias-alvarez/typescript.nvim")
+        use("/home/blackboardd/Code/typescript.nvim")
+        use("/home/blackboardd/Code/mason-lspconfig.nvim")
+        use("neovim/nvim-lspconfig")
         -- ricing
+        use("gu-fan/InstantRst")
         use({
             "iamcco/markdown-preview.nvim",
             run = function()
                 vim.fn["mkdp#util#install"]()
             end,
         })
-        use("/home/blackboardd/.config/nvim/brighten")
-        use("rktjmp/lush.nvim")
         use("xolox/vim-misc")
-        use("vantaboard/vim-colorscheme-switcher")
-        use("kyazdani42/nvim-web-devicons")
         use("startup-nvim/startup.nvim")
         use("SmiteshP/nvim-gps")
         use("lewis6991/gitsigns.nvim")
         -- colos
+        use("/home/blackboardd/.config/nvim/brighten")
+        use("rktjmp/lush.nvim")
+        use("vantaboard/vim-colorscheme-switcher")
+        use("kyazdani42/nvim-web-devicons")
+        use("junegunn/seoul256.vim")
+        use("morhetz/gruvbox")
+        use("arcticicestudio/nord-vim")
+        use("tomasr/molokai")
         use("nyoom-engineering/oxocarbon.nvim")
         use("savq/melange-nvim")
         use("svrana/neosolarized.nvim")
@@ -128,13 +124,10 @@ require("packer").startup({
         use("nyngwang/nvimgelion")
         use("maxmx03/FluoroMachine.nvim")
         use("dasupradyumna/midnight.nvim")
-        use("sonjiku/yawnc.nvim")
         use("sekke276/dark_flat.nvim")
         use("zootedb0t/citruszest.nvim")
-        use("2nthony/vitesse.nvim")
         use("xero/miasma.nvim")
         use("shaeinst/roshnivim-cs")
-        use("rafamadriz/neon")
         use("tomasiser/vim-code-dark")
         use("Mofiqul/vscode.nvim")
         use("marko-cerovac/material.nvim")
@@ -148,21 +141,17 @@ require("packer").startup({
         use("glepnir/zephyr-nvim")
         use("rockerBOO/boo-colorscheme-nvim")
         use("jim-at-jibba/ariake-vim-colors")
-        use("Th3Whit3Wolf/onebuddy")
         use("Scysta/pink-panic.nvim")
         use("ishan9299/modus-theme-vim")
         use("sainnhe/edge")
         use("theniceboy/nvim-deus")
-        use("bkegley/gloombuddy")
         use("Th3Whit3Wolf/one-nvim")
         use("PHSix/nvim-hybrid")
         use("Th3Whit3Wolf/space-nvim")
         use("yonlu/omni.vim")
         use("ray-x/aurora")
-        use("ray-x/starry.nvim")
         use("tanvirtin/monokai.nvim")
         use("savq/melange")
-        use("RRethy/nvim-base16")
         use("fenetikm/falcon")
         use("andersevenrud/nordic.nvim")
         use("shaunsingh/nord.nvim")
@@ -202,28 +191,32 @@ require("packer").startup({
         use("kvrohit/rasmus.nvim")
         use("chrsm/paramount-ng.nvim")
         use("kaiuri/nvim-juliana")
-        use("lmburns/kimbox")
         use("rockyzhang24/arctic.nvim")
         use("ramojus/mellifluous.nvim")
         use("Yazeed1s/minimal.nvim")
-        use("lewpoly/sherbet.nvim")
         use("Mofiqul/adwaita.nvim")
         use("olivercederborg/poimandres.nvim")
         use("kvrohit/mellow.nvim")
         use("Yazeed1s/oh-lucy.nvim")
         -- navigation
+        use({
+            "nvim-telescope/telescope-fzf-native.nvim",
+            run =
+            "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build",
+        })
+        use("johmsalas/text-case.nvim")
+        use("nvim-treesitter/nvim-treesitter")
+        use("nvim-treesitter/nvim-treesitter-refactor")
+        use("nvim-treesitter/nvim-treesitter-textobjects")
+        use("nvim-treesitter/playground")
+        use("RRethy/nvim-treesitter-textsubjects")
+        use("windwp/nvim-ts-autotag")
         use("s1n7ax/nvim-search-and-replace")
         use("Pocco81/auto-save.nvim")
         use("tpope/vim-rhubarb")
         use("tpope/vim-fugitive")
         use("pwntester/octo.nvim")
         use("nacro90/numb.nvim")
-        use({
-            "luukvbaal/stabilize.nvim",
-            config = function()
-                require("stabilize").setup()
-            end,
-        })
         use("tpope/vim-repeat")
         use("ThePrimeagen/harpoon")
         use("easymotion/vim-easymotion")
@@ -249,8 +242,7 @@ require("packer").startup({
         use("wellle/targets.vim")
         -- fun
         use("jakewvincent/texmagic.nvim")
-        -- lang
-        use("simrat39/rust-tools.nvim")
+        use("tpope/vim-sleuth")
     end,
     config = {
         max_jobs = 10,
@@ -261,7 +253,10 @@ if vim.fn.has("win32") == 1 then
     require("windows")
 end
 
+require("output_panel").setup()
+
 require("formatting")
+require("linting")
 require("autocommands")
 require("mappings")
 require("tsconfig")
@@ -269,9 +264,8 @@ require("tsconfig")
 require("plugins.colorizer")
 require("plugins.dap")
 require("plugins.feline")
-require("plugins.fundo")
--- require("plugins.lspconfig")
--- require("plugins.coc")
+require("plugins.fundo-plug")
+require("plugins.lsp.completion")
 require("plugins.lsp.servers")
 require("plugins.markdown-preview")
 require("plugins.numb")
@@ -283,8 +277,6 @@ require("plugins.autosave")
 require("plugins.texmagic")
 
 vim.o.exrc = true
--- vim.g.suda_smart_edit = 1
+vim.g.suda_smart_edit = 1
 vim.g.python3_host_prog = "/usr/bin/python"
 vim.g.python_host_prog = "/usr/bin/python2"
-
-vim.lsp.set_log_level("trace")
