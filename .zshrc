@@ -46,6 +46,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 HYPHEN_INSENSITIVE="true"
 MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
+DIRSTACKSIZE=100000000000000000
 
 plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist)
 
@@ -123,3 +124,26 @@ complete -o nospace -F _comp_kdesrc_run kdesrc-run
 ################################################################################
 
 autoload -U +X bashcompinit && bashcompinitcompinit=1
+
+# pnpm
+export PNPM_HOME="/home/blackboardd/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/blackboardd/.local/share/google-cloud-sdk/path.zsh.inc' ]; then . '/home/blackboardd/.local/share/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/home/blackboardd/.local/share/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/blackboardd/.local/share/google-cloud-sdk/completion.zsh.inc'; fi
+
+# Write to history immediately
+setopt inc_append_history
+# History shared among terminals
+setopt share_history
+# Save extended info in history
+setopt extended_history
+# Ignore duplicates
+setopt hist_ignoredups
