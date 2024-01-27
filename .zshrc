@@ -6,6 +6,9 @@ nvim_cfg_alias="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME /usr/local/bin/nvim"
 git_cfg_alias="git --git-dir=$HOME/.cfg/ --work-tree=$HOME"
 
 zplug "marlonrichert/zsh-edit"
+
+# git config --global alias.cz '$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --'
+zplug "vantaboard/commitizen-deno"
 zplug "g-plane/zsh-yarn-autocompletions", hook-build:"./zplug.zsh", defer:2
 zplug "chrissicool/zsh-256color"
 zplug "redxtech/zsh-aur-install"
