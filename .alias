@@ -20,7 +20,8 @@ abbr --quiet -S s="abbr clear-session && source_files $files"
 abbr --quiet -S firefox="firefox-nightly -start-debugger-server"
 abbr --quiet -S fk='fuck'
 abbr --quiet -S tz='sudo ntpd -qg'
-
+abbr --quiet -S 2stem="sudo spleeter separate -c wav -o $HOME/Music -p spleeter:2stems -f '{filename}_{instrument}_2spleeter.wav'"
+abbr --quiet -S 5stem="sudo spleeter separate -c wav -o $HOME/Music -p spleeter:5stems -f '{filename}_{instrument}_5spleeter.wav'"
 # automt automatically mounts all available drives
 abbr --quiet -S automt='sudo mount -a'
 abbr --quiet -S lsc="colorls"
