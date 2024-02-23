@@ -62,12 +62,7 @@ local on_attach = function(client, bufnr)
     end
 end
 
-require("mason").setup({
-    registries = {
-        "github:vantaboard/mason-registry-renamed",
-    },
-    log_level = vim.log.levels.DEBUG,
-})
+require("mason").setup({})
 require("mason-lspconfig").setup({
     ensure_installed = {
         "denols",
@@ -79,7 +74,7 @@ require("mason-lspconfig").setup({
         "eslint",
         "bashls",
         "powershell_es",
-        "glslls",
+        -- "glslls",
         "jsonls",
         "rust_analyzer",
         "lua_ls",
