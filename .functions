@@ -81,3 +81,14 @@ function parse_query() {
 
     for p in ${QUERY//&/ };do kvp=( ${p/=/ } ); k=${kvp[0]};v=${kvp[1]};eval $k=$v;done
 }
+
+function cpmeta() {
+    from=$1
+    to=$2
+    extension=$(echo "$from" | rev | cut -d'.' -f1 | rev)
+    
+    ffmpeg -i "$from" -f ffmetadata meta.txt  
+    ffmpeg -i "$to" -i meta.txt -map_metadata 1 -codec copy "tmp_copied_final.$extension"
+    mv -f "tmp_copied_final.$extension" "$to"
+    rm meta.txt
+}
