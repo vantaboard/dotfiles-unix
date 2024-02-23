@@ -147,6 +147,10 @@ require('mason-lspconfig').setup_handlers({
             config.cmd = { 'glslls', '--target-env', 'opengl', '--stdin' }
         end
 
+        if lsp == "terraformls" then
+            config.filetypes = { "terraform", "tf" }
+        end
+
         if lsp == "eslint" then
             config.filetypes = {
                 'javascript',
