@@ -242,3 +242,13 @@ lspconfig.esbonio.setup({
     on_attach = on_attach,
     capabilities = capabilities,
 })
+
+lspconfig.qml_lsp.setup({
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
+
+lspconfig.qmlls.setup({
+    on_attach = on_attach,
+    capabilities = capabilities,
+})

@@ -35,6 +35,13 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
 })
 
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+    pattern = "*.qml",
+    callback = function()
+        vim.bo.filetype = "qml"
+    end,
+})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = ".bindings",
     callback = function()
         vim.bo.filetype = "csh"
