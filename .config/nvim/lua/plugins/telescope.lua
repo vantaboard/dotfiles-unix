@@ -1,14 +1,12 @@
 require("textcase").setup({})
 local telescope = require("telescope")
 
-local open_in_nvim_tree = function(prompt_bufnr)
+local open_in_nvim_tree = function()
     local action_state = require("telescope.actions.state")
     local Path = require("plenary.path")
-    local actions = require("telescope.actions")
 
     local entry = action_state.get_selected_entry()[1]
     local entry_path = Path:new(entry):parent():absolute()
-    actions._close(prompt_bufnr, true)
     entry_path = Path:new(entry):parent():absolute()
     entry_path = entry_path:gsub("\\", "\\\\")
 
@@ -66,6 +64,19 @@ telescope.load_extension("textcase")
 
 telescope.setup({
     defaults = {
+        file_ignore_patterns = {
+            ".git/.*",
+        },
+        vimgrep_arguments = {
+            'rg',
+            '--color=never',
+            '--no-heading',
+            '--with-filename',
+            '--line-number',
+            '--column',
+            '--smart-case',
+            '--hidden',
+        },
         mappings = {
             i = {
                 ["C-Q"] = actions.send_selected_to_qflist + actions.open_qflist,
