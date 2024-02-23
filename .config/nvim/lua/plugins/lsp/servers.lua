@@ -31,6 +31,14 @@ local on_attach = function(client, bufnr)
 
     keyset("n", "<leader>d", lbuf.definition)
 
+    if client.name == "pylsp" then
+        client.server_capabilities.documentFormattingProvider = false
+    end
+
+    if client.name == "ruff_lsp" then
+        client.server_capabilities.hoverProvider = false
+    end
+
     if client.name == "volar" then
         keyset("n", "<leader>d", ":TypescriptGoToSourceDefinition<cr>", { silent = true, nowait = true })
     end
@@ -48,6 +56,14 @@ local on_attach = function(client, bufnr)
             vim.cmd("Format")
         end)
     end
+
+    if client.name == "ruff_lsp" then
+        keyset("n", "<leader>q", function()
+            lbuf.format()
+            vim.cmd("Format")
+        end)
+    end
+
     keyset("v", "<leader>q", lbuf.format)
     keyset("n", "<leader>,", set_severity(diag.severity.ERROR, "prev"))
     keyset("n", "<leader>.", set_severity(diag.severity.ERROR, "next"))
@@ -62,14 +78,10 @@ local on_attach = function(client, bufnr)
     end
 end
 
-require("mason").setup({
-    registries = {
-        "github:vantaboard/mason-registry-renamed",
-    },
-    log_level = vim.log.levels.DEBUG,
-})
+require("mason").setup({})
 require("mason-lspconfig").setup({
     ensure_installed = {
+        "denols",
         "marksman",
         "taplo",
         "tflint",
@@ -78,13 +90,15 @@ require("mason-lspconfig").setup({
         "eslint",
         "bashls",
         "powershell_es",
-        "glslls",
+        -- "glslls",
         "jsonls",
         "rust_analyzer",
         "lua_ls",
         "gopls",
         "yamlls",
         "clangd",
+        -- "pylsp",
+        "csharp_ls",
         "pyright",
         "ruff_lsp",
         "volar",
@@ -99,15 +113,42 @@ require('mason-lspconfig').setup_handlers({
             on_attach = on_attach,
         }
 
+        if lsp == "pylsp" then
+            config.settings = {
+                pylsp = {
+                    configurationSources = { "flake8" },
+                    plugins = {
+                        rope_autoimport = {
+                            enabled = true,
+                        }
+                    },
+                },
+            }
+        end
+
         if lsp == "pyright" then
             config.root_dir = util.root_pattern('.venv', 'venv', 'pyrightconfig.json')
             config.settings = {
-                pyright = { disableLanguageServices = false, disableOrganizeImports = true },
+                pyright = {
+                    disableLanguageServices = false,
+                    disableOrganizeImports = true,
+                    disableTaggedHints = true,
+                },
+                python = {
+                    analysis = {
+                        autoImportCompletions = true,
+                        typeCheckingMode = 'basic',
+                    },
+                },
             }
         end
 
         if lsp == "glslls" then
             config.cmd = { 'glslls', '--target-env', 'opengl', '--stdin' }
+        end
+
+        if lsp == "terraformls" then
+            config.filetypes = { "terraform", "tf" }
         end
 
         if lsp == "eslint" then
