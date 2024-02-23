@@ -89,7 +89,7 @@ require("packer").startup({
         use("simrat39/rust-tools.nvim")
         use("williamboman/mason.nvim")
         use("/home/blackboardd/Code/typescript.nvim")
-        use("/home/blackboardd/Code/mason-lspconfig.nvim")
+        use("williamboman/mason-lspconfig.nvim")
         use("neovim/nvim-lspconfig")
         -- ricing
         use("gu-fan/InstantRst")
