@@ -216,5 +216,14 @@ require("formatter").setup {
                 }
             end,
         },
+        python = {
+            function()
+                return {
+                    exe = "ruff check",
+                    args = { "--fix-only", "--stdin-filename", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end,
+        },
     }
 }

@@ -6,6 +6,9 @@ nvim_cfg_alias="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME /usr/local/bin/nvim"
 git_cfg_alias="git --git-dir=$HOME/.cfg/ --work-tree=$HOME"
 
 zplug "marlonrichert/zsh-edit"
+
+# git config --global alias.cz '$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --'
+zplug "vantaboard/commitizen-deno"
 zplug "g-plane/zsh-yarn-autocompletions", hook-build:"./zplug.zsh", defer:2
 zplug "chrissicool/zsh-256color"
 zplug "redxtech/zsh-aur-install"
@@ -48,7 +51,7 @@ MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
 DIRSTACKSIZE=100000000000000000
 
-plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist)
+plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist pdm)
 
 bindkey -r ^s
 bindkey ^j autosuggest-accept
