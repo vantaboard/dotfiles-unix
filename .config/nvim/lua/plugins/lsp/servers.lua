@@ -97,7 +97,7 @@ require("mason-lspconfig").setup({
         "gopls",
         "yamlls",
         "clangd",
-        -- "pylsp",
+        "pylsp",
         "csharp_ls",
         "pyright",
         "ruff_lsp",
@@ -116,13 +116,12 @@ require('mason-lspconfig').setup_handlers({
         if lsp == "pylsp" then
             config.settings = {
                 pylsp = {
-                    configurationSources = { "flake8" },
                     plugins = {
-                        rope_autoimport = {
+                        pylsp_mypy = {
                             enabled = true,
-                        }
+                        },
                     },
-                },
+                }
             }
         end
 
@@ -137,7 +136,7 @@ require('mason-lspconfig').setup_handlers({
                 python = {
                     analysis = {
                         autoImportCompletions = true,
-                        typeCheckingMode = 'basic',
+                        typeCheckingMode = 'off',
                     },
                 },
             }
