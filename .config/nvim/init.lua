@@ -65,7 +65,6 @@ require("packer").startup({
         use("hrsh7th/cmp-nvim-lsp-signature-help")
         use("hrsh7th/cmp-nvim-lsp")
         use("petertriho/cmp-git")
-        use("github/copilot.vim")
         use("norcalli/nvim-colorizer.lua")
         use("onsails/lspkind.nvim")
         use("L3MON4D3/LuaSnip")
