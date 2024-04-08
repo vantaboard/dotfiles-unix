@@ -67,7 +67,15 @@ require("packer").startup({
         use("petertriho/cmp-git")
         use("norcalli/nvim-colorizer.lua")
         use("onsails/lspkind.nvim")
-        use("L3MON4D3/LuaSnip")
+        use("rafamadriz/friendly-snippets")
+        use({
+            "L3MON4D3/LuaSnip",
+            requires = { "rafamadriz/friendly-snippets" },
+            -- follow latest release.
+            tag = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+            -- install jsregexp (optional!:).
+            run = "make install_jsregexp"
+        })
         use("saadparwaiz1/cmp_luasnip")
         -- fuzzy
         use("debugloop/telescope-undo.nvim")
