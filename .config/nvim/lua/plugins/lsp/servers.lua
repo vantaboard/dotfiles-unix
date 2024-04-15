@@ -27,6 +27,10 @@ end
 
 ---@diagnostic disable-next-line: unused-local
 local on_attach = function(client, bufnr)
+    if client.server_capabilities.inlayHintProvider then
+        vim.lsp.buf.inlay_hint(bufnr, true)
+end
+
     keyset("v", "<leader>f", lbuf.format)
 
     keyset("n", "<leader>d", lbuf.definition)
