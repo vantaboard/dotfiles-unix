@@ -28,8 +28,21 @@ require("packer").startup({
         use("vitalk/vim-shebang")
         use("lambdalisue/suda.vim")
         -- debugging
+        use("nvim-neotest/nvim-nio")
+        use {
+            "nvim-neotest/neotest",
+            requires = {
+                "nvim-neotest/nvim-nio",
+                "nvim-lua/plenary.nvim",
+                "antoinemadec/FixCursorHold.nvim",
+                "nvim-treesitter/nvim-treesitter"
+            }
+        }
+        use("nvim-neotest/neotest-python")
         use("ianding1/leetcode.vim")
         use("mfussenegger/nvim-dap")
+        use("mfussenegger/nvim-dap-python")
+        use("Weissle/persistent-breakpoints.nvim")
         use {
             "aznhe21/actions-preview.nvim",
         }
