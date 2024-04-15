@@ -15,6 +15,7 @@ cmp.setup({
         ["<C-Space>"] = cmp.mapping.complete(),
         ["<C-e>"] = cmp.mapping.abort(),
         ["<Tab>"] = cmp.mapping.confirm({ select = true }),
+        ["<C-j>"] = cmp.mapping.confirm({ select = true }),
     }),
     sources = cmp.config.sources({
         {
