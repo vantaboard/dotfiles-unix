@@ -21,7 +21,16 @@ if [[ "$s" != "" ]]; then
     nvidia-settings -a CurrentMetaMode="${s//\}/, ForceCompositionPipeline=On\}}"
 fi
 
-nitrogen --set-zoom-fill $HOME/.wallpapers/ultrawide-superultrawide-hd-wallpaper-02bcd837d38117a5fbce41ac5619d417.jpg
+declare -a wallpapers=(
+    "pexels-laura-james-6101979.jpg"
+    "pexels-brett-sayles-4373999.jpg"
+    "pexels-brett-sayles-4402826.jpg"
+)
+
+for (( i=1; i<=${#wallpapers[@]}; i++))
+do
+    nitrogen --head=$((i - 1)) --set-zoom-fill "$HOME/.wallpapers/${wallpapers[$i]}"
+done
 
 setxkbmap -option ctrl:nocaps
 setxkbmap -option caps:escape
