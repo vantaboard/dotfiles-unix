@@ -2,6 +2,8 @@
 source "$HOME/.env"
 
 declare -a commands=(
+    'android-file-transfer'
+    'cameractrlsgtk4'
     'color'
     'kooha'
     'audacity'

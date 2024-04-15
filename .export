@@ -26,8 +26,6 @@ export PYTHONIOENCODING='UTF-8';
 export LANG='en_US.UTF-8';
 export LC_ALL='en_US.UTF-8';
 
-export CX_CONTAINER=$(sudo docker ps -a | grep sponsorcxdb | awk '{print $1}' | head -n 1);
-
 export ACLOCAL_FLAGS="-I /opt/gnome/share/aclocal -I /usr/share/aclocal"
 
 # Path to the emoji-fzf executable
