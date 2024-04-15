@@ -4,10 +4,18 @@ source "$HOME/.env"
 declare -a commands=(
     'android-file-transfer'
     'cameractrlsgtk4'
+    'color'
+    'kooha'
+    'audacity'
+    'cameractrlsgtk4'
+    'lmms'
+    'mixxx'
+    'alsa-scarlett-gui'
     'anki'
     'blueman-manager'
     'headphones'
     'qtcreator'
+    'soulseekqt'
     'normcap'
     'designer'
     'xournalpp'
@@ -58,7 +66,7 @@ declare -a commands=(
 function edit_script ()
 {
     texec="nvim ${BASH_SOURCE[0]}"
-    term="termite -e \"$texec\""
+    term="kitty sh -c \"$texec\""
     /usr/bin/zsh -c "$term"
 }
 
@@ -69,6 +77,10 @@ selection=$(echo -e "$collated" | dmenu -nb '#000000' -nf '#FF84BB' -sb '#ffffff
 
 if [ $? = 4 ]; then
     edit_script
+fi
+
+if [ "$selection" = 'color' ]; then
+    selection="xcolor | xclip -sel clip"
 fi
 
 if [ "$selection" = 'chromium' ]; then
