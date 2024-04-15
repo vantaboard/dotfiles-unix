@@ -88,14 +88,14 @@ local favorite_colorschemes = {
 
 math.randomseed(os.time())
 
+-- vim.cmd(
+--     "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
+-- )
+
 vim.cmd(
-    "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
+    "colorscheme bluloco"
 )
 vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
-
--- vim.cmd(
---     "colorscheme brighten-light"
--- )
 
 -- make it a semitransparent black instead of
 -- vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
