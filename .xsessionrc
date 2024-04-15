@@ -1,0 +1,56 @@
+#!/bin/bash
+
+if xrandr | grep -q 'eDP1 connected'; then
+    xrandr --output eDP1 --mode 1920x1080 --pos 0x0 --scale 1x1 --rotate normal --rate 144
+    xrandr --output DP-1 --off
+    xrandr --output DP1 --off
+    xrandr --output DP2 --off
+    xrandr --output VIRTUAL1 --off
+fi
+
+if xrandr | grep -q 'HDMI-1-0 connected'; then
+    xrandr --output HDMI-1-0 --primary --mode 1920x1080 --pos 0x0 --scale 1x1 --rotate normal --rate 144
+fi
+
+if xrandr | grep -q 'DP-0 connected'; then
+    xrandr --output eDP1 --mode 1280x720 --pos 0x0 --scale 1x1 --rotate normal --rate 144
+    xrandr --output HDMI-0 --primary --mode 1920x1080 --pos 1280x0 --scale 1x1 --rotate normal --rate 144
+    xrandr --output DP-0 --mode 1920x1080 --pos 3200x0 --scale 1x1 --rotate normal --rate 144
+fi
+
+s="$(nvidia-settings -q CurrentMetaMode -t)"
+
+if [[ "$s" != "" ]]; then
+    s="${s#*" :: "}"
+    nvidia-settings -a CurrentMetaMode="${s//\}/, ForceCompositionPipeline=On\}}"
+fi
+
+declare -a wallpapers=(
+    "pexels-laura-james-6101979.jpg"
+    "pexels-brett-sayles-4373999.jpg"
+    "pexels-brett-sayles-4402826.jpg"
+)
+
+for (( i=1; i<=${#wallpapers[@]}; i++))
+do
+    nitrogen --head=$((i - 1)) --set-zoom-fill "$HOME/.wallpapers/${wallpapers[$i]}"
+done
+
+setxkbmap -option ctrl:nocaps
+setxkbmap -option caps:escape
+xmodmap -e "clear lock"
+xmodmap -e "keycode 64 = Mode_switch"
+xmodmap -e "keycode 43 = h H Left H"
+xmodmap -e "keycode 44 = j J Down J"
+xmodmap -e "keycode 45 = k K Up K"
+xmodmap -e "keycode 46 = l L Right L"
+xmodmap -e "keycode 66 = Escape NoSymbol Escape"
+
+# if RAZER_MOUSE_SPEED_PROP exists, run the below command
+if [ "$RAZER_MOUSE_SPEED_PROP" != "" ]; then
+    xinput --set-prop "pointer:Razer Razer DeathAdder V2" "$RAZER_MOUSE_SPEED_PROP" -0.8
+fi
+
+if [ "$VERTI_MOUSE_SPEED_PROP" != "" ]; then
+    xinput --set-prop "MOSART Semi. 2.4G Wireless Mouse" "$VERTI_MOUSE_SPEED_PROP" -0.8
+fi
