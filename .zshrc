@@ -136,12 +136,6 @@ case ":$PATH:" in
 esac
 # pnpm end
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/home/blackboardd/.local/share/google-cloud-sdk/path.zsh.inc' ]; then . '/home/blackboardd/.local/share/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/home/blackboardd/.local/share/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/blackboardd/.local/share/google-cloud-sdk/completion.zsh.inc'; fi
-
 # Write to history immediately
 setopt inc_append_history
 # History shared among terminals
@@ -150,3 +144,11 @@ setopt share_history
 setopt extended_history
 # Ignore duplicates
 setopt hist_ignoredups
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/blackboardd/Code/google-cloud-sdk/path.zsh.inc' ]; then . '/home/blackboardd/Code/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/home/blackboardd/Code/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/blackboardd/Code/google-cloud-sdk/completion.zsh.inc'; fi
+
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
