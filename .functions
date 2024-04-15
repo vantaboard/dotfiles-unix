@@ -92,3 +92,7 @@ function cpmeta() {
     mv -f "tmp_copied_final.$extension" "$to"
     rm meta.txt
 }
+
+kitty-reload() {
+    kill -SIGUSR1 $(pidof kitty)
+}
