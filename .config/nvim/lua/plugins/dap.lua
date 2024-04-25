@@ -2,6 +2,7 @@ local dap, dapui = require("dap"), require("dapui")
 local dap_python = require('dap-python')
 require('dap.ext.vscode').load_launchjs(nil, { debugpy = { 'python' } })
 local Job = require("plenary.job")
+require('dap-go').setup()
 
 -- require("nvim-dap-virtual-text").setup()
 dap_python.setup()

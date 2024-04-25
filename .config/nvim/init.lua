@@ -40,6 +40,8 @@ require("packer").startup({
         }
         use("nvim-neotest/neotest-python")
         use("ianding1/leetcode.vim")
+        use("leoluz/nvim-dap-go")
+        use("mfussenegger/nvim-jdtls")
         use("mfussenegger/nvim-dap")
         use("mfussenegger/nvim-dap-python")
         use("Weissle/persistent-breakpoints.nvim")
