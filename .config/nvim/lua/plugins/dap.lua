@@ -190,7 +190,7 @@ end
 -- dap
 vim.keymap.set("n", "<leader>B", ":PBToggleBreakpoint<cr>", { silent = true })
 vim.keymap.set("n", "<leader>c", continue, { nowait = true })
-vim.keymap.set("n", "<leader>s", dap.step_into, { nowait = true })
+vim.keymap.set("n", "<leader><leader>s", dap.step_into, { nowait = true })
 vim.keymap.set("n", "<leader><leader>D", dap.disconnect, { nowait = true })
 vim.keymap.set("n", "<leader><leader>d", dapui.toggle)
 vim.keymap.set("n", "<leader>t", dap_python.test_method, { nowait = true })
