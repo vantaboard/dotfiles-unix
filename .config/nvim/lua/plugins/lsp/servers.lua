@@ -76,10 +76,6 @@ end
     keyset("n", "<leader>a", lbuf.code_action)
     keyset("n", "<Leader>va", diag.open_float)
     keyset("i", "<C-x><C-x>", lbuf.signature_help)
-
-    if vim.bo.filetype == "sql" then
-        keyset("n", "<leader>q", ":!sqlfluff fix -fq --dialect=postgres %<cr>")
-    end
 end
 
 require("mason").setup({})
