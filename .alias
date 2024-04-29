@@ -14,6 +14,7 @@ alias log=false
 alias cz="$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --"
 
 # abbr --quiet -S vlc="/usr/bin/vlc --intf http --http-host 127.0.0.1:9090"
+abbr --quiet -S gore='rlwrap yaegi'
 abbr --quiet -S log='tail -f -n 5'
 abbr --quiet -S fzm='cd "$(fzf_dirs)"'
 abbr --quiet -S p="paru -S --noconfirm"
