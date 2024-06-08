@@ -70,12 +70,6 @@ function catless() {
     "${nvim_commands[@]}"
 }
 
-function gctp() {
-    git config user.email 'brightenqtompkins@gmail.com'
-    git config core.sshCommand "ssh -i ~/.ssh/id_ed25519_git_personal -F /dev/null" 
-    git config user.signingkey "$GIT_SIGNING_KEY_PERSONAL"
-}
-
 function parse_query() {
     QUERY=$1
 

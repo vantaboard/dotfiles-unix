@@ -25,9 +25,9 @@ exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/slack'
 exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/chromium --profile-directory="Default" --new-window'
 exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/chromium --profile-directory="Default" https://mail.google.com/mail/u/0/#inbox --new-window'
 
-set $screen1 DP-0.3.1
-set $screen2 DP-0.1
-set $screen3 DP-0.2
+set $screen1 DP2-2
+set $screen2 DP2-1
+set $screen3 DP2-3-1
 
 workspace $ws3 output $screen1
 workspace $ws2 output $screen2
@@ -116,9 +116,9 @@ bindsym $mod+minus scratchpad show
 bindsym $mod+Ctrl+Right workspace next
 bindsym $mod+Ctrl+Left workspace prev
 
-exec --no-startup-id $HOME/.local/bin/betterlockscreen --display 1 --nofx --position center --update $HOME/.wallpapers/outono-for-the-neo.jpg
+exec --no-startup-id $HOME/.local/bin/betterlockscreen --display 3 --nofx --position center --update $HOME/.wallpapers/outono-for-the-neo.jpg
 
-bindsym $mod+Ctrl+Shift+k exec --no-startup-id xkb-switch -s us && $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#DC3E80 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
+bindsym $mod+Ctrl+Shift+k exec --no-startup-id xkb-switch -s us && $HOME/.local/bin/betterlockscreen --lock --display 3 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#DC3E80 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
 
 bindsym $mod+1 workspace $ws1
 bindsym $mod+2 workspace $ws2
@@ -147,6 +147,7 @@ bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6
 bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8
 
+for_window [class="Vncviewer"] fullscreen enable global
 for_window [class="kooha"] floating enable border pixel 1
 for_window [title="alsamixer"] floating enable border pixel 1
 for_window [class="calamares"] floating enable border normal

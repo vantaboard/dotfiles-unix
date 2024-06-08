@@ -2,6 +2,7 @@
 source "$HOME/.env"
 
 declare -a commands=(
+    'x2goclient'
     'android-file-transfer'
     'cameractrlsgtk4'
     'color'

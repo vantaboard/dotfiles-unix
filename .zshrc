@@ -51,7 +51,7 @@ MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
 DIRSTACKSIZE=100000000000000000
 
-plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist pdm)
+plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist)
 
 bindkey -r ^s
 bindkey ^j autosuggest-accept
