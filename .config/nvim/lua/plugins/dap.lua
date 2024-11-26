@@ -195,9 +195,41 @@ end
 -- dap
 vim.keymap.set("n", "<leader>B", ":PBToggleBreakpoint<cr>", { silent = true })
 vim.keymap.set("n", "<leader>c", continue, { nowait = true })
-vim.keymap.set("n", "<leader><leader>s", dap.step_into, { nowait = true })
+vim.keymap.set("n", "<leader>s", dap.step_into, { nowait = true })
 vim.keymap.set("n", "<leader><leader>D", dap.disconnect, { nowait = true })
 vim.keymap.set("n", "<leader><leader>d", dapui.toggle)
 vim.keymap.set("n", "<leader>t", dap_python.test_method, { nowait = true })
 vim.keymap.set("n", "<leader>T", dap_python.test_class, { nowait = true })
-vim.keymap.set("n", "<leader>C", pytest_coverage, { nowait = true })
+
+local Input = require("nui.input")
+local event = require("nui.utils.autocmd").event
+
+local input = Input({
+  position = "50%",
+  size = {
+    width = 40,
+  },
+  border = {
+    style = "single",
+    text = {
+      top = "[Conditional Breakpoint]",
+      top_align = "center",
+    },
+  },
+  win_options = {
+    winhighlight = "Normal:Normal,FloatBorder:Normal",
+  },
+}, {
+  prompt = "> ",
+  default_value = "",
+  on_submit = function(value)
+    require('dap').toggle_breakpoint(value)
+  end,
+})
+
+vim.keymap.set("n", "<leader><leader>B", function() input:mount() end, { silent = true })
+
+-- unmount component when cursor leaves buffer
+input:on(event.BufLeave, function()
+  input:unmount()
+end)
