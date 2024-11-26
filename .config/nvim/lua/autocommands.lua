@@ -13,24 +13,6 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     end,
 })
 
-local Job = require("plenary.job")
-
-local function sqlfluff(fname)
-    Job:new({
-        command = "sqlfluff",
-        args = { "fix", "-fq", fname },
-    }):sync()
-    vim.cmd('e')
-end
-
-vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
-    pattern = "*.sql",
-    callback = function()
-        vim.keymap.set("n", "<leader>q", function() sqlfluff(vim.fn.expand('%')) end, { noremap = true, silent = true })
-    end,
-})
-
-
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = ".alias-secret",
     callback = function()
@@ -50,6 +32,15 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = "*.qml",
     callback = function()
         vim.bo.filetype = "qml"
+    end,
+})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+    pattern = "*.sql",
+    callback = function()
+        vim.keymap.set("n", "<leader>q", function()
+            vim.lsp.buf.format({ async = true })
+        end)
     end,
 })
 
