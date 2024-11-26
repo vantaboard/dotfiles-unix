@@ -7,7 +7,6 @@ git_cfg_alias="git --git-dir=$HOME/.cfg/ --work-tree=$HOME"
 
 zplug "marlonrichert/zsh-edit"
 
-# git config --global alias.cz '$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --'
 zplug "vantaboard/commitizen-deno"
 zplug "g-plane/zsh-yarn-autocompletions", hook-build:"./zplug.zsh", defer:2
 zplug "chrissicool/zsh-256color"
@@ -17,12 +16,10 @@ zplug "pschmitt/emoji-fzf.zsh"
 zplug "QuarticCat/zsh-smartcache"
 zplug "aubreypwd/zsh-plugin-fd"
 zplug "urbainvaes/fzf-marks"
-zplug "olets/zsh-abbr"
 zplug "marlonrichert/zsh-edit"
 zplug "wfxr/forgit", defer:2
 zplug "Aloxaf/fzf-tab", defer:2
 zplug "zdharma-continuum/fast-syntax-highlighting", defer:3
-zplug "zsh-users/zsh-autosuggestions", defer:3
 
 zplug check || zplug install
 zplug load
@@ -30,34 +27,34 @@ zplug load
 # Append a command directly
 zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 
-[ -z "$NVM_DIR" ] && export NVM_DIR="$HOME/.nvm"
-source /usr/share/nvm/nvm.sh
-source /usr/share/nvm/bash_completion
-source /usr/share/nvm/install-nvm-exec
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 export ZSH="$HOME/.oh-my-zsh"
-
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 /usr/bin/keychain --quiet $HOME/.ssh/id_ed25519
 source $HOME/.keychain/`hostname`-sh
 
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#868888,bold"
+ZSH_AUTOSUGGEST_MANUAL_REBIND=true
 ZSH_DISABLE_COMPFIX=true
-ZSH_THEME="frontcube"
+ZSH_THEME="clean"
 DISABLE_UNTRACKED_FILES_DIRTY="true"
 HYPHEN_INSENSITIVE="true"
 MENU_COMPLETE="true"
 DISABLE_UPDATE_PROMPT="true"
 DIRSTACKSIZE=100000000000000000
+DISABLE_MAGIC_FUNCTIONS=true
 
-plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fd fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python ripgrep rsync virtualenv zsh-autosuggestions dirhistory dirpersist)
-
-bindkey -r ^s
-bindkey ^j autosuggest-accept
+plugins=(codeclimate colored-man-pages common-aliases deno dirhistory emoji encode64 extract fzf kubectl git-auto-fetch git-escape-magic git-extras github gitignore grunt gulp isodate pip pipenv pyenv pylint python rsync virtualenv dirhistory dirpersist safe-paste zsh-autosuggestions gcloud)
 
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
 source $ZSH/oh-my-zsh.sh
+
+bindkey -r ^s
+
+source $HOME/zsh-abbr/zsh-abbr.zsh
 
 declare -a files=(
     "export"
@@ -81,60 +78,10 @@ function source_files {
 
 source_files $files
 
-eval $(thefuck --alias)
 eval $(keychain --quiet --eval --agents gpg $GIT_GPG_KEY)
 source $HOME/.keychain/`hostname`-sh-gpg
 
-export WORKON_HOME=~/.virtualenvs
-source /usr/bin/virtualenvwrapper.sh
-
-# kdesrc-build #################################################################
-
-## Add kdesrc-build to PATH
-export PATH="$HOME/kde/src/kdesrc-build:$PATH"
-
-
-## Autocomplete for kdesrc-run
-function _comp_kdesrc_run
-{
-    local cur
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-
-    # Complete only the first argument
-    if [[ $COMP_CWORD != 1 ]]; then
-        return 0
-    fi
-
-    # Retrieve build modules through kdesrc-run
-    # If the exit status indicates failure, set the wordlist empty to avoid
-    # unrelated messages.
-    local modules
-    if ! modules=$(kdesrc-run --list-installed);
-    then
-        modules=""
-    fi
-
-    # Return completions that match the current word
-    COMPREPLY=( $(compgen -W "${modules}" -- "$cur") )
-
-    return 0
-}
-
-## Register autocomplete function
-complete -o nospace -F _comp_kdesrc_run kdesrc-run
-
-################################################################################
-
 autoload -U +X bashcompinit && bashcompinitcompinit=1
-
-# pnpm
-export PNPM_HOME="/home/blackboardd/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
 
 # Write to history immediately
 setopt inc_append_history
@@ -145,10 +92,30 @@ setopt extended_history
 # Ignore duplicates
 setopt hist_ignoredups
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/home/blackboardd/Code/google-cloud-sdk/path.zsh.inc' ]; then . '/home/blackboardd/Code/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/home/blackboardd/Code/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/blackboardd/Code/google-cloud-sdk/completion.zsh.inc'; fi
-
+# disable sort when completing `git checkout`                                                                                                                                                                          
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+# NOTE: don't use escape sequences here, fzf-tab will ignore them
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# force zsh not to show completion menu, which allows fzf-tab to capture the unambiguous prefix
+zstyle ':completion:*' menu no
+# preview directory's content with eza when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+# switch group using `<` and `>`
+zstyle ':fzf-tab:*' switch-group '<' '>'
+
+bindkey ^j autosuggest-accept
+
+bindkey '^[OA' up-line-or-history
+bindkey '^[OB' down-line-or-history
+
+export TMOUT=0
+
+PATH="/home/brighten-tompkins/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/home/brighten-tompkins/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/home/brighten-tompkins/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/home/brighten-tompkins/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/home/brighten-tompkins/perl5"; export PERL_MM_OPT;
+. "/home/brighten-tompkins/.deno/env"

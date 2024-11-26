@@ -1,13 +1,13 @@
 # Setup fzf
 # ---------
-if [[ ! "$PATH" == */home/blackboardd/.fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}/home/blackboardd/.fzf/bin"
+if [[ ! "$PATH" == */home/brighten-tompkins/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}/home/brighten-tompkins/.fzf/bin"
 fi
 
 # Auto-completion
 # ---------------
-[[ $- == *i* ]] && source "/home/blackboardd/.fzf/shell/completion.zsh" 2> /dev/null
+[[ $- == *i* ]] && source "/home/brighten-tompkins/.fzf/shell/completion.zsh" 2> /dev/null
 
 # Key bindings
 # ------------
-source "/home/blackboardd/.fzf/shell/key-bindings.zsh"
+source "/home/brighten-tompkins/.fzf/shell/key-bindings.zsh"

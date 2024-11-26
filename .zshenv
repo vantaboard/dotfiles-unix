@@ -108,3 +108,5 @@ function fzf_dirs {
         --bind "ctrl-o:reload{get_files_dirs_lines {} {} -d --pop}" \
         --bind "enter:accept"
 }
+DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
+. "$HOME/.cargo/env"

@@ -1,5 +1,11 @@
 #!/usr/bin/bash
 
+function gmr() {
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    default_branch=${1:-$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')}
+
+    glab mr create --fill --squash-before-merge --source-branch $current_branch --target-branch $default_branch -y
+}
 
 function gitlab-path() {
     PROJECT_ROOT=$(git remote get-url origin | grep -oP '(?<=:).+(?=\.git)')
@@ -70,6 +76,12 @@ function catless() {
     "${nvim_commands[@]}"
 }
 
+function gctp() {
+    git config user.email 'brightenqtompkins@gmail.com'
+    git config core.sshCommand "ssh -i ~/.ssh/id_ed25519_git_personal -F /dev/null" 
+    git config user.signingkey "$GIT_SIGNING_KEY_PERSONAL"
+}
+
 function parse_query() {
     QUERY=$1
 
@@ -90,6 +102,38 @@ function cpmeta() {
 kitty-reload() {
     kill -SIGUSR1 $(pidof kitty)
 }
+
+function ldiff() {
+    # $ ldiff a.csv b.csv
+    # > 235
+    # > 623 a.csv 
+    # > 123 b.csv
+
+    usage() {
+        echo 
+        echo Usage: ldiff file_a file_b
+        kill -INT $$
+    }
+
+    fatal() {
+        echo error: $*
+        usage 1
+    }
+
+    [ "$1" = -h ] && usage 0
+
+    [ $# -lt 1 ] && fatal file_a is missing
+    [ $# -lt 2 ] && fatal file_b is missing. Needs two files to diff
+
+    alen=$(cat $1 | wc -l)
+    blen=$(cat $2 | wc -l)
+    dlen=$(diff -U 0 $1 $2 | grep ^@ | wc -l)
+
+    echo $dlen
+    echo $alen $1
+    echo $blen $2
+}
+
 function pdf_shotgun() {
     $1
 

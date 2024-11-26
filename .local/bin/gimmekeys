@@ -17,5 +17,5 @@ if [ "$RAZER_MOUSE_SPEED_PROP" != "" ]; then
 fi
 
 if [ "$VERTI_MOUSE_SPEED_PROP" != "" ]; then
-    xinput --set-prop "MOSART Semi. 2.4G Wireless Mouse" "$VERTI_MOUSE_SPEED_PROP" -0.8 2>/dev/null
+    xinput --set-prop "MOSART Semi. 2.4G Wireless Mouse" "$VERTI_MOUSE_SPEED_PROP" -0.5 2>/dev/null
 fi

@@ -2,61 +2,38 @@
 source "$HOME/.env"
 
 declare -a commands=(
-    'x2goclient'
-    'android-file-transfer'
-    'cameractrlsgtk4'
-    'color'
-    'kooha'
+    'intellij-idea-community'
+    'umbrello5'
+    'xcolor'
     'audacity'
     'cameractrlsgtk4'
-    'lmms'
-    'mixxx'
-    'alsa-scarlett-gui'
     'anki'
     'blueman-manager'
     'headphones'
     'qtcreator'
-    'soulseekqt'
     'normcap'
-    'designer'
-    'xournalpp'
-    'webcam'
     'postman'
     'filezilla'
-    'drawio'
     'ew'
     'zoom'
     'inkscape'
     'chromium'
     'chromium-personal'
     'chromium-debug'
-    'steam'
-    'qbittorrent'
-    'edge'
     'office'
     'vlc'
-    'scrcpy'
-    'virtualbox'
     'code-insiders'
-    'firefox-nightly'
     'obsidian'
-    'protonvpn'
-    'tor-browser'
-    'avidemux3_qt5'
     'gimp'
-    'kdevelop'
     'obs'
     'keepassxc'
-    'kdenlive'
     'gimmekeys'
-    'gimmekeysvert'
     'pavucontrol'
     'nvidia-settings'
     'peek'
-    'discord'
     'thunderbird'
-    'snapchat'
-    'dolphin'
+    'cast'
+    'nautilus'
     'suspend'
     'hibernate'
     'slack'
@@ -74,13 +51,17 @@ function edit_script ()
 
 commands_string="${commands[*]}"
 collated="${commands_string// /\\n}"
-selection=$(echo -e "$collated" | dmenu -nb '#000000' -nf '#FF84BB' -sb '#ffffff' -sf '#000000' -fn 'MesloLGS Nerd Font Mono Bold-14' -p '    Run    ')
+selection=$(echo -e "$collated" | dmenu -nb '#000000' -nf '#FF84BB' -sb '#ffffff' -sf '#000000' -fn 'GoMono Nerd Font Mono-10' -p '    run    ')
 
 if [ $? = 4 ]; then
     edit_script
 fi
 
-if [ "$selection" = 'color' ]; then
+if [ "$selection" = 'cast' ]; then
+    selection="gnome-network-displays"
+fi
+
+if [ "$selection" = 'xcolor' ]; then
     selection="xcolor | xclip -sel clip"
 fi
 
@@ -93,7 +74,7 @@ if [ "$selection" = 'chromium-personal' ]; then
 fi
 
 if [ "$selection" = 'chrome' ]; then
-    selection="google-chrome-stable"
+    selection="google-chrome"
 fi
 
 if [ "$selection" = 'headphones' ]; then
@@ -107,14 +88,6 @@ fi
 
 if [ "$selection" = 'chromium-debug' ]; then
     selection="chromium --remote-debugging-port=9222 --user-data-dir=/home/blackboardd/.config/chromium-remote"
-fi
-
-if [ "$selection" = 'edge' ]; then
-    selection="microsoft-edge-stable"
-fi
-
-if [ "$selection" = 'firefox-nightly' ]; then
-    selection="$selection -start-debugger-server"
 fi
 
 if [ "$selection" = 'office' ]; then
