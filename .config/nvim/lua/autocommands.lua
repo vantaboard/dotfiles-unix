@@ -6,12 +6,6 @@ vim.api.nvim_create_autocmd("BufWrite", {
     end,
 })
 
-vim.api.nvim_create_autocmd("ColorScheme", {
-    callback = function()
-        vim.cmd("TransparentEnable")
-    end,
-})
-
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = "tsconfig.json",
     callback = function()
