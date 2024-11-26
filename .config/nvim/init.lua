@@ -31,6 +31,7 @@ require("packer").startup({
         use("kristijanhusak/vim-dadbod-ui")
         use("kristijanhusak/vim-dadbod-completion")
         -- misc
+        use("saecki/live-rename.nvim")
         use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
         use("lambdalisue/suda.vim")
@@ -303,6 +304,7 @@ require("plugins.spectre")
 require("plugins.autosave")
 require("plugins.texmagic")
 require("plugins.go")
+require("plugins.renamer")
 require("plugins.dadbod")
 
 vim.o.exrc = true
