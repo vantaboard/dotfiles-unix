@@ -52,4 +52,13 @@ EMOJI_FZF_NO_ALIAS=
 # Set clipboard management tool
 EMOJI_FZF_CLIPBOARD="xsel -b"
 
-# export FZF_DEFAULT_OPTS="--color=preview-fg:#000000,fg+:#000000,preview-bg:#f2f2f2,info:#ff66ff,spinner:#ff0000,prompt:#ff0000,bg+:#e6e6e6,fg:#000000,header:#0d004d,marker:#ff0000,hl+:#ff0000,hl:#0d004d,pointer:#ff0000"
+export DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
+
+export QT_QPA_PLATFORMTHEME=qt5ct
+export LOG_LEVEL=DEBUG
+export COLOR_LOGGING=enabled
+
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+--color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
