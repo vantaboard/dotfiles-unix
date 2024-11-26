@@ -306,6 +306,7 @@ require("plugins.texmagic")
 require("plugins.go")
 require("plugins.renamer")
 require("plugins.dadbod")
+require("plugins.gitlab")
 
 vim.o.exrc = true
 vim.g.suda_smart_edit = 1
