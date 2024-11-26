@@ -1,5 +1,18 @@
 alias gc=false
+alias gfix=false
 
+abbr --quiet -S gfeat="convco commit --feat"
+abbr --quiet -S gfix="convco commit --fix"
+abbr --quiet -S gchore="convco commit --chore"
+abbr --quiet -S gci="convco commit --ci"
+abbr --quiet -S gdocs="convco commit --docs"
+abbr --quiet -S gstyle="convco commit --style"
+abbr --quiet -S grefac="convco commit --refactor"
+abbr --quiet -S gperf="convco commit --perf"
+abbr --quiet -S gtest="convco commit --test"
+abbr --quiet -S gbuild="convco commit --build"
+abbr --quiet -S gitzip="git archive HEAD -o ${PWD##*/}.zip"
+abbr --quiet -S gsmr="git submodule update --init --recursive"
 abbr --quiet -S gf="git fetch --all --tags"
 abbr --quiet -S gsshp='git config core.sshCommand "ssh -i ~/.ssh/id_ed25519_git_personal -F /dev/null"'
 abbr --quiet -S gsup="git submodule foreach 'git fetch && git checkout main && git rebase origin/main | :'"
