@@ -90,3 +90,8 @@ function cpmeta() {
 kitty-reload() {
     kill -SIGUSR1 $(pidof kitty)
 }
+function pdf_shotgun() {
+    $1
+
+    find . -type f -name "*.pdf" | shuf -n $1 | xargs -I {} open "{}"
+}
