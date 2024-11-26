@@ -26,6 +26,10 @@ require("packer").startup({
         -- golang
         use 'ray-x/go.nvim'
         use 'ray-x/guihua.lua' -- recommended if need floating window support
+        -- database
+        use("tpope/vim-dadbod")
+        use("kristijanhusak/vim-dadbod-ui")
+        use("kristijanhusak/vim-dadbod-completion")
         -- misc
         use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
@@ -299,6 +303,7 @@ require("plugins.spectre")
 require("plugins.autosave")
 require("plugins.texmagic")
 require("plugins.go")
+require("plugins.dadbod")
 
 vim.o.exrc = true
 vim.g.suda_smart_edit = 1
