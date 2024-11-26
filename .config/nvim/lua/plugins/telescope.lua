@@ -66,6 +66,7 @@ telescope.setup({
     defaults = {
         file_ignore_patterns = {
             ".git/.*",
+            "pdm.lock",
         },
         vimgrep_arguments = {
             'rg',
