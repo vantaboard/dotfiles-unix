@@ -7,11 +7,11 @@ Xft.hintstyle: hintslight
 Xft.lcdfilter: lcddefault
 
 urxvt*depth: 32
-urxvt*background: [80]#191c25
+urxvt*background: rgba:0000/0000/0200/c800
 
 XTerm*pointerColor:      #1ABB9B
 XTerm*faceName:          Fixed
-XTerm*faceSize:          26
+XTerm*faceSize:          11
 XTerm*reverseVideo:      on
 XTerm*selectToClipboard: true
 
@@ -43,7 +43,7 @@ XTerm*selectToClipboard: true
 Xcursor.theme: Adwaita
 Xcursor.size:                     0
 
-URxvt.font:                       xft:FiraCode Nerd Font Mono:size=11:style=bold
+URxvt.font:                       xft:GoMono Nerd Font Mono:size=10
 
 URxvt.depth:                      32
 URxvt.background:                 [100]#222D31
