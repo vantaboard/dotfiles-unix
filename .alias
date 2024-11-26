@@ -21,7 +21,6 @@ abbr --quiet -S pdfpng="pdftoppm -png"
 abbr --quiet -S bqq5="bq query --use_legacy_sql=false -n 5 <"
 abbr --quiet -S bqq="bq query --use_legacy_sql=false -n 10 <"
 abbr --quiet -S bql="bq load --source_format=CSV --skip_leading_rows=1"
-abbr --quiet -S gore='rlwrap yaegi'
 abbr --quiet -S log='tail -f -n 5'
 abbr --quiet -S fzm='cd "$(fzf_dirs)"'
 abbr --quiet -S p="paru -S --noconfirm"
@@ -48,5 +47,4 @@ abbr --quiet -S clip="clip.exe"
 abbr --quiet -S v4l2reset="sudo rmmod v4l2loopback"
 abbr --quiet -S murder="killall -s SIGKILL"
 abbr --quiet -S cast="gnome-network-displays"
-
-bindkey " " abbr-expand-and-space
+abbr --quiet -S gore="rlwrap yaegi"
