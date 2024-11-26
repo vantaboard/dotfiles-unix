@@ -1,6 +1,7 @@
 local util = require("lspconfig/util")
 local lspconfig = require("lspconfig")
 local rt = require("rust-tools")
+local configs = require 'lspconfig/configs'
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
@@ -36,10 +37,6 @@ null_ls.setup({
 
 ---@diagnostic disable-next-line: unused-local
 local on_attach = function(client, bufnr)
-    if client.server_capabilities.inlayHintProvider then
-        vim.lsp.buf.inlay_hint(bufnr, true)
-end
-
     keyset("v", "<leader>f", lbuf.format)
 
     keyset("n", "<leader>d", lbuf.definition)
@@ -94,7 +91,8 @@ end
 require("mason").setup({})
 require("mason-lspconfig").setup({
     ensure_installed = {
-        "denols",
+        "jdtls",
+        -- "denols",
         "marksman",
         "taplo",
         "tflint",
@@ -107,7 +105,6 @@ require("mason-lspconfig").setup({
         "jsonls",
         "rust_analyzer",
         "lua_ls",
-        "gopls",
         "yamlls",
         "clangd",
         "pylsp",
@@ -125,6 +122,23 @@ require('mason-lspconfig').setup_handlers({
             capabilities = capabilities,
             on_attach = on_attach,
         }
+
+        if lsp == "jdtls" then
+            config.settings = {
+                java = {
+                    import = {
+                        gradle = {
+                            wrapper = {
+                                enabled = true,
+                                checksums = {
+                                    { sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", allowed = true },
+                                }
+                            }
+                        }
+                    },
+                },
+            }
+        end
 
         if lsp == "pylsp" then
             config.settings = {
@@ -222,20 +236,6 @@ require('mason-lspconfig').setup_handlers({
                     completion = {
                         callSnippet = "Replace",
                     },
-                },
-            }
-        end
-
-        if lsp == "gopls" then
-            config.cmd = { "gopls", "serve" }
-            config.filetypes = { "go", "gomod" }
-            config.root_dir = util.root_pattern("go.work", "go.mod", ".git")
-            config.settings = {
-                gopls = {
-                    analyses = {
-                        unusedparams = true,
-                    },
-                    staticcheck = true,
                 },
             }
         end
