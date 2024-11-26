@@ -18,16 +18,21 @@ set $ws7 7:other
 set $ws8 8:other
 
 exec --no-startup-id /usr/bin/python $HOME/.local/bin/i3_startup
-exec --no-startup-id i3-msg 'workspace $ws2; exec /usr/bin/kitty'
-exec --no-startup-id i3-msg 'workspace $ws3; exec /usr/bin/chromium --profile-directory="Personal" --new-window https://www.youtube.com'
-exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/thunderbird'
-exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/slack'
-exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/chromium --profile-directory="Default" --new-window'
-exec --no-startup-id i3-msg 'workspace $ws4; exec /usr/bin/chromium --profile-directory="Default" https://mail.google.com/mail/u/0/#inbox --new-window'
 
-set $screen1 DP2-2
-set $screen2 DP2-1
-set $screen3 DP2-3-1
+# docked-home
+# set $screen1 DP-0.3.1
+# set $screen2 DP-0.1
+# set $screen3 DP-0.2
+
+# docked
+set $screen1 DP-0.3.1
+set $screen2 DP-0.2
+set $screen3 DP-0.1
+
+# docked-crappy
+# set $screen1 DP-2
+# set $screen2 DP-0.6
+# set $screen3 DP-0.5
 
 workspace $ws3 output $screen1
 workspace $ws2 output $screen2
@@ -36,9 +41,8 @@ workspace $ws4 output $screen3
 
 set $mod Mod4
 
-default_border pixel 8
+default_border pixel 4
 default_floating_border normal
-for_window [class=".*"] border pixel 5
 
 hide_edge_borders none
 
@@ -49,6 +53,7 @@ exec --no-startup-id unclutte0
 exec --no-startup-id webcam
 exec_always --no-startup-id picom -b -c
 
+#bindsym $mod+shift+d exec kill -s USR1 $(pidof deadd-notification-center)
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
@@ -81,7 +86,6 @@ bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 bindsym $mod+Shift+a exec --no-startup-id normcap
 bindsym $mod+Ctrl+t exec --no-startup-id picom -b
-bindsym $mod+Shift+d exec --no-startup-id sh /usr/share/sessionsetup.sh
 bindsym $mod+Ctrl+Shift+n exec --no-startup-id xkb-switch -n
 bindsym Print exec --no-startup-id i3-scrot
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
@@ -147,7 +151,6 @@ bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6
 bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8
 
-for_window [class="Vncviewer"] fullscreen enable global
 for_window [class="kooha"] floating enable border pixel 1
 for_window [title="alsamixer"] floating enable border pixel 1
 for_window [class="calamares"] floating enable border normal
@@ -165,19 +168,14 @@ for_window [title="MuseScore: Play Panel"] floating enable
 for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Oblogout"] fullscreen enable
 for_window [class="octopi"] floating enable
-for_window [title="About Pale Moon"] floating enable
 for_window [class="Pamac-manager"] floating enable
 for_window [class="Pavucontrol"] floating enable
 for_window [class="qt5ct"] floating enable sticky enable border normal
 for_window [class="Qtconfig-qt4"] floating enable sticky enable border normal
 for_window [class="Simple-scan"] floating enable border normal
-for_window [class="(?i)System-config-printer.py"] floating enable border normal
-for_window [class="Skype"] floating enable border normal
 for_window [class="Timeset-gui"] floating enable border normal
 for_window [class="(?i)virtualbox"] floating enable border normal
 for_window [class="Xfburn"] floating enable
-for_window [title="Cameractrls Slider"] floating enable
-for_window [title="SILK"] move position 3500px 200px
 
 for_window [urgent=latest] focus
 
