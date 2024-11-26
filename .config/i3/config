@@ -67,7 +67,7 @@ bindsym $mod+shift+b move workspace to output $screen1
 bindsym $mod+shift+n move workspace to output $screen2
 bindsym $mod+shift+m move workspace to output $screen3
 
-font pango:FiraCode Nerd Font Mono 10
+font pango:GoMono Nerd Font Mono 10
 
 floating_modifier $mod
 
