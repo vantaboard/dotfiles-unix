@@ -35,6 +35,10 @@ require("packer").startup({
         use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
         use("lambdalisue/suda.vim")
+        use {
+            "3rd/image.nvim",
+            requires = { "vhyrro/luarocks.nvim" },
+        }
         -- debugging
         use("nvim-neotest/nvim-nio")
         use {
@@ -307,6 +311,7 @@ require("plugins.go")
 require("plugins.renamer")
 require("plugins.dadbod")
 require("plugins.gitlab")
+require("plugins.image")
 
 vim.o.exrc = true
 vim.g.suda_smart_edit = 1
