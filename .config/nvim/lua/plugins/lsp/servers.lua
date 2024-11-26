@@ -288,26 +288,6 @@ require('mason-lspconfig').setup_handlers({
 })
 
 
-require("typescript").setup({
-    disable_commands = false,
-    debug = false,
-    go_to_source_definition = {
-        fallback = true,
-    },
-    server = {
-        capabilities = capabilities,
-        on_attach = on_attach,
-        filetypes = {
-            "javascript",
-            "javascriptreact",
-            "javascript.jsx",
-            "typescript",
-            "typescriptreact",
-            "typescript.tsx",
-            "vue",
-        },
-    },
-})
 
 
 rt.setup({
