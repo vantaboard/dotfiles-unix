@@ -1,4 +1,4 @@
-exec --no-startup-id betterlockscreen -w dim
+exec --no-startup-id $HOME/.local/bin/betterlockscreen -w dim
 exec --no-startup-id dunst
 exec --no-startup-id gxkb
 exec_always --no-startup-id $HOME/.local/bin/gimmekeys
@@ -81,7 +81,7 @@ bindsym $mod+F3 exec pcmanfm
 bindsym $mod+Shift+F3 exec pcmanfm_pkexec
 bindsym $mod+F5 exec terminal -e 'mocp'
 bindsym $mod+t exec --no-startup-id pkill picom
-bindsym $mod+Ctrl+Shift+s exec --no-startup-id systemctl suspend
+bindsym $mod+Ctrl+Shift+s exec --no-startup-id $HOME/.local/bin/suspend
 bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 bindsym $mod+Shift+a exec --no-startup-id normcap
@@ -120,9 +120,9 @@ bindsym $mod+minus scratchpad show
 bindsym $mod+Ctrl+Right workspace next
 bindsym $mod+Ctrl+Left workspace prev
 
-exec --no-startup-id $HOME/.local/bin/betterlockscreen --display 3 --nofx --position center --update $HOME/.wallpapers/outono-for-the-neo.jpg
+exec --no-startup-id $HOME/.local/bin/betterlockscreen --display 1 --nofx --position center --update $HOME/.wallpapers/outono-for-the-neo.jpg
 
-bindsym $mod+Ctrl+Shift+k exec --no-startup-id xkb-switch -s us && $HOME/.local/bin/betterlockscreen --lock --display 3 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#DC3E80 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
+bindsym $mod+Ctrl+Shift+k exec --no-startup-id $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#DC3E80 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
 
 bindsym $mod+1 workspace $ws1
 bindsym $mod+2 workspace $ws2
