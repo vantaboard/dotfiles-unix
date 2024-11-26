@@ -25,6 +25,15 @@ local function set_severity(severity, next_or_prev)
     end
 end
 
+local null_ls = require("null-ls")
+
+null_ls.setup({
+    sources = {
+        null_ls.builtins.diagnostics.sqlfluff,
+        null_ls.builtins.formatting.sqlfluff,
+    },
+})
+
 ---@diagnostic disable-next-line: unused-local
 local on_attach = function(client, bufnr)
     if client.server_capabilities.inlayHintProvider then
@@ -76,6 +85,10 @@ end
     keyset("n", "<leader>a", lbuf.code_action)
     keyset("n", "<Leader>va", diag.open_float)
     keyset("i", "<C-x><C-x>", lbuf.signature_help)
+
+    if vim.bo.filetype == "sql" then
+        keyset("n", "<leader>q", ":!sqlfluff fix -fq --dialect=postgres %<cr>")
+    end
 end
 
 require("mason").setup({})
