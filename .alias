@@ -47,5 +47,6 @@ abbr --quiet -S "cfg"="move_to_config_env"
 abbr --quiet -S clip="clip.exe"
 abbr --quiet -S v4l2reset="sudo rmmod v4l2loopback"
 abbr --quiet -S murder="killall -s SIGKILL"
+abbr --quiet -S cast="gnome-network-displays"
 
 bindkey " " abbr-expand-and-space
