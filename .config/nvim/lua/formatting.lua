@@ -58,27 +58,37 @@ vim.opt.showbreak = "↳  "
 vim.g.camelcasemotion_key = "<leader>"
 
 local favorite_colorschemes = {
-    "aurora",
-    "dracula",
-    -- "vn-night",
-    "oxocarbon",
-    "omni",
-    "tokyonight",
-    "snazzy",
-    "nvimgelion",
-    -- "nightfox",
+    "kanagawa",
+    "nightfox",
+    "cyberdream",
     "nightfly",
     "moonfly",
-    "OceanicNext",
-    "catppuccin-mocha",
-    "terafox",
-    "solarized-high",
-    "rose-pine-main",
-    "fluoromachine",
-    "zenburned",
-    "wildcharm",
+    "tokyonight-night",
+    -- "wildcharm",
     -- "abscs",
-    "codeschool",
+    "radioactive_waste",
+    "boo",
+    -- "nvimgelion",
+    "citruszest",
+    -- "night-owl",
+    "miasma",
+    "eldritch",
+    -- "miss-dracula",
+    -- "aurora",
+    -- "dracula",
+    -- -- "vn-night",
+    -- "oxocarbon",
+    -- "omni",
+    -- "tokyonight",
+    -- "snazzy",
+    -- "OceanicNext",
+    -- "catppuccin-mocha",
+    -- "terafox",
+    -- "solarized-high",
+    -- "rose-pine-main",
+    -- "fluoromachine",
+    -- "zenburned",
+    -- "codeschool",
     -- "brighten",
 }
 
@@ -88,17 +98,12 @@ local favorite_colorschemes = {
 
 math.randomseed(os.time())
 
--- vim.cmd(
---     "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
--- )
-
 vim.cmd(
-    "colorscheme bluloco"
+    "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
 )
-vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
 
--- make it a semitransparent black instead of
--- vim.cmd("hi Normal guibg=NONE ctermbg=NONE")
+vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
+vim.api.nvim_set_hl(0, "ColorColumn", { bg = "#FF2b80" })
 
 -- unicode
 vim.opt.encoding = "utf8"
@@ -113,7 +118,7 @@ vim.o.scrolloff = 8
 vim.opt.clipboard = "unnamedplus"
 
 -- Set color column
-vim.wo.colorcolumn = "80"
+vim.wo.colorcolumn = "120"
 
 -- Tab stops
 vim.o.tabstop = 4
