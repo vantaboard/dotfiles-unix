@@ -5,6 +5,11 @@ require("nvim-tree").setup({
         cmd = "gio trash",
         require_confirm = false,
     },
+    filters = {
+        custom = {
+            "^.null-ls*"
+        },
+    },
     on_attach = function(bufnr)
         local function opts(desc)
             return {
