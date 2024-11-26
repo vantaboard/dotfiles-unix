@@ -23,6 +23,9 @@ local use = require("packer").use
 require("packer").startup({
     function()
         use("wbthomason/packer.nvim")
+        -- golang
+        use 'ray-x/go.nvim'
+        use 'ray-x/guihua.lua' -- recommended if need floating window support
         -- misc
         use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
@@ -295,6 +298,7 @@ require("plugins.telescope")
 require("plugins.spectre")
 require("plugins.autosave")
 require("plugins.texmagic")
+require("plugins.go")
 
 vim.o.exrc = true
 vim.g.suda_smart_edit = 1

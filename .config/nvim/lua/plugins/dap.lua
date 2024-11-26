@@ -160,6 +160,11 @@ dapui.setup({})
 
 -- https://github.com/mfussenegger/nvim-dap/issues/20
 local continue = function()
+    if vim.bo.filetype == "go" and dap.session() == nil then
+        require('dap-go').debug_test()
+
+        return
+    end
     if vim.fn.filereadable('.vscode/launch.json') then
         require('dap.ext.vscode').load_launchjs(nil, { debugpy = { 'python' } })
     end
