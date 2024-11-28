@@ -269,7 +269,6 @@ require("packer").startup({
         use("nvim-treesitter/nvim-treesitter-textobjects")
         use("nvim-treesitter/playground")
         use("RRethy/nvim-treesitter-textsubjects")
-        use("windwp/nvim-ts-autotag")
         use("s1n7ax/nvim-search-and-replace")
         use("Pocco81/auto-save.nvim")
         use("tpope/vim-rhubarb")
