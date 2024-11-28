@@ -1,3 +1,5 @@
+# Add deno completions to search path
+if [[ ":$FPATH:" != *":/home/brighten-tompkins/.zsh/completions:"* ]]; then export FPATH="/home/brighten-tompkins/.zsh/completions:$FPATH"; fi
 source ~/.zplug/init.zsh
 
 NVIM_ALIAS="/usr/local/bin/nvim"
