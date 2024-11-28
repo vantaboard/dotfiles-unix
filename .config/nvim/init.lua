@@ -340,5 +340,5 @@ require("plugins.image")
 
 vim.o.exrc = true
 vim.g.suda_smart_edit = 1
-vim.g.python3_host_prog = "/usr/bin/python"
+vim.g.python3_host_prog = "/usr/bin/python3"
 vim.g.python_host_prog = "/usr/bin/python2"
