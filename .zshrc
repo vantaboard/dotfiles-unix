@@ -1,5 +1,5 @@
 # Add deno completions to search path
-if [[ ":$FPATH:" != *":/home/brighten-tompkins/.zsh/completions:"* ]]; then export FPATH="/home/brighten-tompkins/.zsh/completions:$FPATH"; fi
+if [[ ":$FPATH:" != *":$HOME/.zsh/completions:"* ]]; then export FPATH="$HOME/.zsh/completions:$FPATH"; fi
 source ~/.zplug/init.zsh
 
 NVIM_ALIAS="/usr/local/bin/nvim"
@@ -115,9 +115,9 @@ bindkey '^[OB' down-line-or-history
 
 export TMOUT=0
 
-PATH="/home/brighten-tompkins/perl5/bin${PATH:+:${PATH}}"; export PATH;
-PERL5LIB="/home/brighten-tompkins/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
-PERL_LOCAL_LIB_ROOT="/home/brighten-tompkins/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
-PERL_MB_OPT="--install_base \"/home/brighten-tompkins/perl5\""; export PERL_MB_OPT;
-PERL_MM_OPT="INSTALL_BASE=/home/brighten-tompkins/perl5"; export PERL_MM_OPT;
-. "/home/brighten-tompkins/.deno/env"
+PATH="$HOME/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"$HOME/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"; export PERL_MM_OPT;
+. "$HOME/.deno/env"
