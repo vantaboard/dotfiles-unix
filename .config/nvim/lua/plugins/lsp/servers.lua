@@ -45,7 +45,7 @@ local on_attach = function(client, bufnr)
         client.server_capabilities.documentFormattingProvider = false
     end
 
-    if client.name == "ruff_lsp" then
+    if client.name == "ruff" then
         client.server_capabilities.hoverProvider = false
     end
 
@@ -67,7 +67,7 @@ local on_attach = function(client, bufnr)
         end)
     end
 
-    if client.name == "ruff_lsp" then
+    if client.name == "ruff" then
         keyset("n", "<leader>q", function()
             lbuf.format()
             vim.cmd("Format")
@@ -110,7 +110,7 @@ require("mason-lspconfig").setup({
         "pylsp",
         "csharp_ls",
         "pyright",
-        "ruff_lsp",
+        "ruff",
         "volar",
         "theme_check",
     }
