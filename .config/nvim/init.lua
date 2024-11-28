@@ -38,7 +38,7 @@ require("packer").startup({
         -- use("filipdutescu/renamer.nvim") -- last updated in 2022
         use("saecki/live-rename.nvim")
         use("MunifTanjim/nui.nvim")
-        use("jose-elias-alvarez/null-ls.nvim")
+        use("nvimtools/none-ls.nvim")
         use("junegunn/fzf")
         use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
