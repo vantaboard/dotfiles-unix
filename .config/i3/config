@@ -48,12 +48,13 @@ hide_edge_borders none
 
 focus_follows_mouse no
 
+exec --no-startup-id su - brighten-tompkins -c "tmux new -s musikcube -d musikcube"
+
 exec --no-startup-id unclutter -idle 0.5 -root
 exec --no-startup-id unclutte0
 exec --no-startup-id webcam
 exec_always --no-startup-id picom -b -c
 
-#bindsym $mod+shift+d exec kill -s USR1 $(pidof deadd-notification-center)
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
@@ -151,6 +152,7 @@ bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6
 bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7
 bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8
 
+for_window [class="Vncviewer"] fullscreen enable global
 for_window [class="kooha"] floating enable border pixel 1
 for_window [title="alsamixer"] floating enable border pixel 1
 for_window [class="calamares"] floating enable border normal
@@ -168,6 +170,7 @@ for_window [title="MuseScore: Play Panel"] floating enable
 for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Oblogout"] fullscreen enable
 for_window [class="octopi"] floating enable
+for_window [title="About Pale Moon"] floating enable
 for_window [class="Pamac-manager"] floating enable
 for_window [class="Pavucontrol"] floating enable
 for_window [class="qt5ct"] floating enable sticky enable border normal
