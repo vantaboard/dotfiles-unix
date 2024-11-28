@@ -35,7 +35,7 @@ require("dap-vscode-js").setup({
 dap.adapters.cppdbg = {
     id = "cppdbg",
     type = "executable",
-    command = "/home/blackboardd/Code/vscode-cpptools/debugAdapters/bin/OpenDebugAD7",
+    command = os.getenv("HOME") .. "/.local/share/vscode-cpptools/extension/debugAdapters/bin/OpenDebugAD7",
 }
 
 dap.configurations.python = {}
@@ -121,7 +121,7 @@ for _, language in ipairs({
             request = "launch",
             runtimeExecutable = "/usr/bin/chromium",
             runtimeArgs = {
-                "--user-data-dir=/home/blackboardd/.config/chromium-remote",
+                "--user-data-dir=" .. os.getenv("HOME") .. "/.config/chromium-remote",
             },
             name = "Launch: Chrome (9222)",
             url = "http://localhost:3000",
