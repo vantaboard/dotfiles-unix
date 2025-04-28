@@ -320,7 +320,7 @@ if vim.fn.has("win32") == 1 then
     require("windows")
 end
 
-require("output_panel").setup()
+require("output_panel").setup({})
 
 require("formatting")
 require("linting")
