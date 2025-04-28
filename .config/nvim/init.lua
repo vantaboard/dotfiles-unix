@@ -27,6 +27,13 @@ require("packer").startup({
         use 'ray-x/go.nvim'
         use 'ray-x/guihua.lua' -- recommended if need floating window support
         -- database
+        use {
+            '/home/brighten-tompkins/Code/dataform.nvim',
+            requires = {
+                'rcarriga/nvim-notify',
+                'nvim-telescope/telescope.nvim'
+            },
+        }
         use("tpope/vim-dadbod")
         use("kristijanhusak/vim-dadbod-ui")
         use("kristijanhusak/vim-dadbod-completion")
