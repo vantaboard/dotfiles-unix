@@ -38,6 +38,7 @@ require("packer").startup({
         use("kristijanhusak/vim-dadbod-ui")
         use("kristijanhusak/vim-dadbod-completion")
         -- misc
+        use("m-demare/attempt.nvim")
         use {
             "toppair/peek.nvim",
             build = "deno task --quiet build:fast",
@@ -343,6 +344,7 @@ require("plugins.renamer")
 require("plugins.dadbod")
 require("plugins.gitlab")
 require("plugins.image")
+require("plugins.attempt")
 
 vim.o.exrc = true
 vim.g.suda_smart_edit = 1
