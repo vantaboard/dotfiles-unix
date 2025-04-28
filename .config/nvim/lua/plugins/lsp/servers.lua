@@ -92,12 +92,14 @@ require("mason").setup({})
 require("mason-lspconfig").setup({
     ensure_installed = {
         "jdtls",
-        -- "denols",
         "marksman",
+        "denols",
         "taplo",
         "tflint",
         "terraformls",
         "cssls",
+        -- "vtsls",
+        "html",
         "eslint",
         "bashls",
         "powershell_es",
@@ -188,6 +190,18 @@ require('mason-lspconfig').setup_handlers({
             }
         end
 
+        -- if lsp == "vtsls" then
+        --     config.root_dir = function()
+        --         return not vim.fs.root(0, { 'deno.json', 'deno.jsonc' })
+        --             and vim.fs.root(0, {
+        --                 'tsconfig.json',
+        --                 'jsconfig.json',
+        --                 'package.json',
+        --                 '.git',
+        --             })
+        --     end
+        -- end
+
         if lsp == "pyright" then
             config.root_dir = util.root_pattern('.venv', 'venv', 'pyrightconfig.json')
             config.settings = {
@@ -211,6 +225,41 @@ require('mason-lspconfig').setup_handlers({
 
         if lsp == "terraformls" then
             config.filetypes = { "terraform", "tf" }
+        end
+
+        if lsp == "gopls" then
+            config.settings = {
+                settings = {
+                    gopls = {
+                        usePlaceholders = true,
+                        codelenses = {
+                            gc_details = false,
+                            generate = true,
+                            regenerate_cgo = true,
+                            run_govulncheck = true,
+                            test = true,
+                            tidy = true,
+                            upgrade_dependency = true,
+                            vendor = true,
+                        },
+                        experimentalPostfixCompletions = true,
+                        gofumpt = true,
+                        completeUnimported = true,
+                        staticcheck = true,
+                        directoryFilters = { "-.git", "-node_modules" },
+                        semanticTokens = true,
+                        hints = {
+                            assignVariableTypes = true,
+                            compositeLiteralFields = true,
+                            compositeLiteralTypes = true,
+                            constantValues = true,
+                            functionTypeParameters = true,
+                            parameterNames = true,
+                            rangeVariableTypes = true,
+                        },
+                    },
+                }
+            }
         end
 
         if lsp == "eslint" then
@@ -252,6 +301,16 @@ require('mason-lspconfig').setup_handlers({
                     },
                     schemas = require('schemastore').yaml.schemas {
                         replace = {
+                            ["openapi.json"] = {
+                                description = "A Open API documentation files",
+                                fileMatch = { "openapi.json", "openapi.yml", "openapi.yaml" },
+                                name = "openapi.json",
+                                url = "https://spec.openapis.org/oas/3.1/schema/2022-10-07",
+                                versions = {
+                                    ["3.0"] = "https://spec.openapis.org/oas/3.0/schema/2021-09-28",
+                                    ["3.1"] = "https://spec.openapis.org/oas/3.1/schema/2022-10-07"
+                                }
+                            },
                             ['gitlab-ci'] = {
                                 description = "configuring Gitlab CI",
                                 fileMatch = { '**/.gitlab/**/*.yml', "*.gitlab-ci.yml" },
@@ -312,16 +371,6 @@ lspconfig.esbonio.setup({
     capabilities = capabilities,
 })
 
-lspconfig.qml_lsp.setup({
-    on_attach = on_attach,
-    capabilities = capabilities,
-})
-
-lspconfig.qmlls.setup({
-    on_attach = on_attach,
-    capabilities = capabilities,
-})
-
 lspconfig.gopls.setup({
     on_attach = on_attach,
     capabilities = capabilities,
@@ -336,17 +385,7 @@ lspconfig.gopls.setup({
     },
 })
 
--- if not configs.golangcilsp then
---     configs.golangcilsp = {
---         default_config = {
---             cmd = { 'golangci-lint-langserver' },
---             root_dir = lspconfig.util.root_pattern('.git', 'go.mod'),
---             init_options = {
---                 command = { "golangci-lint", "run", "--enable-all", "--disable", "lll", "--out-format", "json", "--issues-exit-code=1" },
---             }
---         },
---     }
--- end
--- lspconfig.golangci_lint_ls.setup {
---     filetypes = { 'go', 'gomod' }
--- }
+lspconfig.qmlls.setup({
+    on_attach = on_attach,
+    capabilities = capabilities,
+})
