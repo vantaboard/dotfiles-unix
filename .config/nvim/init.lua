@@ -284,7 +284,10 @@ require("packer").startup({
         use("tpope/vim-repeat")
         use("ThePrimeagen/harpoon")
         use("easymotion/vim-easymotion")
-        use("feline-nvim/feline.nvim")
+        use {
+            'nvim-lualine/lualine.nvim',
+            requires = { 'nvim-tree/nvim-web-devicons', opt = true }
+        }
         use("kyazdani42/nvim-tree.lua")
         use("jbyuki/instant.nvim")
         use("akinsho/bufferline.nvim")
@@ -327,7 +330,7 @@ require("tsconfig")
 
 require("plugins.colorizer")
 require("plugins.dap")
-require("plugins.feline")
+require("plugins.lualine")
 require("plugins.fundo-plug")
 require("plugins.lsp.completion")
 require("plugins.lsp.servers")
