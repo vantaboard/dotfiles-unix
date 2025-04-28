@@ -2,6 +2,7 @@
 source "$HOME/.env"
 
 declare -a commands=(
+    'virtualbox'
     'intellij-idea-community'
     'umbrello5'
     'xcolor'
