@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+
+s="$(nvidia-settings -q CurrentMetaMode -t)"
+
+if [[ "$s" != "" ]]; then
+    s="${s#*" :: "}"
+    nvidia-settings -a CurrentMetaMode="${s//\}/, ForceCompositionPipeline=On\}}"
+fi
+
+sleep 3
+
+declare -a wallpapers=(
+    "pexels-brett-sayles-4402826.jpg"
+    "pexels-pixabay-531767.jpg"
+    "pexels-steve-4606820 (1).jpg"
+)
+
+count="$(xrandr | grep "*" | wc -l)"
+echo $count
+
+for (( i=0; i<=$count; i++))
+do
+    echo "$HOME/.wallpapers/${wallpapers[$i]}"
+    nitrogen --head=$((i-1)) --set-zoom-fill "$HOME/.wallpapers/${wallpapers[$i]}"
+done
