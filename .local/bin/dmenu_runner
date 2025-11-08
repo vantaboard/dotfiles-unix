@@ -73,15 +73,15 @@ if [ "$selection" = 'xcolor' ]; then
 fi
 
 if [ "$selection" = 'chromium' ]; then
-    selection="chromium --profile-directory='Default'"
+    selection="google-chrome-stable --profile-directory='Default'"
 fi
 
 if [ "$selection" = 'chromium-personal' ]; then
-    selection="chromium --profile-directory='Personal'"
+    selection="google-chrome-stable --profile-directory='Personal'"
 fi
 
 if [ "$selection" = 'chrome' ]; then
-    selection="google-chrome"
+    selection="google-chrome-stable"
 fi
 
 if [ "$selection" = 'headphones' ]; then
