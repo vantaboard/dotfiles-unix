@@ -1,50 +1,18 @@
 alias firefox=false
 alias p=false
+alias p=false
 alias gs=false
 alias gm=false
 alias vi=false
 alias help=false
 alias fzm=false
-# alias vlc=false
-# alias rm="trash-put"
 alias craftenv="source ~/CraftRoot/craft/craftenv.sh"
 alias help=run-help
 alias expowebcam="webcam exposure"
 alias log=false
-alias python=python3
 alias cz="$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --"
 alias cpdf="xclip -selection clipboard -target application/pdf"
 alias cpng="xclip -selection clipboard -target image/png"
-
-# abbr --quiet -S vlc="/usr/bin/vlc --intf http --http-host 127.0.0.1:9090"
-abbr --quiet -S pdfpng="pdftoppm -png"
-abbr --quiet -S bqq5="bq query --use_legacy_sql=false -n 5 <"
-abbr --quiet -S bqq="bq query --use_legacy_sql=false -n 10 <"
-abbr --quiet -S bql="bq load --source_format=CSV --skip_leading_rows=1"
-abbr --quiet -S log='tail -f -n 5'
-abbr --quiet -S fzm='cd "$(fzf_dirs)"'
-abbr --quiet -S p="paru -S --noconfirm"
-abbr --quiet -S s="abbr clear-session && source_files $files"
-abbr --quiet -S firefox="firefox-nightly -start-debugger-server"
-abbr --quiet -S fk='fuck'
-abbr --quiet -S tz='sudo ntpd -qg'
-abbr --quiet -S 2stem="poetry -C $HOME/Code/spleeter run spleeter separate -o $HOME/StemMusic -p spleeter:2stems -f '{filename}_{instrument}_2spleeter.{codec}'"
-abbr --quiet -S 5stem="poetry -C $HOME/Code/spleeter run spleeter separate -o $HOME/StemMusic -p spleeter:5stems -f '{filename}_{instrument}_5spleeter.{codec}'"
-# automt automatically mounts all available drives
-abbr --quiet -S automt='sudo mount -a'
-abbr --quiet -S lsc="colorls"
-
-abbr --quiet -S kb="kubectl -n"
-abbr --quiet -S kbd="kubectl"
-abbr --quiet -S slackt="slack-term -config ~/.slack"
-abbr --quiet -S mutt="neomutt"
-abbr --quiet -S sl="ls"
 alias vi=nvim
-
-abbr --quiet -S "cfg"="move_to_config_env"
-
-abbr --quiet -S clip="clip.exe"
-abbr --quiet -S v4l2reset="sudo rmmod v4l2loopback"
-abbr --quiet -S murder="killall -s SIGKILL"
-abbr --quiet -S cast="gnome-network-displays"
-abbr --quiet -S gore="rlwrap yaegi"
+alias rm=trash-put
+alias python=python3
