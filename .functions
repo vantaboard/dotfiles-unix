@@ -1,5 +1,14 @@
 #!/usr/bin/bash
 
+function compabbr() {
+    # Compile once (run this manually whenever you edit the abbr file)
+    zmodload zsh/zcompile
+    zcompile -R ~/.config/zsh/abbreviations.zsh{.zwc,.zwc.old}
+
+    # .zshrc
+    [[ -r ~/.config/zsh/abbreviations.zsh.zwc ]] && source ~/.config/zsh/abbreviations.zsh.zwc || source ~/.config/zsh/abbreviations.zsh
+}
+
 function gmr() {
     current_branch=$(git rev-parse --abbrev-ref HEAD)
     default_branch=${1:-$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')}
@@ -138,4 +147,37 @@ function pdf_shotgun() {
     $1
 
     find . -type f -name "*.pdf" | shuf -n $1 | xargs -I {} open "{}"
+}
+
+function zshcompile() {
+    # Compile frequently sourced scripts to .zwc if they exist
+    zmodload zsh/zcompile 2>/dev/null || return
+
+    # list of glob patterns to compile; patterns may match 0 files
+    typeset -a _compile_globs=(
+      "$ZSH/oh-my-zsh.sh"
+      "$ZSH/lib/*.zsh"
+      "$ZSH/plugins/git/git.plugin.zsh"
+      "$HOME/.config/zsh/*.zsh"
+      "$ZSH/custom/plugins/zsh-completions/src/*.zsh"
+    )
+
+    setopt localoptions null_glob             # missing globs -> empty list
+    typeset -a _to_compile=()
+
+    for pat in "${_compile_globs[@]}"; do
+      for f in $~pat; do                      # expand pattern safely
+        [[ -r $f ]] && _to_compile+="$f"
+      done
+    done
+
+    if (( ${#_to_compile} )); then
+      # one .zwc per file keeps sourcing behavior simple
+      for f in "${_to_compile[@]}"; do
+        zcompile -R "${f}.zwc" "$f"
+      done
+      echo "Compiled ${#_to_compile} files."
+    else
+      echo "Nothing to compile."
+    fi
 }

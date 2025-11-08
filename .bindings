@@ -34,6 +34,7 @@ function fzf-dir {
 }
 
 zle -N paste-clipboard
+bindkey -r ^s
 bindkey ^s paste-clipboard
 
 zle -N paste-clipboard-r
@@ -47,3 +48,7 @@ bindkey ^u fzf-dir
 
 bind ^e mark
 bind ^f fzm
+
+bindkey ^j autosuggest-accept
+bindkey '^[OA' up-line-or-history
+bindkey '^[OB' down-line-or-history
