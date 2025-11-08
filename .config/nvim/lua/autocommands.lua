@@ -1,3 +1,5 @@
+local Job = require("plenary.job")
+
 vim.api.nvim_create_augroup("reload queries on query save", { clear = true })
 vim.api.nvim_create_autocmd("BufWrite", {
     pattern = "*.scm",
@@ -32,6 +34,15 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     pattern = "*.qml",
     callback = function()
         vim.bo.filetype = "qml"
+    end,
+})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+    pattern = "*.sqlx",
+    callback = function()
+        vim.keymap.set("n", "<leader>q", function()
+            vim.lsp.buf.format({ async = true })
+        end)
     end,
 })
 

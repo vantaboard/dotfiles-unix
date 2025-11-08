@@ -76,7 +76,7 @@ telescope.setup({
             '--line-number',
             '--column',
             '--smart-case',
-            '--hidden',
+            "--no-ignore",
         },
         mappings = {
             i = {
@@ -127,58 +127,77 @@ vim.o.undodir = vim.fn.expand("~/.vim/undo")
 
 ---------- mappings ----------
 -- built ins
-local builtin = require("telescope.builtin")
-vim.keymap.set("n", "<leader>ff", function()
-    builtin.find_files({ hidden = true })
-end)
-vim.keymap.set("n", "<leader>fg", function()
-    builtin.live_grep({ hidden = true })
-end)
-vim.keymap.set("n", "<leader>/", function()
-    builtin.current_buffer_fuzzy_find({
-        fuzzy = false,
-        case_mode = "ignore_case",
-    })
-end)
-vim.keymap.set("n", "<leader>D", function()
-    builtin.diagnostics({ bufnr = 0 })
-end)
-vim.keymap.set("n", "<leader>da", builtin.diagnostics)
-vim.keymap.set("n", "<leader>dw", function()
-    builtin.diagnostics({
-        severity = vim.diagnostic.severity.WARN,
-    })
-end)
-vim.keymap.set("n", "<leader>de", function()
-    builtin.diagnostics({
-        severity = vim.diagnostic.severity.ERROR,
-    })
-end)
 
--- resume picker
-vim.keymap.set("n", "<leader>R", ":Telescope resume<cr>")
+if vim.g.vscode then
+    -- VSCode extension
+    local code = require('vscode')
 
--- get all pickers
-vim.keymap.set("n", "<leader>p", ":Telescope<cr>")
+    vim.keymap.set("n", "<leader>ff", function()
+        code.action('periscope.searchFiles')
+    end)
 
--- yank history
-vim.keymap.set("n", "<leader>y", ":Telescope yank_history<cr>")
+    vim.keymap.set("n", "<leader>fg", function()
+        code.action('periscope.search')
+    end)
 
--- dap
-vim.keymap.set("n", "<leader>ds", ":Telescope dap frames<cr>")
-vim.keymap.set("n", "<leader>dc", ":Telescope dap commands<cr>")
-vim.keymap.set("n", "<leader>db", ":Telescope dap list_breakpoints<cr>")
-vim.keymap.set("n", "<leader>dv", ":Telescope dap variables<cr>")
+    vim.keymap.set("n", "<leader>/", function()
+        code.action('periscope.searchCurrentFile')
+    end)
+else
+    -- ordinary Neovim
+    local builtin = require("telescope.builtin")
+    vim.keymap.set("n", "<leader>ff", function()
+        builtin.find_files({ hidden = true, no_ignore = true })
+    end)
+    vim.keymap.set("n", "<leader>fg", function()
+        builtin.live_grep({ hidden = true, no_ignore = true })
+    end)
+    vim.keymap.set("n", "<leader>/", function()
+        builtin.current_buffer_fuzzy_find({
+            fuzzy = false,
+            case_mode = "ignore_case",
+        })
+    end)
+    vim.keymap.set("n", "<leader>D", function()
+        builtin.diagnostics({ bufnr = 0 })
+    end)
+    vim.keymap.set("n", "<leader>da", builtin.diagnostics)
+    vim.keymap.set("n", "<leader>dw", function()
+        builtin.diagnostics({
+            severity = vim.diagnostic.severity.WARN,
+        })
+    end)
+    vim.keymap.set("n", "<leader>de", function()
+        builtin.diagnostics({
+            severity = vim.diagnostic.severity.ERROR,
+        })
+    end)
 
--- harpoon
-vim.keymap.set("n", "<leader>h", ":Telescope harpoon marks<cr>")
+    -- resume picker
+    vim.keymap.set("n", "<leader>R", ":Telescope resume<cr>")
 
--- color scheme
-vim.keymap.set("n", "<leader><leader>o", function()
-    builtin.colorscheme({
-        enable_preview = true,
-    })
-end)
+    -- get all pickers
+    vim.keymap.set("n", "<leader>p", ":Telescope<cr>")
 
--- command history
-vim.keymap.set("n", "<leader>:", ":Telescope command_history<cr>")
+    -- yank history
+    vim.keymap.set("n", "<leader>y", ":Telescope yank_history<cr>")
+
+    -- dap
+    vim.keymap.set("n", "<leader>ds", ":Telescope dap frames<cr>")
+    vim.keymap.set("n", "<leader>dc", ":Telescope dap commands<cr>")
+    vim.keymap.set("n", "<leader>db", ":Telescope dap list_breakpoints<cr>")
+    vim.keymap.set("n", "<leader>dv", ":Telescope dap variables<cr>")
+
+    -- harpoon
+    vim.keymap.set("n", "<leader>h", ":Telescope harpoon marks<cr>")
+
+    -- color scheme
+    vim.keymap.set("n", "<leader><leader>o", function()
+        builtin.colorscheme({
+            enable_preview = true,
+        })
+    end)
+
+    -- command history
+    vim.keymap.set("n", "<leader>:", ":Telescope command_history<cr>")
+end
