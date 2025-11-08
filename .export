@@ -1,11 +1,11 @@
+#!/usr/bin/sh
 export LS_COLORS="$(vivid generate dracula)"
 export TSS_LOG="-level verbose -file $HOME/.tsserver_temp/tsserver.log";
 export MANPAGER='less -X';
 export EDITOR='nvim';
 export WORKON_HOME=$HOME/.virtualenvs
-export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin"
 export HISTORY_PATH="$HOME/.local/share/zsh/history";
-export BROWSER=/usr/bin/chromium
+export BROWSER=/usr/bin/google-chrome-stable
 export LIBAVCODEC_VERSION_MAJOR=60
 export GIT_PAGER="diff-so-fancy"
 # ignore ones with a length greater than 50 -- thanks to https://github.com/Aloxaf
@@ -28,30 +28,6 @@ export LC_ALL='en_US.UTF-8';
 
 export ACLOCAL_FLAGS="-I /opt/gnome/share/aclocal -I /usr/share/aclocal"
 
-# Path to the emoji-fzf executable
-EMOJI_FZF_BIN_PATH="emoji-fzf"
-
-# Bind to Ctrl-K by default. Unset to disable.
-EMOJI_FZF_BINDKEY="^k"
-
-# Fuzzy matching tool to use for the emoji selection
-EMOJI_FZF_FUZZY_FINDER=fzf
-
-# Optional arguments to pass to the fuzzy finder tool
-EMOJI_FZF_FUZZY_FINDER_ARGS=
-
-# Path to an optional custom alias JSON file
-EMOJI_FZF_CUSTOM_ALIASES=
-
-# Set to non-empty value to prepend the emoji before the emoji aliases
-EMOJI_FZF_PREPEND_EMOJIS=1
-
-# Set to non-empty value to skip the creation of shell aliases
-EMOJI_FZF_NO_ALIAS=
-
-# Set clipboard management tool
-EMOJI_FZF_CLIPBOARD="xsel -b"
-
 export DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
 
 export QT_QPA_PLATFORMTHEME=qt5ct
@@ -59,9 +35,32 @@ export LOG_LEVEL=DEBUG
 export COLOR_LOGGING=enabled
 
 export FZF_DEFAULT_OPTS=" \
---color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=bg+:#313244,bg:-1,spinner:#f5e0dc,hl:#f38ba8 \
 --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
---color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
+--color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
+--bind 'tab:down,shift-tab:up'"
 
 export CGO_ENABLED=1
 export CXX=clang++ 
+
+# export BIGQUERY_EMULATOR_HOST=https://bigquery.googleapis.com
+
+export GOEXPERIMENT=synctest
+
+export TMOUT=0
+
+export PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}";
+export PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}";
+export PERL_MB_OPT="--install_base \"$HOME/perl5\"";
+export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5";
+
+export PNPM_HOME="/home/brighten-tompkins/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+export NVIM_ALIAS="/usr/local/bin/nvim"
+export GIT_ALIAS="git"
+export nvim_cfg_alias="GIT_DIR=$HOME/.cfg GIT_WORK_TREE=$HOME /usr/local/bin/nvim"
+export git_cfg_alias="git --git-dir=$HOME/.cfg/ --work-tree=$HOME"
