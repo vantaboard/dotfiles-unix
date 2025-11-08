@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# Copy essential Chromium profile data from one profile directory to another
+# Usage: ./copy_chromium_profile.sh --input /path/to/old/Default --output /path/to/new/Default
+
+set -euo pipefail
+
+# -------------------------------
+# Parse arguments
+# -------------------------------
+INPUT_DIR=""
+OUTPUT_DIR=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --input)
+      INPUT_DIR="$2"
+      shift 2
+      ;;
+    --output)
+      OUTPUT_DIR="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      echo "Usage: $0 --input /path/to/old/Default --output /path/to/new/Default"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$INPUT_DIR" || -z "$OUTPUT_DIR" ]]; then
+  echo "❌ Error: Both --input and --output must be specified."
+  echo "Usage: $0 --input /path/to/old/Default --output /path/to/new/Default"
+  exit 1
+fi
+
+if [[ ! -d "$INPUT_DIR" ]]; then
+  echo "❌ Error: Input directory does not exist: $INPUT_DIR"
+  exit 1
+fi
+
+mkdir -p "$OUTPUT_DIR"
+
+echo "🔄 Copying Chromium user data..."
+echo "From: $INPUT_DIR"
+echo "To:   $OUTPUT_DIR"
+echo
+
+# -------------------------------
+# Files to copy
+# -------------------------------
+files_to_copy=(
+  "Bookmarks"
+  "Cookies"
+  "Cookies-journal"
+  "History"
+  "History-journal"
+  "Top Sites"
+  "Top Sites-journal"
+  "Visited Links"
+  "Login Data"
+  "Login Data-journal"
+  "Login Data For Account"
+  "Web Data"
+  "Web Data-journal"
+  "Favicons"
+  "Favicons-journal"
+  "Preferences"
+  "Secure Preferences"
+  "Custom Dictionary.txt"
+)
+
+# -------------------------------
+# Folders to copy
+# -------------------------------
+dirs_to_copy=(
+  "Extensions"
+  "Local Extension Settings"
+  "Managed Extension Settings"
+  "Sync Extension Settings"
+  "Sessions"
+  "Session Storage"
+  "Local Storage"
+  "IndexedDB"
+  "Dictionaries"
+)
+
+# -------------------------------
+# Copy files
+# -------------------------------
+for f in "${files_to_copy[@]}"; do
+  if [[ -f "$INPUT_DIR/$f" ]]; then
+    echo "📄 Copying file: $f"
+    cp -p "$INPUT_DIR/$f" "$OUTPUT_DIR/" || echo "⚠️  Failed to copy $f"
+  fi
+done
+
+# -------------------------------
+# Copy directories
+# -------------------------------
+for d in "${dirs_to_copy[@]}"; do
+  if [[ -d "$INPUT_DIR/$d" ]]; then
+    echo "📁 Copying directory: $d"
+    cp -a "$INPUT_DIR/$d" "$OUTPUT_DIR/" || echo "⚠️  Failed to copy $d"
+  fi
+done
+
+echo
+echo "✅ Done! Profile data copied successfully to:"
+echo "   $OUTPUT_DIR"
+echo
+echo "👉 Note: Some encrypted data (passwords, cookies) may not transfer unless on the same OS user."
