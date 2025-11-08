@@ -92,18 +92,12 @@ local favorite_colorschemes = {
     -- "brighten",
 }
 
--- random colorscheme
--- seed based on the current hour, so that it changes every 5 minutes
--- math.randomseed(tonumber(os.date("%H")) * 300)
-
-math.randomseed(os.time())
-
 vim.cmd(
-    "colorscheme " .. favorite_colorschemes[math.random(#favorite_colorschemes)]
+    "colorscheme melange"
 )
 
 vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
-vim.api.nvim_set_hl(0, "ColorColumn", { bg = "#FF2b80" })
+vim.api.nvim_set_hl(0, "ColorColumn", { bg = "#f98304" })
 
 -- unicode
 vim.opt.encoding = "utf8"

@@ -1,3 +1,20 @@
+require("transparent").setup({
+    enable = true,
+    extra_groups = {
+        "NormalFloat",    -- plugins which have float panel such as Lazy, Mason, LspInfo
+        "NvimTreeNormal", -- NvimTree
+        "BufferLineTabClose",
+        "BufferlineBufferSelected",
+        "BufferLineFill",
+        "BufferLineBackground",
+        "BufferLineSeparator",
+        "BufferLineIndicatorSelected",
+    },
+    exclude = {},
+})
+
+require('transparent').clear_prefix('BufferLine')
+
 local ensure_packer = function()
     local fn = vim.fn
     local install_path = fn.stdpath("data")
@@ -23,17 +40,46 @@ local use = require("packer").use
 require("packer").startup({
     function()
         use("wbthomason/packer.nvim")
+        -- === ai ===
+        -- Avante.nvim with build process
+        -- use {
+        --     'yetone/avante.nvim',
+        --     branch = 'main',
+        --     run = 'make',
+        --     config = function()
+        --         require('avante').setup()
+        --     end,
+        --     requires = {
+        --         -- Required plugins
+        --         'nvim-lua/plenary.nvim',
+        --         'MunifTanjim/nui.nvim',
+        --         'MeanderingProgrammer/render-markdown.nvim',
+
+        --         -- Optional dependencies
+        --         'hrsh7th/nvim-cmp',
+        --         'nvim-tree/nvim-web-devicons', -- or use 'echasnovski/mini.icons'
+        --         'HakonHarnes/img-clip.nvim',
+        --         'stevearc/dressing.nvim', -- for enhanced input UI
+        --         'folke/snacks.nvim',      -- for modern input UI
+        --     }
+        -- }
+        -- use({
+        --     "/home/brighten-tompkins/Code/cursor-agent.nvim",
+        --     config = function()
+        --         require("cursor-agent").setup({})
+        --     end,
+        -- })
         -- golang
         use 'ray-x/go.nvim'
         use 'ray-x/guihua.lua' -- recommended if need floating window support
         -- database
-        use {
-            '/home/brighten-tompkins/Code/dataform.nvim',
-            requires = {
-                'rcarriga/nvim-notify',
-                'nvim-telescope/telescope.nvim'
-            },
-        }
+        -- use {
+        --     '/home/brighten-tompkins/Code/dataform.nvim',
+        --     requires = {
+        --         'rcarriga/nvim-notify',
+        --         'nvim-telescope/telescope.nvim'
+        --     },
+        -- }
         use("tpope/vim-dadbod")
         use("kristijanhusak/vim-dadbod-ui")
         use("kristijanhusak/vim-dadbod-completion")
@@ -51,10 +97,6 @@ require("packer").startup({
         use("mhanberg/output-panel.nvim")
         use("vitalk/vim-shebang")
         use("lambdalisue/suda.vim")
-        use {
-            "3rd/image.nvim",
-            requires = { "vhyrro/luarocks.nvim" },
-        }
         -- debugging
         use("nvim-neotest/nvim-nio")
         use {
@@ -139,6 +181,7 @@ require("packer").startup({
         use("williamboman/mason-lspconfig.nvim")
         use("neovim/nvim-lspconfig")
         -- ricing
+        use("xiyaowong/transparent.nvim")
         use("gu-fan/InstantRst")
         use({
             "iamcco/markdown-preview.nvim",
@@ -155,7 +198,7 @@ require("packer").startup({
         use("eldritch-theme/eldritch.nvim")
         use("oxfist/night-owl.nvim")
         use("uloco/bluloco.nvim")
-        use("scottmckendry/cyberdream.nvim")
+        -- use("scottmckendry/cyberdream.nvim")
         use("rktjmp/lush.nvim")
         use("vantaboard/vim-colorscheme-switcher")
         use("kyazdani42/nvim-web-devicons")
@@ -174,7 +217,7 @@ require("packer").startup({
         use("zootedb0t/citruszest.nvim")
         use("shaeinst/roshnivim-cs")
         use("tomasiser/vim-code-dark")
-        use("Mofiqul/vscode.nvim")
+        -- use("Mofiqul/vscode.nvim")
         use("marko-cerovac/material.nvim")
         use("bluz71/vim-nightfly-colors")
         use("bluz71/vim-moonfly-colors")
@@ -214,7 +257,7 @@ require("packer").startup({
         use("adisen99/codeschool.nvim")
         use("projekt0n/github-nvim-theme")
         use("kdheepak/monochrome.nvim")
-        use("rose-pine/neovim")
+        -- use("rose-pine/neovim")
         use("mcchrish/zenbones.nvim")
         use("catppuccin/nvim")
         use("FrenzyExists/aquarium-vim")
@@ -246,25 +289,25 @@ require("packer").startup({
         -- version control
         use("tpope/vim-fugitive")
         use("pwntester/octo.nvim")
-        use {
-            "harrisoncramer/gitlab.nvim",
-            requires = {
-                "MunifTanjim/nui.nvim",
-                "nvim-lua/plenary.nvim",
-                "sindrets/diffview.nvim",
-                "stevearc/dressing.nvim",      -- Recommended but not required. Better UI for pickers.
-                "nvim-tree/nvim-web-devicons", -- Recommended but not required. Icons in discussion tree.
-            },
-            build = function()
-                require("gitlab.server").build()
-            end,
-            branch = "develop",
-            config = function()
-                require("diffview") -- We require some global state from diffview
-                local gitlab = require("gitlab")
-                gitlab.setup()
-            end,
-        }
+        -- use {
+        --     "harrisoncramer/gitlab.nvim",
+        --     requires = {
+        --         "MunifTanjim/nui.nvim",
+        --         "nvim-lua/plenary.nvim",
+        --         "sindrets/diffview.nvim",
+        --         "stevearc/dressing.nvim",      -- Recommended but not required. Better UI for pickers.
+        --         "nvim-tree/nvim-web-devicons", -- Recommended but not required. Icons in discussion tree.
+        --     },
+        --     build = function()
+        --         require("gitlab.server").build()
+        --     end,
+        --     branch = "develop",
+        --     config = function()
+        --         require("diffview") -- We require some global state from diffview
+        --         local gitlab = require("gitlab")
+        --         gitlab.setup()
+        --     end,
+        -- }
         -- navigation
         use({
             "nvim-telescope/telescope-fzf-native.nvim",
@@ -316,9 +359,26 @@ require("packer").startup({
     },
 })
 
-if vim.fn.has("win32") == 1 then
-    require("windows")
-end
+
+
+-- require("cursor-agent").setup({
+--     window_mode = "attached",
+--     position = "right", -- Opens on right side
+--     width = 0.2,        -- 1/5 of screen width
+-- })
+-- 
+-- -- Toggle the interactive terminal
+-- vim.keymap.set("n", "<leader>ca", ":CursorAgent<CR>", { desc = "Cursor Agent: Toggle terminal" })
+-- 
+-- -- Ask about the visual selection
+-- vim.keymap.set("v", "<leader>ca", ":CursorAgentSelection<CR>", { desc = "Cursor Agent: Send selection" })
+-- 
+-- -- Ask about the current buffer
+-- vim.keymap.set("n", "<leader>cA", ":CursorAgentBuffer<CR>", { desc = "Cursor Agent: Send buffer" })
+-- 
+-- if vim.fn.has("win32") == 1 then
+--     require("windows")
+-- end
 
 require("output_panel").setup({})
 
@@ -328,7 +388,7 @@ require("autocommands")
 require("mappings")
 require("tsconfig")
 
-require("plugins.colorizer")
+-- require("plugins.colorizer")
 require("plugins.dap")
 require("plugins.lualine")
 require("plugins.fundo-plug")
@@ -343,12 +403,185 @@ require("plugins.spectre")
 require("plugins.autosave")
 require("plugins.texmagic")
 require("plugins.go")
-require("plugins.gitlab-plug")
+-- require("plugins.gitlab-plug")
 require("plugins.renamer")
 require("plugins.dadbod")
-require("plugins.image")
+-- require("plugins.image")
 require("plugins.attempt")
 
 vim.o.exrc = true
 vim.g.python3_host_prog = "/usr/bin/python"
 vim.g.python_host_prog = "/usr/bin/python2"
+
+-- require("avante").setup({
+--     ---@alias Provider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
+--     ---@type Provider
+--     provider = "openai", -- The provider used in Aider mode or in the planning phase of Cursor Planning Mode
+--     ---@alias Mode "agentic" | "legacy"
+--     ---@type Mode
+--     mode = "agentic", -- The default mode for interaction. "agentic" uses tools to automatically generate code, "legacy" uses the old planning method to generate code.
+--     -- WARNING: Since auto-suggestions are a high-frequency operation and therefore expensive,
+--     -- currently designating it as `copilot` provider is dangerous because: https://github.com/yetone/avante.nvim/issues/1048
+--     -- Of course, you can reduce the request frequency by increasing `suggestion.debounce`.
+--     auto_suggestions_provider = "openai",
+--     providers = {
+--         openai = {
+--           endpoint = "https://api.openai.com/v1",
+--           model = "gpt-5",
+--           timeout = 30000, -- Timeout in milliseconds, increase this for reasoning models
+--           context_window = 128000, -- Number of tokens to send to the model for context
+--           extra_request_body = {
+--             temperature = 0.75,
+--             max_completion_tokens = 16384, -- Increase this to include reasoning tokens (for reasoning models)
+--             reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
+--           },
+--         },
+--     },
+--     ---Specify the special dual_boost mode
+--     ---1. enabled: Whether to enable dual_boost mode. Default to false.
+--     ---2. first_provider: The first provider to generate response. Default to "openai".
+--     ---3. second_provider: The second provider to generate response. Default to "claude".
+--     ---4. prompt: The prompt to generate response based on the two reference outputs.
+--     ---5. timeout: Timeout in milliseconds. Default to 60000.
+--     ---How it works:
+--     --- When dual_boost is enabled, avante will generate two responses from the first_provider and second_provider respectively. Then use the response from the first_provider as provider1_output and the response from the second_provider as provider2_output. Finally, avante will generate a response based on the prompt and the two reference outputs, with the default Provider as normal.
+--     ---Note: This is an experimental feature and may not work as expected.
+--     dual_boost = {
+--         enabled = false,
+--         first_provider = "openai",
+--         second_provider = "claude",
+--         prompt =
+--         "Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: [{{provider1_output}}], Reference Output 2: [{{provider2_output}}]",
+--         timeout = 60000, -- Timeout in milliseconds
+--     },
+--     behaviour = {
+--         auto_suggestions = false, -- Experimental stage
+--         auto_set_highlight_group = true,
+--         auto_set_keymaps = true,
+--         auto_apply_diff_after_generation = false,
+--         support_paste_from_clipboard = false,
+--         minimize_diff = true,             -- Whether to remove unchanged lines when applying a code block
+--         enable_token_counting = true,     -- Whether to enable token counting. Default to true.
+--         auto_add_current_file = true,     -- Whether to automatically add the current file when opening a new chat. Default to true.
+--         auto_approve_tool_permissions = true, -- Default: auto-approve all tools (no prompts)
+--         -- Examples:
+--         -- auto_approve_tool_permissions = false,                -- Show permission prompts for all tools
+--         -- auto_approve_tool_permissions = {"bash", "replace_in_file"}, -- Auto-approve specific tools only
+--         ---@type "popup" | "inline_buttons"
+--         confirmation_ui_style = "inline_buttons",
+--     },
+--     prompt_logger = {                                       -- logs prompts to disk (timestamped, for replay/debugging)
+--         enabled = true,                                     -- toggle logging entirely
+--         log_dir = vim.fn.stdpath("cache") .. "/avante_prompts", -- directory where logs are saved
+--         fortune_cookie_on_success = false,                  -- shows a random fortune after each logged prompt (requires `fortune` installed)
+--         next_prompt = {
+--             normal = "<C-n>",                               -- load the next (newer) prompt log in normal mode
+--             insert = "<C-n>",
+--         },
+--         prev_prompt = {
+--             normal = "<C-p>", -- load the previous (older) prompt log in normal mode
+--             insert = "<C-p>",
+--         },
+--     },
+--     mappings = {
+--         --- @class AvanteConflictMappings
+--         diff = {
+--             ours = "co",
+--             theirs = "ct",
+--             all_theirs = "ca",
+--             both = "cb",
+--             cursor = "cc",
+--             next = "]x",
+--             prev = "[x",
+--         },
+--         suggestion = {
+--             accept = "<M-l>",
+--             next = "<M-]>",
+--             prev = "<M-[>",
+--             dismiss = "<C-]>",
+--         },
+--         jump = {
+--             next = "]]",
+--             prev = "[[",
+--         },
+--         submit = {
+--             normal = "<CR>",
+--             insert = "<C-s>",
+--         },
+--         cancel = {
+--             normal = { "<C-c>", "<Esc>", "q" },
+--             insert = { "<C-c>" },
+--         },
+--         sidebar = {
+--             apply_all = "A",
+--             apply_cursor = "a",
+--             retry_user_request = "r",
+--             edit_user_request = "e",
+--             switch_windows = "<Tab>",
+--             reverse_switch_windows = "<S-Tab>",
+--             remove_file = "d",
+--             add_file = "@",
+--             close = { "<Esc>", "q" },
+--             close_from_input = nil, -- e.g., { normal = "<Esc>", insert = "<C-d>" }
+--         },
+--     },
+--     selection = {
+--         enabled = true,
+--         hint_display = "delayed",
+--     },
+--     windows = {
+--         ---@type "right" | "left" | "top" | "bottom"
+--         position = "right", -- the position of the sidebar
+--         wrap = true,    -- similar to vim.o.wrap
+--         width = 30,     -- default % based on available width
+--         sidebar_header = {
+--             enabled = true, -- true, false to enable/disable the header
+--             align = "center", -- left, center, right for title
+--             rounded = true,
+--         },
+--         spinner = {
+--             editing = { "⡀", "⠄", "⠂", "⠁", "⠈", "⠐", "⠠", "⢀", "⣀", "⢄", "⢂", "⢁", "⢈", "⢐", "⢠", "⣠", "⢤", "⢢", "⢡", "⢨", "⢰", "⣰", "⢴", "⢲", "⢱", "⢸", "⣸", "⢼", "⢺", "⢹", "⣹", "⢽", "⢻", "⣻", "⢿", "⣿" },
+--             generating = { "·", "✢", "✳", "∗", "✻", "✽" }, -- Spinner characters for the 'generating' state
+--             thinking = { "🤯", "🙄" }, -- Spinner characters for the 'thinking' state
+--         },
+--         input = {
+--             prefix = "> ",
+--             height = 8, -- Height of the input window in vertical layout
+--         },
+--         edit = {
+--             border = "rounded",
+--             start_insert = true, -- Start insert mode when opening the edit window
+--         },
+--         ask = {
+--             floating = false, -- Open the 'AvanteAsk' prompt in a floating window
+--             start_insert = true, -- Start insert mode when opening the ask window
+--             border = "rounded",
+--             ---@type "ours" | "theirs"
+--             focus_on_apply = "ours", -- which diff to focus after applying
+--         },
+--     },
+--     highlights = {
+--         ---@type AvanteConflictHighlights
+--         diff = {
+--             current = "DiffText",
+--             incoming = "DiffAdd",
+--         },
+--     },
+--     --- @class AvanteConflictUserConfig
+--     diff = {
+--         autojump = true,
+--         ---@type string | fun(): any
+--         list_opener = "copen",
+--         --- Override the 'timeoutlen' setting while hovering over a diff (see :help timeoutlen).
+--         --- Helps to avoid entering operator-pending mode with diff mappings starting with `c`.
+--         --- Disable by setting to -1.
+--         override_timeoutlen = 500,
+--     },
+--     suggestion = {
+--         debounce = 600,
+--         throttle = 600,
+--     },
+-- })
+
+-- views can only be fully collapsed with the global statusline
+vim.opt.laststatus = 3

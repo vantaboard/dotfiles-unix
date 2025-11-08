@@ -9,6 +9,7 @@ require("nvim-tree").setup({
         custom = {
             "^.null-ls*"
         },
+        git_ignored = false
     },
     on_attach = function(bufnr)
         local function opts(desc)

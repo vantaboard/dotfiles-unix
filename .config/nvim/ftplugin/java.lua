@@ -1,0 +1,24 @@
+-- local config = {
+--     cmd = {
+--         os.getenv("HOME") .. '/.local/bin/jdtls',
+--         '--java-executable',
+--         '/usr/lib/jvm/java-21-openjdk-amd64/bin/java'
+--     },
+--     root_dir = vim.fs.dirname(vim.fs.find({ 'gradlew', '.git', 'mvnw' }, { upward = true })[1]),
+--     settings = {
+--         java = {
+--             import = {
+--                 gradle = {
+--                     wrapper = {
+--                         enabled = true,
+--                         checksums = {
+--                             { sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", allowed = true },
+--                         }
+--                     }
+--                 }
+--             },
+--         },
+--     }
+-- }
+-- 
+-- require('jdtls').start_or_attach(config)
