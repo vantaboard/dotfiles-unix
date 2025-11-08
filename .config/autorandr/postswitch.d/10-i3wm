@@ -1,0 +1,51 @@
+#!/usr/bin/bash
+
+ACTIVE_MONITORS=$(
+  xrandr | awk '/ connected/ && /mm x / {
+    name = $1
+    if (match($0, /[0-9]+x[0-9]+\+([0-9]+)\+[0-9]+/, m)) {
+      # m[1] is the X offset
+      print m[1], name
+    }
+  }' | sort -n | awk '{print $2}'
+)
+
+# Convert to array properly
+MONITOR_ARRAY=($ACTIVE_MONITORS)
+
+MOVE_KEYS=("b" "n" "m")
+
+CONFIG_OUTPUT="############# Auto-generated for use with autorandr #############\n"
+
+for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
+    SCREEN_NAME="screen$i"
+    monitor=${MONITOR_ARRAY[$i]}
+
+    CONFIG_OUTPUT+="set \$$SCREEN_NAME $monitor\n"
+    CONFIG_OUTPUT+="workspace \$ws$i output \$$SCREEN_NAME\n"
+
+    # if the current move keys index is greater than the current monitor index, add the move key binding
+    if [ $i -lt ${#MOVE_KEYS[@]} ]; then    
+        CONFIG_OUTPUT+="bindsym \$mod+shift+${MOVE_KEYS[$i]} move workspace to output \$$SCREEN_NAME\n"
+    fi
+done
+
+WORKSPACE_NAMES=("web" "code" "media" "comms" "misc" "av" "other" "other")
+
+for i in {0..7}; do
+    INDEX_FROM_ONE=$((i + 1))
+
+    WS="\$ws$i"
+
+    CONFIG_OUTPUT+="bindsym \$mod+$INDEX_FROM_ONE workspace $WS\n"
+    CONFIG_OUTPUT+="bindsym \$mod+Ctrl+$INDEX_FROM_ONE move container to workspace $WS\n"
+    CONFIG_OUTPUT+="bindsym \$mod+Shift+$INDEX_FROM_ONE move container to workspace $WS; workspace $WS\n"
+    CONFIG_OUTPUT+="set $WS $INDEX_FROM_ONE:${WORKSPACE_NAMES[$i]}\n"
+done
+
+# find the "############# Auto-generated for use with autorandr #############" line in the $HOME/.config/i4/config file and remove everything after it and replace it with the new config
+sed -i '/############# Auto-generated for use with autorandr #############/,$d' $HOME/.config/i3/config
+echo -e $CONFIG_OUTPUT >> $HOME/.config/i3/config
+
+i3-msg reload
+i3-msg restart

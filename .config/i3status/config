@@ -1,10 +1,12 @@
 general {
         colors = true
         interval = 5
-        color_good = "#2AA198"
-        color_bad = "#586E75"
-        color_degraded = "#DC322F"
         markup = pango
+
+        # Theme: orange highlight, urgent red, soft amber for degraded
+        color_good     = "#f98304"
+        color_degraded = "#ffae42"
+        color_bad      = "#E5201D"
 }
 
 order += "wireless _first_"
@@ -17,40 +19,43 @@ order += "tztime date"
 order += "tztime local"
 
 wireless _first_ {
-        format_up = "📡 %essid"
+        format_up = "<span color='#f98304'>📡</span> %essid"
         format_down = ""
 }
 
 ethernet _first_ {
-        format_up = "📡 %ip"
+        format_up = "<span color='#f98304'>🖧</span> %ip"
         format_down = ""
 }
 
 cpu_usage {
-        format = "%usage"
+        format = "<span color='#f98304'>CPU</span> %usage"
 }
 
 disk "/" {
-        format = "%avail"
+        format = "<span color='#f98304'></span> %avail"
 }
 
 battery all {
-        format = " %status %percentage"
+        format = " <span color='#f98304'>%status</span> %percentage"
         format_down = ""
         last_full_capacity = true
         integer_battery_capacity = true
-        status_chr = "🔌"
-        status_bat = "🔋"
-        status_unk = ""
-        status_full = "💗"
+
+        status_chr  = "🔌"
+        status_bat  = "🔋"
+        status_unk  = ""
+        status_full = "🧡"
+
         low_threshold = 15
         threshold_type = time
+        # (Colors from general apply: below threshold → bad/red)
 }
 
 memory {
-        format = "%available"
+        format = "<span color='#f98304'>RAM</span> %available"
         threshold_degraded = "1G"
-        format_degraded = "MEMORY < %available"
+        format_degraded = "<span color='#ffae42'>RAM</span> %available"
 }
 
 tztime date {
@@ -58,5 +63,6 @@ tztime date {
 }
 
 tztime local {
+        # Keep time high-contrast white
         format = "<span color='#FFFFFF'>%l:%M %p</span>"
 }

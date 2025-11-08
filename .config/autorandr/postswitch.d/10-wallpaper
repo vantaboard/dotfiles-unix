@@ -10,9 +10,9 @@ fi
 sleep 3
 
 declare -a wallpapers=(
-    "pexels-brett-sayles-4402826.jpg"
-    "pexels-pixabay-531767.jpg"
-    "pexels-steve-4606820 (1).jpg"
+    "pexels-kanhaiya-sharma-284427440-13062567.jpg"
+    "pexels-steve-29008328.jpg"
+    "pexels-marek-piwnicki-3907296-30052780.jpg"
 )
 
 count="$(xrandr | grep "*" | wc -l)"

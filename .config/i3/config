@@ -8,36 +8,9 @@ exec_always setxkbmap -option caps:escape
 exec_always xmodmap -e "clear lock"
 exec_always xset dpms 600 1200 1800
 
-set $ws1 1:web
-set $ws2 2:code
-set $ws3 3:media
-set $ws4 4:comms
-set $ws5 5:misc
-set $ws6 6:av
-set $ws7 7:other
-set $ws8 8:other
-
+# Start a hidden kitty instance for fast startup
+exec --no-startup-id kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
 exec --no-startup-id /usr/bin/python $HOME/.local/bin/i3_startup
-
-# docked-home
-# set $screen1 DP-0.3.1
-# set $screen2 DP-0.1
-# set $screen3 DP-0.2
-
-# docked
-set $screen1 DP-0.3.1
-set $screen2 DP-0.2
-set $screen3 DP-0.1
-
-# docked-crappy
-# set $screen1 DP-2
-# set $screen2 DP-0.6
-# set $screen3 DP-0.5
-
-workspace $ws3 output $screen1
-workspace $ws2 output $screen2
-workspace $ws1 output $screen3
-workspace $ws4 output $screen3
 
 set $mod Mod4
 
@@ -58,17 +31,13 @@ exec_always --no-startup-id picom -b -c
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
-bindsym $mod+Return exec kitty
+bindsym $mod+Return exec kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket
 bindsym $mod+Shift+q kill
 bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
 bindsym $mod+d exec $HOME/.local/bin/dmenu_runner
 bindsym $mod+z exec --no-startup-id morc_menu
 
-bindsym $mod+shift+b move workspace to output $screen1
-bindsym $mod+shift+n move workspace to output $screen2
-bindsym $mod+shift+m move workspace to output $screen3
-
-font pango:GoMono Nerd Font Mono 10
+font pango:ZedMono Nerd Font 10
 
 floating_modifier $mod
 
@@ -121,36 +90,9 @@ bindsym $mod+minus scratchpad show
 bindsym $mod+Ctrl+Right workspace next
 bindsym $mod+Ctrl+Left workspace prev
 
-exec --no-startup-id $HOME/.local/bin/betterlockscreen --display 1 --nofx --position center --update $HOME/.wallpapers/outono-for-the-neo.jpg
+exec_always $HOME/.local/bin/betterlockscreen --display 1 --span --nofx --position center --update $HOME/.wallpapers/pexels-timmossholder-1549629.jpg
 
-bindsym $mod+Ctrl+Shift+k exec --no-startup-id $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#DC3E80 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
-
-bindsym $mod+1 workspace $ws1
-bindsym $mod+2 workspace $ws2
-bindsym $mod+3 workspace $ws3
-bindsym $mod+4 workspace $ws4
-bindsym $mod+5 workspace $ws5
-bindsym $mod+6 workspace $ws6
-bindsym $mod+7 workspace $ws7
-bindsym $mod+8 workspace $ws8
-
-bindsym $mod+Ctrl+1 move container to workspace $ws1
-bindsym $mod+Ctrl+2 move container to workspace $ws2
-bindsym $mod+Ctrl+3 move container to workspace $ws3
-bindsym $mod+Ctrl+4 move container to workspace $ws4
-bindsym $mod+Ctrl+5 move container to workspace $ws5
-bindsym $mod+Ctrl+6 move container to workspace $ws6
-bindsym $mod+Ctrl+7 move container to workspace $ws7
-bindsym $mod+Ctrl+8 move container to workspace $ws8
-
-bindsym $mod+Shift+1 move container to workspace $ws1; workspace $ws1
-bindsym $mod+Shift+2 move container to workspace $ws2; workspace $ws2
-bindsym $mod+Shift+3 move container to workspace $ws3; workspace $ws3
-bindsym $mod+Shift+4 move container to workspace $ws4; workspace $ws4
-bindsym $mod+Shift+5 move container to workspace $ws5; workspace $ws5
-bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6
-bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7
-bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8
+bindsym $mod+Ctrl+Shift+k exec --no-startup-id $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#E56CA7 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
 
 for_window [class="Vncviewer"] fullscreen enable global
 for_window [class="kooha"] floating enable border pixel 1
@@ -252,23 +194,23 @@ bar {
         statusline #F9FAF9
         separator  #454947
 
-#                          border  backgr. text
-        focused_workspace  #F9FAF9 #E56CA7 #F9FAF9
-        active_workspace   #595b5b #2C2C2C #FDF6E3
-        inactive_workspace #595b5b #222D31 #EEE8D5
-        binding_mode       #E56CA7 #2C2C2C #F9FAF9
-        urgent_workspace   #E56CA7 #FDF6E3 #E5201D
+#                          border   backgr.   text
+        focused_workspace  #F9FAF9  #f98304   #2C2C2C
+        active_workspace   #595b5b  #2C2C2C   #FDF6E3
+        inactive_workspace #595b5b  #222D31   #EEE8D5
+        binding_mode       #f98304  #2C2C2C   #F9FAF9
+        urgent_workspace   #f98304  #FDF6E3   #E5201D
     }
 }
 
 bindsym $mod+m bar mode toggle
 
-# class                 border  bground text    indicator child_border
-client.focused          #BA618F #E56CA7 #FFFFFF #E64FF4   #FF94E1
-client.focused_inactive #330F29 #C45C8F #FFFFFF #B936C6   #511C6A
-client.unfocused        #330F29 #A34C77 #FFFFFF   #9e568a
-client.urgent           #2F343A #900000 #FFFFFF #900000   #900000
-client.placeholder      #000000 #0C0C0C #FFFFFF #000000   #0C0C0C
+# class                 border   bground  text     indicator child_border
+client.focused          #b36204  #f98304  #2C2C2C  #ffae42   #ffb866
+client.focused_inactive #4a2b0a  #d87404  #FFFFFF  #c46f00   #663b0a
+client.unfocused        #3a2a1a  #a55e03  #FFFFFF  #9c5300
+client.urgent           #2F343A  #900000  #FFFFFF  #900000   #900000
+client.placeholder      #000000  #0C0C0C  #FFFFFF  #000000   #0C0C0C
 
 client.background       #FFFFFF
 
@@ -310,3 +252,41 @@ mode "$mode_gaps_outer" {
         bindsym Return mode "default"
         bindsym Escape mode "default"
 }
+
+############# Auto-generated for use with autorandr #############
+set $screen0 DP-2
+workspace $ws0 output $screen0
+bindsym $mod+shift+b move workspace to output $screen0
+bindsym $mod+1 workspace $ws0
+bindsym $mod+Ctrl+1 move container to workspace $ws0
+bindsym $mod+Shift+1 move container to workspace $ws0; workspace $ws0
+set $ws0 1:web
+bindsym $mod+2 workspace $ws1
+bindsym $mod+Ctrl+2 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws1; workspace $ws1
+set $ws1 2:code
+bindsym $mod+3 workspace $ws2
+bindsym $mod+Ctrl+3 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws2; workspace $ws2
+set $ws2 3:media
+bindsym $mod+4 workspace $ws3
+bindsym $mod+Ctrl+4 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws3; workspace $ws3
+set $ws3 4:comms
+bindsym $mod+5 workspace $ws4
+bindsym $mod+Ctrl+5 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws4; workspace $ws4
+set $ws4 5:misc
+bindsym $mod+6 workspace $ws5
+bindsym $mod+Ctrl+6 move container to workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws5; workspace $ws5
+set $ws5 6:av
+bindsym $mod+7 workspace $ws6
+bindsym $mod+Ctrl+7 move container to workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws6; workspace $ws6
+set $ws6 7:other
+bindsym $mod+8 workspace $ws7
+bindsym $mod+Ctrl+8 move container to workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws7; workspace $ws7
+set $ws7 8:other
+
