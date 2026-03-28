@@ -112,46 +112,114 @@ local function reverse_lines_in_range(start_line, end_line)
     vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, lines)
 end
 
-local function reverse_first_column_in_range(start_line, end_line)
-    if start_line > end_line then
-        start_line, end_line = end_line, start_line
+local function reverse_utf8_str(s)
+    if s == "" then
+        return s
     end
-    local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
-    local n = #lines
-    local firsts = {}
-    local rests = {}
-    for i = 1, n do
-        local line = lines[i]
-        if line == "" then
-            firsts[i] = ""
-            rests[i] = ""
-        else
-            firsts[i] = vim.fn.strcharpart(line, 0, 1)
-            rests[i] = vim.fn.strcharpart(line, 1)
-        end
+    local n = vim.fn.strchars(s)
+    local parts = {}
+    for i = n - 1, 0, -1 do
+        parts[#parts + 1] = vim.fn.strcharpart(s, i, 1)
     end
-    for i = 1, math.floor(n / 2) do
-        firsts[i], firsts[n - i + 1] = firsts[n - i + 1], firsts[i]
-    end
-    for i = 1, n do
-        lines[i] = firsts[i] .. rests[i]
-    end
-    vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, lines)
+    return table.concat(parts)
 end
 
--- <leader>r: reverse all lines (normal) or reverse selected lines in place (visual)
-vim.keymap.set("n", "<leader>r", ":g/^/m0<cr>", { silent = true })
-vim.keymap.set("x", "<leader>r", function()
-    -- Use '< '> marks; line("v") is unreliable after visual exits for the mapping
-    reverse_lines_in_range(vim.fn.line("'<"), vim.fn.line("'>"))
+-- Visual type and corners for getregion/getregionpos. During an |xmap| callback, |visualmode()|
+-- is often still empty while |mode()| is still v/V/^V; use getpos('v') and getpos('.') then.
+-- See |getregion()| example with getpos('v'), getpos('.'), and mode().
+local function visual_type_and_corners()
+    local m1 = vim.fn.mode():sub(1, 1)
+    if m1 == "v" or m1 == "V" or m1 == "\22" then
+        return m1, vim.fn.getpos("v"), vim.fn.getpos(".")
+    end
+    local vm = vim.fn.visualmode()
+    if vm == "" then
+        return nil, nil, nil
+    end
+    return vm, vim.fn.getpos("'<"), vim.fn.getpos("'>`")
+end
+
+-- Visual <leader>rr: linewise = reverse line order; charwise = reverse text on each line;
+-- block (^V) = reverse vertically within each column (matches grid / column selections).
+local function reverse_visual_selection()
+    local vm, p1, p2 = visual_type_and_corners()
+    if not vm or p1[2] == 0 or p2[2] == 0 then
+        return
+    end
+
+    local sl, el = p1[2], p2[2]
+    if sl > el then
+        sl, el = el, sl
+    end
+
+    if vm == "V" then
+        reverse_lines_in_range(sl, el)
+        return
+    end
+
+    local region_opts = { type = vm }
+    local lines = vim.fn.getregion(p1, p2, region_opts)
+    if #lines == 0 then
+        return
+    end
+
+    if vm == "v" then
+        for i, line in ipairs(lines) do
+            lines[i] = reverse_utf8_str(line)
+        end
+    elseif vm == "\22" then
+        local grid = {}
+        for r, line in ipairs(lines) do
+            grid[r] = {}
+            local n = vim.fn.strchars(line)
+            for c = 0, n - 1 do
+                grid[r][c + 1] = vim.fn.strcharpart(line, c, 1)
+            end
+        end
+        local nrows = #grid
+        local ncols = nrows > 0 and #grid[1] or 0
+        for c = 1, ncols do
+            for r = 1, math.floor(nrows / 2) do
+                grid[r][c], grid[nrows - r + 1][c] = grid[nrows - r + 1][c], grid[r][c]
+            end
+        end
+        for r = 1, nrows do
+            lines[r] = table.concat(grid[r])
+        end
+    else
+        return
+    end
+
+    local pos = vim.fn.getregionpos(p1, p2, region_opts)
+    if vm == "\22" then
+        -- Block: replace each row's slice; one span from first to last corner is not the rectangle.
+        for i = 1, #lines do
+            local sp = pos[i][1]
+            local ep = pos[i][2]
+            vim.api.nvim_buf_set_text(0, sp[2] - 1, sp[3] - 1, ep[2] - 1, ep[3], { lines[i] })
+        end
+        return
+    end
+
+    local start_pos = pos[1][1]
+    local end_pos = pos[#pos][2]
+    local sr = start_pos[2] - 1
+    local sc = start_pos[3] - 1
+    local er = end_pos[2] - 1
+    local ec = end_pos[3]
+    vim.api.nvim_buf_set_text(0, sr, sc, er, ec, lines)
+end
+
+-- <leader>rr: normal = reverse all lines; visual = reverse selected text (char/line/block)
+-- (not <leader>r: nvim-tree refresh, LSP references)
+vim.keymap.set("n", "<leader>rr", ":g/^/m0<cr>", { silent = true })
+vim.keymap.set("x", "<leader>rr", function()
+    reverse_visual_selection()
 end, { silent = true })
--- <leader>R: reverse order of first character on each line (rest of line unchanged)
-vim.keymap.set("n", "<leader>R", function()
-    reverse_first_column_in_range(1, vim.fn.line("$"))
-end, { silent = true })
-vim.keymap.set("x", "<leader>R", function()
-    reverse_first_column_in_range(vim.fn.line("'<"), vim.fn.line("'>"))
-end, { silent = true })
+
+-- Block visual (Ctrl-V): prepend unnamed register on each line (avoids `p` replacing the block).
+-- Yank "/foo/" elsewhere, block-select the column, then <leader>p.
+vim.keymap.set("x", "<leader>p", 'I<C-r>"<Esc>', { silent = true })
 
 vim.keymap.set("v", "<leader>c", copy_commit)
 
