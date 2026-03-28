@@ -100,6 +100,59 @@ local function copy_commit()
     }):start()
 end
 
+local function reverse_lines_in_range(start_line, end_line)
+    if start_line > end_line then
+        start_line, end_line = end_line, start_line
+    end
+    local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+    local n = #lines
+    for i = 1, math.floor(n / 2) do
+        lines[i], lines[n - i + 1] = lines[n - i + 1], lines[i]
+    end
+    vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, lines)
+end
+
+local function reverse_first_column_in_range(start_line, end_line)
+    if start_line > end_line then
+        start_line, end_line = end_line, start_line
+    end
+    local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+    local n = #lines
+    local firsts = {}
+    local rests = {}
+    for i = 1, n do
+        local line = lines[i]
+        if line == "" then
+            firsts[i] = ""
+            rests[i] = ""
+        else
+            firsts[i] = vim.fn.strcharpart(line, 0, 1)
+            rests[i] = vim.fn.strcharpart(line, 1)
+        end
+    end
+    for i = 1, math.floor(n / 2) do
+        firsts[i], firsts[n - i + 1] = firsts[n - i + 1], firsts[i]
+    end
+    for i = 1, n do
+        lines[i] = firsts[i] .. rests[i]
+    end
+    vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, lines)
+end
+
+-- <leader>r: reverse all lines (normal) or reverse selected lines in place (visual)
+vim.keymap.set("n", "<leader>r", ":g/^/m0<cr>", { silent = true })
+vim.keymap.set("x", "<leader>r", function()
+    -- Use '< '> marks; line("v") is unreliable after visual exits for the mapping
+    reverse_lines_in_range(vim.fn.line("'<"), vim.fn.line("'>"))
+end, { silent = true })
+-- <leader>R: reverse order of first character on each line (rest of line unchanged)
+vim.keymap.set("n", "<leader>R", function()
+    reverse_first_column_in_range(1, vim.fn.line("$"))
+end, { silent = true })
+vim.keymap.set("x", "<leader>R", function()
+    reverse_first_column_in_range(vim.fn.line("'<"), vim.fn.line("'>"))
+end, { silent = true })
+
 vim.keymap.set("v", "<leader>c", copy_commit)
 
 vim.keymap.set("n", "<leader>P", function()
