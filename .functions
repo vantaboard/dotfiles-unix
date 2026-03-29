@@ -9,6 +9,20 @@ function compabbr() {
     [[ -r ~/.config/zsh/abbreviations.zsh.zwc ]] && source ~/.config/zsh/abbreviations.zsh.zwc || source ~/.config/zsh/abbreviations.zsh
 }
 
+abbr() {
+  command abbr "$@"
+  # only sync when abbr was mutated; you can refine flags here
+  case "$*" in
+    *"-a"*|*"add"*|*"remove"*|*"-r"*) nohup ~/.local/bin/zsh-abbr-sync >/dev/null 2>&1 & ;;
+  esac
+}
+
+function reload_abbr() {
+    # Load canonical abbreviations file if present
+    ABBR_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/zsh-abbr/abbreviations.zsh"
+    [[ -f "$ABBR_FILE" ]] && source "$ABBR_FILE"
+}
+
 function gmr() {
     current_branch=$(git rev-parse --abbrev-ref HEAD)
     default_branch=${1:-$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')}
@@ -33,6 +47,8 @@ function whatport() {
     sudo lsof -i :"$1"
 }
 
+# Toggle bare-repo dotfiles git (~/.cfg, work tree $HOME). Do not export these globally
+# (e.g. in .zshenv) or every repo will look like $HOME.
 function move_to_config_env {
     if [ "$1" = "on" ]; then
         export GIT_DIR=$HOME/.cfg
@@ -41,8 +57,8 @@ function move_to_config_env {
     fi
 
     if [ "$1" = "off" ]; then
-        export GIT_DIR=
-        export GIT_WORK_TREE=
+        unset GIT_DIR
+        unset GIT_WORK_TREE
         return
     fi
 }
@@ -181,3 +197,50 @@ function zshcompile() {
       echo "Nothing to compile."
     fi
 }
+
+screenkey-dev() {
+  local screen="$1"
+  local height=80   # height of the screenkey banner
+
+  if [[ -z "$screen" ]]; then
+    echo "usage: screenkey-dev <SCREEN_INDEX>"
+    return 1
+  fi
+
+  # Extract geometry for the given screen index from xrandr
+  # Format we want: WIDTHxHEIGHT+X+Y
+  local geom
+  geom=$(
+    xrandr --listmonitors \
+      | awk -v s="$screen" '
+          $1 == s ":" {
+            # example line:
+            # 1: +HDMI-1 1920/509x1080/286+3008+0  HDMI-1
+            match($0, /([0-9]+)\/[0-9]+x([0-9]+)\/[0-9]+\+([0-9]+)\+([0-9]+)/, a)
+            if (a[1] && a[2]) {
+              print a[1] "x" a[2] "+" a[3] "+" a[4]
+            }
+          }
+        '
+  )
+
+  if [[ -z "$geom" ]]; then
+    echo "Could not determine geometry for screen $screen"
+    xrandr --listmonitors
+    return 1
+  fi
+
+  # Replace height with our desired banner height, keep X/Y offset
+  local width x y
+  IFS='x+' read -r width _ x y <<< "$geom"
+  local final_geom="${width}x${height}+${x}+${y}"
+
+  screenkey \
+    --position fixed \
+    --geometry "$final_geom" \
+    --timeout 2 \
+    --opacity 0.9 \
+    --bg-color "#000000" \
+    --font-size large
+}
+
