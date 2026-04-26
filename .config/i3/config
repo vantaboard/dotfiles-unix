@@ -27,6 +27,7 @@ exec --no-startup-id unclutter -idle 0.5 -root
 exec --no-startup-id unclutte0
 exec --no-startup-id webcam
 exec_always --no-startup-id picom -b -c
+exec_always --no-startup-id copyq
 
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
@@ -50,12 +51,12 @@ bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
 bindsym $mod+F3 exec pcmanfm
 bindsym $mod+Shift+F3 exec pcmanfm_pkexec
 bindsym $mod+F5 exec terminal -e 'mocp'
-bindsym $mod+t exec --no-startup-id pkill picom
+# bindsym $mod+t exec --no-startup-id pkill picom
 bindsym $mod+Ctrl+Shift+s exec --no-startup-id $HOME/.local/bin/suspend
 bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
 bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 bindsym $mod+Shift+a exec --no-startup-id normcap
-bindsym $mod+Ctrl+t exec --no-startup-id picom -b
+# bindsym $mod+Ctrl+t exec --no-startup-id picom -b
 bindsym $mod+Ctrl+Shift+n exec --no-startup-id xkb-switch -n
 bindsym Print exec --no-startup-id i3-scrot
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
@@ -254,9 +255,15 @@ mode "$mode_gaps_outer" {
 }
 
 ############# Auto-generated for use with autorandr #############
-set $screen0 DP-2
+set $screen0 DP-0.1
 workspace $ws0 output $screen0
 bindsym $mod+shift+b move workspace to output $screen0
+set $screen1 DP-0.2
+workspace $ws1 output $screen1
+bindsym $mod+shift+n move workspace to output $screen1
+set $screen2 DP-0.3.1
+workspace $ws2 output $screen2
+bindsym $mod+shift+m move workspace to output $screen2
 bindsym $mod+1 workspace $ws0
 bindsym $mod+Ctrl+1 move container to workspace $ws0
 bindsym $mod+Shift+1 move container to workspace $ws0; workspace $ws0
