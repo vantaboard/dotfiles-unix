@@ -16,6 +16,8 @@ function webcam() {
 DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
 . "$HOME/.cargo/env"
 
+eval "$("$HOME"/.local/share/mise/installs/direnv/2.36.0/direnv hook zsh)"
+
 # Dotfiles live in a bare repo at ~/.cfg with $HOME as the work tree, but do *not*
 # export GIT_DIR / GIT_WORK_TREE here — that breaks normal git in project directories.
 # Use: move_to_config_env on  (then git …)  and  move_to_config_env off  when done.

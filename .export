@@ -45,8 +45,6 @@ export CXX=clang++
 
 # export BIGQUERY_EMULATOR_HOST=https://bigquery.googleapis.com
 
-export GOEXPERIMENT=synctest
-
 export TMOUT=0
 
 export PERL5LIB="$HOME/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}";

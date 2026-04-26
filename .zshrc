@@ -1,3 +1,10 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 ##### ─────────────────────────────────────────────────────────────────────────────
 ##### RUN FIRST: single-pass, cached completion init (no audit), correct order
 ##### ─────────────────────────────────────────────────────────────────────────────
@@ -54,7 +61,7 @@ export ZSH="$HOME/.oh-my-zsh"
 export ABBR_AUTOLOAD=0
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#868888,bold"
 export ZSH_AUTOSUGGEST_MANUAL_REBIND=true
-export ZSH_THEME="clean"
+export ZSH_THEME="powerlevel10k/powerlevel10k"
 export DISABLE_UNTRACKED_FILES_DIRTY="true"
 export HYPHEN_INSENSITIVE="true"
 export MENU_COMPLETE="true"
@@ -63,9 +70,11 @@ export DISABLE_UPDATE_PROMPT="true"
 export DIRSTACKSIZE=100000000000000000
 export DISABLE_MAGIC_FUNCTIONS=true
 
-export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin:$HOME/perl5/bin"
+export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin:${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
 
-plugins=(codeclimate extract python virtualenv zsh-autosuggestions direnv ssh-agent fzf fzf-tab)
+eval "$(/home/brighten-tompkins/.local/bin/mise activate zsh)"
+
+plugins=(codeclimate extract python virtualenv zsh-autosuggestions ssh-agent fzf fzf-tab git)
 
 # OMZ bootstrap (now safe—compinit/compaudit are already handled)
 source "$ZSH/oh-my-zsh.sh"
@@ -125,11 +134,8 @@ setopt extended_history       # save timestamp/duration
 setopt hist_ignoredups        # skip duplicate commands
 
 ##### ─────────────────────────────────────────────────────────────────────────────
-##### asdf-direnv, keychain, GPG
+##### keychain, GPG
 ##### ─────────────────────────────────────────────────────────────────────────────
-
-# asdf-direnv integration
-source "${XDG_CONFIG_HOME:-$HOME/.config}/asdf-direnv/zshrc"
 
 # SSH keys
 # /usr/bin/keychain --quiet "$HOME/.ssh/id_ed25519"
@@ -200,6 +206,8 @@ __zox_fzf_cd_widget() {
   if (( exit_code != 0 )); then
     zle reset-prompt
     zle redisplay
+
+    zle accept-line
     return 0
   fi
 
@@ -216,3 +224,13 @@ zle -N __zox_fzf_cd_widget
 bindkey '^U' __zox_fzf_cd_widget
 bindkey -M viins '^U' __zox_fzf_cd_widget
 bindkey -M vicmd '^U' __zox_fzf_cd_widget
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# cursor-clip auto completions
+fpath+=(~/.local/share/zsh/site-functions)
+autoload -Uz compinit && compinit
+
+export CC=clang
+export CXX=clang++
