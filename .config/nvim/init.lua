@@ -137,7 +137,6 @@ require("packer").startup({
         use("theHamsta/nvim-dap-virtual-text")
         -- completion
         use("b0o/SchemaStore.nvim")
-        use("wakatime/vim-wakatime")
         use("folke/neodev.nvim")
         use("folke/neoconf.nvim")
         use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap" } })

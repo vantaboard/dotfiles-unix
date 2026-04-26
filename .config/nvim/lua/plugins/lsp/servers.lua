@@ -58,9 +58,31 @@ local on_attach = function(client, bufnr)
         lbuf.format({ async = true })
     end)
 
-    if client.name == "cssls" or client.name == "glslls" or client.name == "yamlls" or client.name == "theme_check" or client.name == "esbonio" then
+    if client.name == "cssls" or client.name == "glslls" or client.name == "yamlls" or client.name == "esbonio" then
         keyset("n", "<leader>q", function()
             vim.cmd("Format")
+        end)
+    end
+
+    if client.name == "gopls" then
+        keyset("n", "<leader>q", function()
+            local params = vim.lsp.util.make_range_params()
+            params.context = { only = { "source.organizeImports" } }
+            -- buf_request_sync defaults to a 1000ms timeout. Depending on your
+            -- machine and codebase, you may want longer. Add an additional
+            -- argument after params if you find that you have to write the file
+            -- twice for changes to be saved.
+            -- E.g., vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
+            local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
+            for cid, res in pairs(result or {}) do
+                for _, r in pairs(res.result or {}) do
+                    if r.edit then
+                        local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
+                        vim.lsp.util.apply_workspace_edit(r.edit, enc)
+                    end
+                end
+            end
+            vim.lsp.buf.format({ async = false })
         end)
     end
 
@@ -194,6 +216,7 @@ vim.lsp.config('gopls', {
         client.server_capabilities.didChangeWatchedFiles = {
             dynamicRegistration = true
         }
+
         on_attach(client, bufnr)
     end,
     settings = {
@@ -227,6 +250,20 @@ vim.lsp.config('gopls', {
         },
     },
 })
+
+vim.lsp.config('golangcilsp', {
+    capabilities = capabilities,
+    on_attach = on_attach,
+    init_options = {
+        command = {
+            "golangci-lint", "run",
+            "--output.json.path", "stdout", -- v2 specific flag
+            "--show-stats=false",
+            "--issues-exit-code=1"
+        },
+    }
+})
+
 
 -- ESLint Language Server
 vim.lsp.config('eslint', {
@@ -291,6 +328,26 @@ vim.lsp.config('yamlls', {
                         fileMatch = { '**/.gitlab/**/*.yml', "*.gitlab-ci.yml" },
                         name = "gitlab-ci",
                         url = "https://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/editor/schema/ci.json"
+                    },
+                    -- Catalog name must match SchemaStore.nvim (see lua/schemastore/catalog.lua).
+                    ["Golangci-lint Configuration"] = {
+                        description = "golangci-lint configuration file",
+                        fileMatch = {
+                            ".golangci.yml",
+                            ".golangci.yaml",
+                            "**/.golangci.yml",
+                            "**/.golangci.yaml",
+                            ".golangci.toml",
+                            ".golangci.json",
+                            "**/.golangci.toml",
+                            "**/.golangci.json",
+                        },
+                        name = "Golangci-lint Configuration",
+                        url = "https://golangci-lint.run/jsonschema/golangci.jsonschema.json",
+                        versions = {
+                            ["1"] = "https://golangci-lint.run/jsonschema/golangci.v1.jsonschema.json",
+                            ["2"] = "https://golangci-lint.run/jsonschema/golangci.v2.jsonschema.json",
+                        },
                     },
                 }
             },
@@ -373,11 +430,6 @@ vim.lsp.config('ruff', {
     on_attach = on_attach,
 })
 
-vim.lsp.config('theme_check', {
-    capabilities = capabilities,
-    on_attach = on_attach,
-})
-
 -- Setup Mason and mason-lspconfig (v2.0.0+)
 require("mason").setup({})
 require("mason-lspconfig").setup({
@@ -403,7 +455,6 @@ require("mason-lspconfig").setup({
         "csharp_ls",
         "pyright",
         "ruff",
-        "theme_check",
     }
 })
 
