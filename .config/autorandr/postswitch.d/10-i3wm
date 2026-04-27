@@ -47,5 +47,11 @@ done
 sed -i '/############# Auto-generated for use with autorandr #############/,$d' $HOME/.config/i3/config
 echo -e $CONFIG_OUTPUT >> $HOME/.config/i3/config
 
-i3-msg reload
-i3-msg restart
+# Explicitly find the socket if it's missing
+if [ -z "$I3SOCK" ]; then
+    export I3SOCK=$(ls /run/user/1000/i3/ipc-socket.* 2>/dev/null | head -n 1)
+fi
+
+# Use reload instead of restart to prevent the session from crashing
+i3-msg -s "$I3SOCK" reload
+echo "i3wm config reloaded."

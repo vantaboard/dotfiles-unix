@@ -1,13 +1,9 @@
 #!/usr/bin/bash
 
-s="$(nvidia-settings -q CurrentMetaMode -t)"
+# Remove the nvidia-settings block entirely. It fights with autorandr.
+# Just keep the nitrogen part.
 
-if [[ "$s" != "" ]]; then
-    s="${s#*" :: "}"
-    nvidia-settings -a CurrentMetaMode="${s//\}/, ForceCompositionPipeline=On\}}"
-fi
-
-sleep 3
+sleep 1 # Reduced sleep
 
 declare -a wallpapers=(
      "pexels-didsss-9656151.jpg"
@@ -15,11 +11,18 @@ declare -a wallpapers=(
      "pexels-codioful-6985184.jpg"
 )
 
-count="$(xrandr | grep "*" | wc -l)"
-echo $count
+# Use your specific user's nitrogen config
+export DISPLAY=:1
+export XAUTHORITY="/run/user/1000/gdm/Xauthority"
 
-for (( i=0; i<=$count; i++))
+# Get current connected count accurately
+count=$(xrandr | grep -c " connected")
+
+for (( i=0; i<$count; i++))
 do
-    echo "$HOME/.wallpapers/${wallpapers[$i]}"
-    nitrogen --head=$((i-1)) --set-zoom-fill "$HOME/.wallpapers/${wallpapers[$i]}"
+    wall="${wallpapers[$i]}"
+    # Fallback to the first wallpaper if we have more monitors than wallpapers
+    [ -z "$wall" ] && wall="${wallpapers[0]}"
+    
+    nitrogen --head=$i --set-zoom-fill "$HOME/.wallpapers/$wall"
 done
