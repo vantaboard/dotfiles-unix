@@ -17,3 +17,4 @@ alias cpng="xclip -selection clipboard -target image/png"
 alias vi=nvim
 alias rm=trash-put
 alias python=python3
+alias autorandr="$HOME/Code/autorandr-env/.venv/bin/autorandr"
