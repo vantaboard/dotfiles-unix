@@ -1,0 +1,3 @@
+# Generic trigger for the VIA Hub (matches any revision of this specific chip)
+ACTION=="add", SUBSYSTEM=="usb", ENV{PRODUCT}=="2109/822/*", RUN+="/usr/local/bin/hotplug_monitor.sh add"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="2109/822/*", RUN+="/usr/local/bin/hotplug_monitor.sh remove"
