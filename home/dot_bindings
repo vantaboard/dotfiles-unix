@@ -46,9 +46,6 @@ bindkey ^a copy-path
 zle -N fzf-dir
 bindkey ^u fzf-dir
 
-bind ^e mark
-bind ^f fzm
-
 bindkey ^j autosuggest-accept
 bindkey '^[OA' up-line-or-history
 bindkey '^[OB' down-line-or-history

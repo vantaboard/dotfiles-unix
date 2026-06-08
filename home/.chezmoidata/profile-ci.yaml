@@ -25,7 +25,7 @@ profile_ci:
     fzf_tab: false
     zsh_abbr: false
     omz_git: true
-    omz_fzf: true
+    omz_fzf: false
     omz_ssh_agent: false
     omz_python: false
     omz_virtualenv: false

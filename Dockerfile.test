@@ -36,7 +36,5 @@ RUN mkdir -p "${HOME}/.local/share/chezmoi" \
 
 RUN sh -c "$(curl -fsSL https://get.chezmoi.io/lb)" -- -b "${HOME}/.local/bin" \
   && "${HOME}/.local/bin/chezmoi" init --apply \
-  && cp /repo/tests/zsh-smoke.sh /tmp/zsh-smoke.sh \
-  && bash /tmp/zsh-smoke.sh \
-  && cp /repo/tests/zsh-smoke-minimal.sh /tmp/zsh-smoke-minimal.sh \
-  && bash /tmp/zsh-smoke-minimal.sh
+  && bash /repo/tests/zsh-smoke.sh \
+  && bash /repo/tests/zsh-smoke-minimal.sh

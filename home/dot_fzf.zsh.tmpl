@@ -15,5 +15,6 @@ fi
 
 # Key bindings
 # ------------
-source "{{ .chezmoi.homeDir }}/.fzf/shell/key-bindings.zsh"
+[[ -f "{{ .chezmoi.homeDir }}/.fzf/shell/key-bindings.zsh" ]] \
+  && source "{{ .chezmoi.homeDir }}/.fzf/shell/key-bindings.zsh"
 {{- end }}

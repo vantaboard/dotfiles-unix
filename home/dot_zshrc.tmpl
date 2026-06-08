@@ -7,9 +7,13 @@
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 {{- if index $f "p10k" }}
+{{- if env "CHEZMOI_CI" }}
+export POWERLEVEL9K_INSTANT_PROMPT=off
+{{- else }}
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
+{{- end }}
 {{- end }}
 
 ##### ─────────────────────────────────────────────────────────────────────────────
@@ -267,7 +271,7 @@ export CC=clang
 export CXX=clang++
 {{- end }}
 
-eval "$(task --completion zsh)"
+command -v task >/dev/null 2>&1 && eval "$(task --completion zsh)"
 
 {{- if index $f "mise" }}
 # mise must run after every PATH change (OMZ, dotfiles) so managed tools win over system/Cursor paths.

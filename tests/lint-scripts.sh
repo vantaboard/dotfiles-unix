@@ -33,6 +33,8 @@ bash -n "${REPO_ROOT}/scripts/lib/setup-catalog.sh"
 echo "OK: ${REPO_ROOT}/scripts/lib/setup-catalog.sh"
 bash -n "${REPO_ROOT}/scripts/lib/setup-ui.sh"
 echo "OK: ${REPO_ROOT}/scripts/lib/setup-ui.sh"
+bash -n "${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
+echo "OK: ${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
 
 for script in \
   "${HOME_DIR}/dot_local/bin/deploy-dotfiles" \
