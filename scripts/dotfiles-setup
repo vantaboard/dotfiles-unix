@@ -71,12 +71,10 @@ resolve_profile_dir() {
 resolve_profile_dir
 
 declare -A ENABLED=()
-declare -A CATEGORIES=()
 
 load_defaults() {
   local cat fid def req
   for cat in $(catalog_get_categories); do
-    CATEGORIES[$cat]=1
     while IFS=: read -r fid def req; do
       [[ -z "$fid" ]] && continue
       if [[ "$def" == "true" || "$req" == "true" ]]; then
@@ -192,14 +190,14 @@ run_wizard() {
 
   # Category selection
   local -a cat_list=()
-  local -a cat_defaults=()
+  local cat_defaults=""
   local cat
   for cat in $(catalog_get_categories); do
     local label
     label="$(catalog_get_category_label "$cat")"
     if [[ "$(catalog_get_category_required "$cat")" == "true" ]]; then
       cat_list+=("$cat|$label (required)")
-      cat_defaults+="$cat|$label (required)"
+      cat_defaults+="$cat|$label (required)"$'\n'
     else
       cat_list+=("$cat|$label")
       cat_defaults+="$cat|$label"$'\n'

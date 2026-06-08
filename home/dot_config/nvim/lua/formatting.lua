@@ -93,11 +93,10 @@ local favorite_colorschemes = {
 }
 
 vim.cmd(
-    "colorscheme melange"
+    "colorscheme boo"
 )
 
 vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
-vim.api.nvim_set_hl(0, "ColorColumn", { bg = "#f98304" })
 
 -- unicode
 vim.opt.encoding = "utf8"
@@ -147,73 +146,73 @@ local format_glsl = function()
 end
 
 -- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
-require("formatter").setup {
-    -- Enable or disable logging
-    logging = true,
-    -- Set the log level
-    log_level = vim.log.levels.WARN,
-    -- All formatter configurations are opt-in
-    filetype = {
-        glsl = format_glsl,
-        frag = format_glsl,
-        vert = format_glsl,
-        tesc = format_glsl,
-        tese = format_glsl,
-        geom = format_glsl,
-        comp = format_glsl,
-        css = {
-            -- prettier
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end,
-        },
-        yml = {
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end,
-        },
-        yaml = {
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end,
-        },
-        toml = {
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end,
-        },
-        liquid = {
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end,
-        },
-        rst = {
-            function()
-                return {
-                    exe = "rstfmt",
-                    stdin = true,
-                }
-            end,
-        },
-    }
-}
+-- require("formatter").setup {
+--     -- Enable or disable logging
+--     logging = true,
+--     -- Set the log level
+--     log_level = vim.log.levels.WARN,
+--     -- All formatter configurations are opt-in
+--     filetype = {
+--         glsl = format_glsl,
+--         frag = format_glsl,
+--         vert = format_glsl,
+--         tesc = format_glsl,
+--         tese = format_glsl,
+--         geom = format_glsl,
+--         comp = format_glsl,
+--         css = {
+--             -- prettier
+--             function()
+--                 return {
+--                     exe = "prettier",
+--                     args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+--                     stdin = true,
+--                 }
+--             end,
+--         },
+--         yml = {
+--             function()
+--                 return {
+--                     exe = "prettier",
+--                     args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+--                     stdin = true,
+--                 }
+--             end,
+--         },
+--         yaml = {
+--             function()
+--                 return {
+--                     exe = "prettier",
+--                     args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+--                     stdin = true,
+--                 }
+--             end,
+--         },
+--         toml = {
+--             function()
+--                 return {
+--                     exe = "prettier",
+--                     args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+--                     stdin = true,
+--                 }
+--             end,
+--         },
+--         liquid = {
+--             function()
+--                 return {
+--                     exe = "prettier",
+--                     args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+--                     stdin = true,
+--                 }
+--             end,
+--         },
+--         rst = {
+--             function()
+--                 return {
+--                     exe = "rstfmt",
+--                     stdin = true,
+--                 }
+--             end,
+--         },
+--     }
+-- }

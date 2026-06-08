@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CATALOG="$REPO_ROOT/home/.chezmoidata/setup-catalog.yaml"
 PROFILE="${1:-$REPO_ROOT/home/.chezmoidata/profile.example.yaml}"
 
+# shellcheck source=../scripts/lib/setup-catalog.sh
 source "$REPO_ROOT/scripts/lib/setup-catalog.sh"
 export CATALOG_FILE="$CATALOG"
 
@@ -49,7 +50,6 @@ done
 # Dependency check
 for fid in $(catalog_all_feature_ids); do
   [[ "${ENABLED[$fid]:-0}" == "1" ]] || continue
-  local_req=""
   while IFS= read -r req; do
     [[ -z "$req" ]] && continue
     if [[ "${ENABLED[$req]:-0}" != "1" ]]; then

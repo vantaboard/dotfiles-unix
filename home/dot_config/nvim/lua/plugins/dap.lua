@@ -1,6 +1,5 @@
 local dap, dapui = require("dap"), require("dapui")
 local dap_python = require('dap-python')
-require('dap.ext.vscode').load_launchjs(nil, { debugpy = { 'python' } })
 local Job = require("plenary.job")
 require('dap-go').setup()
 
@@ -14,8 +13,6 @@ function dap_python.test_runners.pytest_no_cov(classname, methodname)
     test_args[#test_args + 1] = "--no-cov"
     return test_module, test_args
 end
-
-require('dap.ext.vscode').load_launchjs 'launch.json'
 
 require('persistent-breakpoints').setup {
     load_breakpoints_event = { "BufReadPost" }
@@ -164,9 +161,6 @@ local continue = function()
         require('dap-go').debug_test()
 
         return
-    end
-    if vim.fn.filereadable('.vscode/launch.json') then
-        require('dap.ext.vscode').load_launchjs(nil, { debugpy = { 'python' } })
     end
     dap.continue()
 end

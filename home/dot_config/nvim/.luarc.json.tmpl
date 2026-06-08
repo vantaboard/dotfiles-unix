@@ -1,7 +1,11 @@
 {
     "workspace.library": [
-        "/usr/share/nvim/runtime/lua",
+        "{{ .chezmoi.homeDir }}/.local/share/nvim/site/pack/packer/start/neodev.nvim/types/nightly",
+        "/usr/local/share/nvim/runtime/lua",
+        "{{ .chezmoi.homeDir }}/.local/share/nvim/site/pack/packer/start/nvim-lspconfig/lua",
         "{{ .chezmoi.homeDir }}/.config/nvim/lua",
+        "{{ .chezmoi.homeDir }}/.local/share/nvim/site/pack/packer/start/neoconf.nvim/types",
+        "{{ .chezmoi.homeDir }}/.local/share/nvim/site/pack/packer/start/neoconf.nvim/types/lua",
         "${3rd}/luv/library"
     ]
 }

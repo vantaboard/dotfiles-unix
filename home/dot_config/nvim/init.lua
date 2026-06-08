@@ -1,3 +1,274 @@
+local hooks = function(ev)
+  local name, kind = ev.data.spec.name, ev.data.kind
+  local path = ev.data.path
+
+  -- Only run on install or update
+  if not (kind == 'install' or kind == 'update') then return end
+
+  local function run_cmd(cmd_table)
+    -- Wrap in pcall to catch errors without crashing Neovim
+    local ok, obj = pcall(vim.system, cmd_table, { cwd = path })
+    if not ok then
+      vim.notify("Build failed for " .. name .. ": " .. tostring(obj), vim.log.levels.ERROR)
+    end
+  end
+
+  if name == 'LuaSnip' and vim.fn.executable('make') == 1 then
+    run_cmd({ 'make', 'install_jsregexp' })
+
+  elseif name == 'markdown-preview' then
+    vim.fn["mkdp#util#install"]()
+
+  elseif name == 'peek' and vim.fn.executable('deno') == 1 then
+    run_cmd({ 'deno', 'task', '--quiet', 'build:fast' })
+
+  elseif name == 'telescope-fzf-native' and vim.fn.executable('cmake') == 1 then
+    -- Using 'sh -c' to handle the '&&' chain correctly
+    run_cmd({ 'sh', '-c', 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' })
+
+  elseif name == 'avante.nvim' and vim.fn.executable('make') == 1 then
+    run_cmd({ 'make' })
+  end
+end
+
+vim.api.nvim_create_autocmd('PackChanged', { callback = hooks })
+
+vim.pack.add({
+  'https://github.com/Mathijs-Bakker/godotdev.nvim',
+  'https://github.com/ray-x/go.nvim',
+  -- recommended if need floating window support
+  'https://github.com/ray-x/guihua.lua',
+  'https://github.com/tpope/vim-dadbod',
+'https://github.com/kristijanhusak/vim-dadbod-ui',
+'https://github.com/kristijanhusak/vim-dadbod-completion',
+        -- misc
+'https://github.com/m-demare/attempt.nvim',
+  {
+    src = 'https://github.com/toppair/peek.nvim',
+    name = 'peek',
+  },
+'https://github.com/saecki/live-rename.nvim',
+'https://github.com/MunifTanjim/nui.nvim',
+'https://github.com/junegunn/fzf',
+'https://github.com/mhanberg/output-panel.nvim',
+'https://github.com/vitalk/vim-shebang',
+'https://github.com/lambdalisue/suda.vim',
+        -- debugging
+'https://github.com/nvim-neotest/nvim-nio',
+'https://github.com/antoinemadec/FixCursorHold.nvim',
+'https://github.com/nvim-neotest/neotest',
+'https://github.com/nvim-neotest/neotest-python',
+'https://github.com/ianding1/leetcode.vim',
+'https://github.com/leoluz/nvim-dap-go',
+'https://github.com/mfussenegger/nvim-dap',
+'https://github.com/mfussenegger/nvim-dap-python',
+'https://github.com/Weissle/persistent-breakpoints.nvim',
+'https://github.com/aznhe21/actions-preview.nvim',
+        'https://github.com/mxsdev/nvim-dap-vscode-js',
+'https://github.com/Pocco81/dap-buddy.nvim',
+        'https://github.com/gbprod/yanky.nvim',
+        'https://github.com/gbrlsnchs/telescope-lsp-handlers.nvim',
+        'https://github.com/nvim-telescope/telescope-dap.nvim',
+'https://github.com/theHamsta/nvim-dap-virtual-text',
+        -- completion
+'https://github.com/b0o/SchemaStore.nvim',
+'https://github.com/folke/neodev.nvim',
+'https://github.com/folke/neoconf.nvim',
+        'https://github.com/rcarriga/nvim-dap-ui',
+'https://github.com/hrsh7th/nvim-cmp',
+'https://github.com/hrsh7th/cmp-buffer',
+'https://github.com/hrsh7th/cmp-path',
+'https://github.com/hrsh7th/cmp-cmdline',
+'https://github.com/hrsh7th/cmp-nvim-lsp-signature-help',
+'https://github.com/hrsh7th/cmp-nvim-lsp',
+'https://github.com/petertriho/cmp-git',
+'https://github.com/norcalli/nvim-colorizer.lua',
+'https://github.com/onsails/lspkind.nvim',
+'https://github.com/rafamadriz/friendly-snippets',
+  {
+    src = 'https://github.com/L3MON4D3/LuaSnip',
+    name = 'LuaSnip',
+    version = 'v2.5.0',
+  },
+'https://github.com/saadparwaiz1/cmp_luasnip',
+-- dependencies
+'https://github.com/stevearc/dressing.nvim',
+'https://github.com/MeanderingProgrammer/render-markdown.nvim',
+
+-- AI
+{
+    src = 'https://github.com/yetone/avante.nvim',
+    name = 'avante.nvim',
+},
+'https://github.com/milanglacier/minuet-ai.nvim',
+        -- fuzzy
+'https://github.com/debugloop/telescope-undo.nvim',
+'https://github.com/nvim-telescope/telescope-ui-select.nvim',
+  {
+    src = 'https://github.com/nvim-telescope/telescope.nvim',
+    version = 'v0.2.2',
+  },
+'https://github.com/nvim-lua/plenary.nvim',
+        -- formatting
+'https://github.com/mhartington/formatter.nvim',
+        -- linting
+'https://github.com/mfussenegger/nvim-lint',
+        -- lsp
+'https://github.com/simrat39/rust-tools.nvim',
+'https://github.com/williamboman/mason.nvim',
+'https://github.com/williamboman/mason-lspconfig.nvim',
+'https://github.com/neovim/nvim-lspconfig',
+        -- ricing
+        { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main' },
+'https://github.com/xiyaowong/transparent.nvim',
+'https://github.com/gu-fan/InstantRst',
+  {
+    src = 'https://github.com/iamcco/markdown-preview.nvim',
+    name = 'markdown-preview',
+  },
+'https://github.com/xolox/vim-misc',
+'https://github.com/startup-nvim/startup.nvim',
+'https://github.com/lewis6991/gitsigns.nvim',
+        -- colos
+'https://github.com/xero/miasma.nvim',
+'https://github.com/eldritch-theme/eldritch.nvim',
+'https://github.com/oxfist/night-owl.nvim',
+'https://github.com/uloco/bluloco.nvim',
+'https://github.com/rktjmp/lush.nvim',
+'https://github.com/vantaboard/vim-colorscheme-switcher',
+'https://github.com/kyazdani42/nvim-web-devicons',
+'https://github.com/junegunn/seoul256.vim',
+'https://github.com/morhetz/gruvbox',
+'https://github.com/arcticicestudio/nord-vim',
+'https://github.com/tomasr/molokai',
+'https://github.com/nyoom-engineering/oxocarbon.nvim',
+'https://github.com/savq/melange-nvim',
+'https://github.com/svrana/neosolarized.nvim',
+'https://github.com/neanias/everforest-nvim',
+'https://github.com/nyngwang/nvimgelion',
+'https://github.com/maxmx03/FluoroMachine.nvim',
+'https://github.com/dasupradyumna/midnight.nvim',
+'https://github.com/sekke276/dark_flat.nvim',
+'https://github.com/zootedb0t/citruszest.nvim',
+'https://github.com/shaeinst/roshnivim-cs',
+'https://github.com/tomasiser/vim-code-dark',
+'https://github.com/Mofiqul/vscode.nvim',
+'https://github.com/marko-cerovac/material.nvim',
+'https://github.com/bluz71/vim-nightfly-colors',
+'https://github.com/bluz71/vim-moonfly-colors',
+'https://github.com/ChristianChiarulli/nvcode-color-schemes.vim',
+'https://github.com/folke/tokyonight.nvim',
+'https://github.com/sainnhe/sonokai',
+'https://github.com/kyazdani42/blue-moon',
+'https://github.com/mhartington/oceanic-next',
+'https://github.com/glepnir/zephyr-nvim',
+'https://github.com/rockerBOO/boo-colorscheme-nvim',
+'https://github.com/jim-at-jibba/ariake-vim-colors',
+'https://github.com/Scysta/pink-panic.nvim',
+'https://github.com/ishan9299/modus-theme-vim',
+'https://github.com/sainnhe/edge',
+'https://github.com/theniceboy/nvim-deus',
+'https://github.com/Th3Whit3Wolf/one-nvim',
+'https://github.com/PHSix/nvim-hybrid',
+'https://github.com/Th3Whit3Wolf/space-nvim',
+'https://github.com/yonlu/omni.vim',
+'https://github.com/ray-x/aurora',
+'https://github.com/tanvirtin/monokai.nvim',
+'https://github.com/savq/melange',
+'https://github.com/fenetikm/falcon',
+'https://github.com/andersevenrud/nordic.nvim',
+'https://github.com/shaunsingh/nord.nvim',
+'https://github.com/ishan9299/nvim-solarized-lua',
+'https://github.com/shaunsingh/moonlight.nvim',
+'https://github.com/navarasu/onedark.nvim',
+'https://github.com/lourenci/github-colors',
+'https://github.com/sainnhe/gruvbox-material',
+'https://github.com/sainnhe/everforest',
+'https://github.com/NTBBloodbath/doom-one.nvim',
+'https://github.com/dracula/vim',
+'https://github.com/Mofiqul/dracula.nvim',
+'https://github.com/yashguptaz/calvera-dark.nvim',
+'https://github.com/nxvu699134/vn-night.nvim',
+'https://github.com/adisen99/codeschool.nvim',
+'https://github.com/projekt0n/github-nvim-theme',
+'https://github.com/kdheepak/monochrome.nvim',
+'https://github.com/mcchrish/zenbones.nvim',
+'https://github.com/catppuccin/nvim',
+'https://github.com/FrenzyExists/aquarium-vim',
+'https://github.com/EdenEast/nightfox.nvim',
+'https://github.com/kvrohit/substrata.nvim',
+'https://github.com/ldelossa/vimdark',
+'https://github.com/Everblush/everblush.nvim',
+'https://github.com/adisen99/apprentice.nvim',
+'https://github.com/olimorris/onedarkpro.nvim',
+'https://github.com/rmehri01/onenord.nvim',
+'https://github.com/RishabhRD/gruvy',
+'https://github.com/echasnovski/mini.nvim',
+'https://github.com/luisiacc/gruvbox-baby',
+'https://github.com/titanzero/zephyrium',
+'https://github.com/rebelot/kanagawa.nvim',
+'https://github.com/tiagovla/tokyodark.nvim',
+'https://github.com/cpea2506/one_monokai.nvim',
+'https://github.com/phha/zenburn.nvim',
+'https://github.com/kvrohit/rasmus.nvim',
+'https://github.com/chrsm/paramount-ng.nvim',
+'https://github.com/kaiuri/nvim-juliana',
+'https://github.com/rockyzhang24/arctic.nvim',
+'https://github.com/ramojus/mellifluous.nvim',
+'https://github.com/Yazeed1s/minimal.nvim',
+'https://github.com/Mofiqul/adwaita.nvim',
+'https://github.com/olivercederborg/poimandres.nvim',
+'https://github.com/kvrohit/mellow.nvim',
+'https://github.com/Yazeed1s/oh-lucy.nvim',
+        -- version control
+'https://github.com/tpope/vim-fugitive',
+'https://github.com/pwntester/octo.nvim',
+  {
+    src = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim',
+    name = 'telescope-fzf-native',
+  },
+        -- navigation
+'https://github.com/johmsalas/text-case.nvim',
+'https://github.com/s1n7ax/nvim-search-and-replace',
+'https://github.com/Pocco81/auto-save.nvim',
+'https://github.com/tpope/vim-rhubarb',
+'https://github.com/nacro90/numb.nvim',
+'https://github.com/tpope/vim-repeat',
+'https://github.com/ThePrimeagen/harpoon',
+'https://github.com/easymotion/vim-easymotion',
+        'https://github.com/nvim-lualine/lualine.nvim',
+'https://github.com/kyazdani42/nvim-tree.lua',
+'https://github.com/jbyuki/instant.nvim',
+'https://github.com/akinsho/bufferline.nvim',
+'https://github.com/haya14busa/is.vim',
+'https://github.com/kevinhwang91/promise-async',
+'https://github.com/mbbill/undotree',
+'https://github.com/tpope/vim-surround',
+'https://github.com/tpope/vim-commentary',
+'https://github.com/famiu/bufdelete.nvim',
+'https://github.com/michaeljsmith/vim-indent-object',
+'https://github.com/nvim-pack/nvim-spectre',
+'https://github.com/bkad/CamelCaseMotion',
+'https://github.com/wellle/targets.vim',
+        -- fun
+'https://github.com/jakewvincent/texmagic.nvim',
+'https://github.com/tpope/vim-sleuth',
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "*",
+  callback = function()
+    -- List of filetypes to ignore
+    local ignore_ft = { "cmp_menu", "cmp_docs", "noice", "prompt", "TelescopePrompt" }
+    if vim.tbl_contains(ignore_ft, vim.bo.filetype) then
+      return
+    end
+
+    -- Use pcall (protected call) to catch errors silently if a parser is missing
+    pcall(vim.treesitter.start)
+  end,
+})
+
 require("transparent").setup({
     enable = true,
     extra_groups = {
@@ -15,370 +286,6 @@ require("transparent").setup({
 
 require('transparent').clear_prefix('BufferLine')
 
-local ensure_packer = function()
-    local fn = vim.fn
-    local install_path = fn.stdpath("data")
-        .. "/site/pack/packer/start/packer.nvim"
-    if fn.empty(fn.glob(install_path)) > 0 then
-        fn.system({
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "https://github.com/wbthomason/packer.nvim",
-            install_path,
-        })
-        vim.cmd("packadd packer.nvim")
-        return true
-    end
-    return false
-end
-
-ensure_packer()
-local use = require("packer").use
-
-require("packer").startup({
-    function()
-        use("wbthomason/packer.nvim")
-        -- === ai ===
-        -- Avante.nvim with build process
-        -- use {
-        --     'yetone/avante.nvim',
-        --     branch = 'main',
-        --     run = 'make',
-        --     config = function()
-        --         require('avante').setup()
-        --     end,
-        --     requires = {
-        --         -- Required plugins
-        --         'nvim-lua/plenary.nvim',
-        --         'MunifTanjim/nui.nvim',
-        --         'MeanderingProgrammer/render-markdown.nvim',
-
-        --         -- Optional dependencies
-        --         'hrsh7th/nvim-cmp',
-        --         'nvim-tree/nvim-web-devicons', -- or use 'echasnovski/mini.icons'
-        --         'HakonHarnes/img-clip.nvim',
-        --         'stevearc/dressing.nvim', -- for enhanced input UI
-        --         'folke/snacks.nvim',      -- for modern input UI
-        --     }
-        -- }
-        -- use({
-        --     "/home/brighten-tompkins/Code/cursor-agent.nvim",
-        --     config = function()
-        --         require("cursor-agent").setup({})
-        --     end,
-        -- })
-        -- golang
-        use 'ray-x/go.nvim'
-        use 'ray-x/guihua.lua' -- recommended if need floating window support
-        -- database
-        -- use {
-        --     '/home/brighten-tompkins/Code/dataform.nvim',
-        --     requires = {
-        --         'rcarriga/nvim-notify',
-        --         'nvim-telescope/telescope.nvim'
-        --     },
-        -- }
-        use("tpope/vim-dadbod")
-        use("kristijanhusak/vim-dadbod-ui")
-        use("kristijanhusak/vim-dadbod-completion")
-        -- misc
-        use("m-demare/attempt.nvim")
-        use {
-            "toppair/peek.nvim",
-            build = "deno task --quiet build:fast",
-        }
-        -- use("filipdutescu/renamer.nvim") -- last updated in 2022
-        use("saecki/live-rename.nvim")
-        use("MunifTanjim/nui.nvim")
-        use("nvimtools/none-ls.nvim")
-        use("junegunn/fzf")
-        use("mhanberg/output-panel.nvim")
-        use("vitalk/vim-shebang")
-        use("lambdalisue/suda.vim")
-        -- debugging
-        use("nvim-neotest/nvim-nio")
-        use {
-            "nvim-neotest/neotest",
-            requires = {
-                "nvim-neotest/nvim-nio",
-                "nvim-lua/plenary.nvim",
-                "antoinemadec/FixCursorHold.nvim",
-                "nvim-treesitter/nvim-treesitter"
-            }
-        }
-        use("nvim-neotest/neotest-python")
-        use("ianding1/leetcode.vim")
-        use("leoluz/nvim-dap-go")
-        use("mfussenegger/nvim-dap")
-        use("mfussenegger/nvim-dap-python")
-        use("Weissle/persistent-breakpoints.nvim")
-        use {
-            "aznhe21/actions-preview.nvim",
-        }
-        use({
-            "mxsdev/nvim-dap-vscode-js",
-            requires = { "mfussenegger/nvim-dap" },
-        })
-        use("Pocco81/dap-buddy.nvim")
-        use({
-            "gbprod/yanky.nvim",
-            requires = { { "nvim-telescope/telescope.nvim" } },
-        })
-        use({
-            "gbrlsnchs/telescope-lsp-handlers.nvim",
-            requires = { { "nvim-telescope/telescope.nvim" } },
-        })
-        use({
-            "nvim-telescope/telescope-dap.nvim",
-            requires = { { "nvim-telescope/telescope.nvim" } },
-        })
-        use("theHamsta/nvim-dap-virtual-text")
-        -- completion
-        use("b0o/SchemaStore.nvim")
-        use("folke/neodev.nvim")
-        use("folke/neoconf.nvim")
-        use({ "rcarriga/nvim-dap-ui", requires = { "mfussenegger/nvim-dap" } })
-        use("hrsh7th/nvim-cmp")
-        use("hrsh7th/cmp-buffer")
-        use("hrsh7th/cmp-path")
-        use("hrsh7th/cmp-cmdline")
-        use("hrsh7th/cmp-nvim-lsp-signature-help")
-        use("hrsh7th/cmp-nvim-lsp")
-        use("petertriho/cmp-git")
-        use("norcalli/nvim-colorizer.lua")
-        use("onsails/lspkind.nvim")
-        use("rafamadriz/friendly-snippets")
-        use({
-            "L3MON4D3/LuaSnip",
-            requires = { "rafamadriz/friendly-snippets" },
-            -- follow latest release.
-            tag = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-            -- install jsregexp (optional!:).
-            run = "make install_jsregexp"
-        })
-        use("saadparwaiz1/cmp_luasnip")
-        -- fuzzy
-        use("debugloop/telescope-undo.nvim")
-        use("nvim-telescope/telescope-ui-select.nvim")
-        use({
-            "nvim-telescope/telescope.nvim",
-            tag = "0.1.x",
-            dependencies = {
-                "debugloop/telescope-undo.nvim",
-            },
-        })
-        use("nvim-lua/plenary.nvim")
-        -- formatting
-        use("mhartington/formatter.nvim")
-        -- linting
-        use("mfussenegger/nvim-lint")
-        -- lsp
-        use("simrat39/rust-tools.nvim")
-        use("williamboman/mason.nvim")
-        use("williamboman/mason-lspconfig.nvim")
-        use("neovim/nvim-lspconfig")
-        -- ricing
-        use("xiyaowong/transparent.nvim")
-        use("gu-fan/InstantRst")
-        use({
-            "iamcco/markdown-preview.nvim",
-            run = function()
-                vim.fn["mkdp#util#install"]()
-            end,
-        })
-        use("xolox/vim-misc")
-        use("startup-nvim/startup.nvim")
-        use("SmiteshP/nvim-gps")
-        use("lewis6991/gitsigns.nvim")
-        -- colos
-        use("xero/miasma.nvim")
-        use("eldritch-theme/eldritch.nvim")
-        use("oxfist/night-owl.nvim")
-        use("uloco/bluloco.nvim")
-        -- use("scottmckendry/cyberdream.nvim")
-        use("rktjmp/lush.nvim")
-        use("vantaboard/vim-colorscheme-switcher")
-        use("kyazdani42/nvim-web-devicons")
-        use("junegunn/seoul256.vim")
-        use("morhetz/gruvbox")
-        use("arcticicestudio/nord-vim")
-        use("tomasr/molokai")
-        use("nyoom-engineering/oxocarbon.nvim")
-        use("savq/melange-nvim")
-        use("svrana/neosolarized.nvim")
-        use("neanias/everforest-nvim")
-        use("nyngwang/nvimgelion")
-        use("maxmx03/FluoroMachine.nvim")
-        use("dasupradyumna/midnight.nvim")
-        use("sekke276/dark_flat.nvim")
-        use("zootedb0t/citruszest.nvim")
-        use("shaeinst/roshnivim-cs")
-        use("tomasiser/vim-code-dark")
-        -- use("Mofiqul/vscode.nvim")
-        use("marko-cerovac/material.nvim")
-        use("bluz71/vim-nightfly-colors")
-        use("bluz71/vim-moonfly-colors")
-        use("ChristianChiarulli/nvcode-color-schemes.vim")
-        use("folke/tokyonight.nvim")
-        use("sainnhe/sonokai")
-        use("kyazdani42/blue-moon")
-        use("mhartington/oceanic-next")
-        use("glepnir/zephyr-nvim")
-        use("rockerBOO/boo-colorscheme-nvim")
-        use("jim-at-jibba/ariake-vim-colors")
-        use("Scysta/pink-panic.nvim")
-        use("ishan9299/modus-theme-vim")
-        use("sainnhe/edge")
-        use("theniceboy/nvim-deus")
-        use("Th3Whit3Wolf/one-nvim")
-        use("PHSix/nvim-hybrid")
-        use("Th3Whit3Wolf/space-nvim")
-        use("yonlu/omni.vim")
-        use("ray-x/aurora")
-        use("tanvirtin/monokai.nvim")
-        use("savq/melange")
-        use("fenetikm/falcon")
-        use("andersevenrud/nordic.nvim")
-        use("shaunsingh/nord.nvim")
-        use("ishan9299/nvim-solarized-lua")
-        use("shaunsingh/moonlight.nvim")
-        use("navarasu/onedark.nvim")
-        use("lourenci/github-colors")
-        use("sainnhe/gruvbox-material")
-        use("sainnhe/everforest")
-        use("NTBBloodbath/doom-one.nvim")
-        use("dracula/vim")
-        use("Mofiqul/dracula.nvim")
-        use("yashguptaz/calvera-dark.nvim")
-        use("nxvu699134/vn-night.nvim")
-        use("adisen99/codeschool.nvim")
-        use("projekt0n/github-nvim-theme")
-        use("kdheepak/monochrome.nvim")
-        -- use("rose-pine/neovim")
-        use("mcchrish/zenbones.nvim")
-        use("catppuccin/nvim")
-        use("FrenzyExists/aquarium-vim")
-        use("EdenEast/nightfox.nvim")
-        use("kvrohit/substrata.nvim")
-        use("ldelossa/vimdark")
-        use("Everblush/everblush.nvim")
-        use("adisen99/apprentice.nvim")
-        use("olimorris/onedarkpro.nvim")
-        use("rmehri01/onenord.nvim")
-        use("RishabhRD/gruvy")
-        use("echasnovski/mini.nvim")
-        use("luisiacc/gruvbox-baby")
-        use("titanzero/zephyrium")
-        use("rebelot/kanagawa.nvim")
-        use("tiagovla/tokyodark.nvim")
-        use("cpea2506/one_monokai.nvim")
-        use("phha/zenburn.nvim")
-        use("kvrohit/rasmus.nvim")
-        use("chrsm/paramount-ng.nvim")
-        use("kaiuri/nvim-juliana")
-        use("rockyzhang24/arctic.nvim")
-        use("ramojus/mellifluous.nvim")
-        use("Yazeed1s/minimal.nvim")
-        use("Mofiqul/adwaita.nvim")
-        use("olivercederborg/poimandres.nvim")
-        use("kvrohit/mellow.nvim")
-        use("Yazeed1s/oh-lucy.nvim")
-        -- version control
-        use("tpope/vim-fugitive")
-        use("pwntester/octo.nvim")
-        -- use {
-        --     "harrisoncramer/gitlab.nvim",
-        --     requires = {
-        --         "MunifTanjim/nui.nvim",
-        --         "nvim-lua/plenary.nvim",
-        --         "sindrets/diffview.nvim",
-        --         "stevearc/dressing.nvim",      -- Recommended but not required. Better UI for pickers.
-        --         "nvim-tree/nvim-web-devicons", -- Recommended but not required. Icons in discussion tree.
-        --     },
-        --     build = function()
-        --         require("gitlab.server").build()
-        --     end,
-        --     branch = "develop",
-        --     config = function()
-        --         require("diffview") -- We require some global state from diffview
-        --         local gitlab = require("gitlab")
-        --         gitlab.setup()
-        --     end,
-        -- }
-        -- navigation
-        use({
-            "nvim-telescope/telescope-fzf-native.nvim",
-            run =
-            "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build",
-        })
-        use("johmsalas/text-case.nvim")
-        use("nvim-treesitter/nvim-treesitter")
-        use("nvim-treesitter/nvim-treesitter-refactor")
-        use("nvim-treesitter/nvim-treesitter-textobjects")
-        use("nvim-treesitter/playground")
-        use("RRethy/nvim-treesitter-textsubjects")
-        use("s1n7ax/nvim-search-and-replace")
-        use("Pocco81/auto-save.nvim")
-        use("tpope/vim-rhubarb")
-        use("nacro90/numb.nvim")
-        use("tpope/vim-repeat")
-        use("ThePrimeagen/harpoon")
-        use("easymotion/vim-easymotion")
-        use {
-            'nvim-lualine/lualine.nvim',
-            requires = { 'nvim-tree/nvim-web-devicons', opt = true }
-        }
-        use("kyazdani42/nvim-tree.lua")
-        use("jbyuki/instant.nvim")
-        use("akinsho/bufferline.nvim")
-        use("haya14busa/is.vim")
-        use({
-            "kevinhwang91/nvim-fundo",
-            requires = "kevinhwang91/promise-async",
-            run = function()
-                require("fundo").install()
-            end,
-        })
-        use("mbbill/undotree")
-        use("tpope/vim-surround")
-        use("tpope/vim-commentary")
-        use("famiu/bufdelete.nvim")
-        use("michaeljsmith/vim-indent-object")
-        use("nvim-pack/nvim-spectre")
-        use("bkad/CamelCaseMotion")
-        use("wellle/targets.vim")
-        -- fun
-        use("jakewvincent/texmagic.nvim")
-        use("tpope/vim-sleuth")
-    end,
-    config = {
-        max_jobs = 10,
-    },
-})
-
-
-
--- require("cursor-agent").setup({
---     window_mode = "attached",
---     position = "right", -- Opens on right side
---     width = 0.2,        -- 1/5 of screen width
--- })
--- 
--- -- Toggle the interactive terminal
--- vim.keymap.set("n", "<leader>ca", ":CursorAgent<CR>", { desc = "Cursor Agent: Toggle terminal" })
--- 
--- -- Ask about the visual selection
--- vim.keymap.set("v", "<leader>ca", ":CursorAgentSelection<CR>", { desc = "Cursor Agent: Send selection" })
--- 
--- -- Ask about the current buffer
--- vim.keymap.set("n", "<leader>cA", ":CursorAgentBuffer<CR>", { desc = "Cursor Agent: Send buffer" })
--- 
--- if vim.fn.has("win32") == 1 then
---     require("windows")
--- end
-
 require("output_panel").setup({})
 
 require("formatting")
@@ -387,200 +294,29 @@ require("autocommands")
 require("mappings")
 require("tsconfig")
 
--- require("plugins.colorizer")
 require("plugins.dap")
 require("plugins.lualine")
-require("plugins.fundo-plug")
 require("plugins.lsp.completion")
 require("plugins.lsp.servers")
 require("plugins.markdown-preview")
 require("plugins.numb")
-require("plugins.nvim-treesitter")
 require("plugins.nvimtree")
+require("plugins.godot")
+-- require("plugins.nvim-treesitter")
 require("plugins.telescope")
 require("plugins.spectre")
 require("plugins.autosave")
 require("plugins.texmagic")
 require("plugins.go")
--- require("plugins.gitlab-plug")
 require("plugins.renamer")
 require("plugins.dadbod")
--- require("plugins.image")
 require("plugins.attempt")
+require("plugins.avante")
+require("plugins.minuet")
 
 vim.o.exrc = true
 vim.g.python3_host_prog = "/usr/bin/python"
 vim.g.python_host_prog = "/usr/bin/python2"
-
--- require("avante").setup({
---     ---@alias Provider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
---     ---@type Provider
---     provider = "openai", -- The provider used in Aider mode or in the planning phase of Cursor Planning Mode
---     ---@alias Mode "agentic" | "legacy"
---     ---@type Mode
---     mode = "agentic", -- The default mode for interaction. "agentic" uses tools to automatically generate code, "legacy" uses the old planning method to generate code.
---     -- WARNING: Since auto-suggestions are a high-frequency operation and therefore expensive,
---     -- currently designating it as `copilot` provider is dangerous because: https://github.com/yetone/avante.nvim/issues/1048
---     -- Of course, you can reduce the request frequency by increasing `suggestion.debounce`.
---     auto_suggestions_provider = "openai",
---     providers = {
---         openai = {
---           endpoint = "https://api.openai.com/v1",
---           model = "gpt-5",
---           timeout = 30000, -- Timeout in milliseconds, increase this for reasoning models
---           context_window = 128000, -- Number of tokens to send to the model for context
---           extra_request_body = {
---             temperature = 0.75,
---             max_completion_tokens = 16384, -- Increase this to include reasoning tokens (for reasoning models)
---             reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
---           },
---         },
---     },
---     ---Specify the special dual_boost mode
---     ---1. enabled: Whether to enable dual_boost mode. Default to false.
---     ---2. first_provider: The first provider to generate response. Default to "openai".
---     ---3. second_provider: The second provider to generate response. Default to "claude".
---     ---4. prompt: The prompt to generate response based on the two reference outputs.
---     ---5. timeout: Timeout in milliseconds. Default to 60000.
---     ---How it works:
---     --- When dual_boost is enabled, avante will generate two responses from the first_provider and second_provider respectively. Then use the response from the first_provider as provider1_output and the response from the second_provider as provider2_output. Finally, avante will generate a response based on the prompt and the two reference outputs, with the default Provider as normal.
---     ---Note: This is an experimental feature and may not work as expected.
---     dual_boost = {
---         enabled = false,
---         first_provider = "openai",
---         second_provider = "claude",
---         prompt =
---         "Based on the two reference outputs below, generate a response that incorporates elements from both but reflects your own judgment and unique perspective. Do not provide any explanation, just give the response directly. Reference Output 1: [{{provider1_output}}], Reference Output 2: [{{provider2_output}}]",
---         timeout = 60000, -- Timeout in milliseconds
---     },
---     behaviour = {
---         auto_suggestions = false, -- Experimental stage
---         auto_set_highlight_group = true,
---         auto_set_keymaps = true,
---         auto_apply_diff_after_generation = false,
---         support_paste_from_clipboard = false,
---         minimize_diff = true,             -- Whether to remove unchanged lines when applying a code block
---         enable_token_counting = true,     -- Whether to enable token counting. Default to true.
---         auto_add_current_file = true,     -- Whether to automatically add the current file when opening a new chat. Default to true.
---         auto_approve_tool_permissions = true, -- Default: auto-approve all tools (no prompts)
---         -- Examples:
---         -- auto_approve_tool_permissions = false,                -- Show permission prompts for all tools
---         -- auto_approve_tool_permissions = {"bash", "replace_in_file"}, -- Auto-approve specific tools only
---         ---@type "popup" | "inline_buttons"
---         confirmation_ui_style = "inline_buttons",
---     },
---     prompt_logger = {                                       -- logs prompts to disk (timestamped, for replay/debugging)
---         enabled = true,                                     -- toggle logging entirely
---         log_dir = vim.fn.stdpath("cache") .. "/avante_prompts", -- directory where logs are saved
---         fortune_cookie_on_success = false,                  -- shows a random fortune after each logged prompt (requires `fortune` installed)
---         next_prompt = {
---             normal = "<C-n>",                               -- load the next (newer) prompt log in normal mode
---             insert = "<C-n>",
---         },
---         prev_prompt = {
---             normal = "<C-p>", -- load the previous (older) prompt log in normal mode
---             insert = "<C-p>",
---         },
---     },
---     mappings = {
---         --- @class AvanteConflictMappings
---         diff = {
---             ours = "co",
---             theirs = "ct",
---             all_theirs = "ca",
---             both = "cb",
---             cursor = "cc",
---             next = "]x",
---             prev = "[x",
---         },
---         suggestion = {
---             accept = "<M-l>",
---             next = "<M-]>",
---             prev = "<M-[>",
---             dismiss = "<C-]>",
---         },
---         jump = {
---             next = "]]",
---             prev = "[[",
---         },
---         submit = {
---             normal = "<CR>",
---             insert = "<C-s>",
---         },
---         cancel = {
---             normal = { "<C-c>", "<Esc>", "q" },
---             insert = { "<C-c>" },
---         },
---         sidebar = {
---             apply_all = "A",
---             apply_cursor = "a",
---             retry_user_request = "r",
---             edit_user_request = "e",
---             switch_windows = "<Tab>",
---             reverse_switch_windows = "<S-Tab>",
---             remove_file = "d",
---             add_file = "@",
---             close = { "<Esc>", "q" },
---             close_from_input = nil, -- e.g., { normal = "<Esc>", insert = "<C-d>" }
---         },
---     },
---     selection = {
---         enabled = true,
---         hint_display = "delayed",
---     },
---     windows = {
---         ---@type "right" | "left" | "top" | "bottom"
---         position = "right", -- the position of the sidebar
---         wrap = true,    -- similar to vim.o.wrap
---         width = 30,     -- default % based on available width
---         sidebar_header = {
---             enabled = true, -- true, false to enable/disable the header
---             align = "center", -- left, center, right for title
---             rounded = true,
---         },
---         spinner = {
---             editing = { "⡀", "⠄", "⠂", "⠁", "⠈", "⠐", "⠠", "⢀", "⣀", "⢄", "⢂", "⢁", "⢈", "⢐", "⢠", "⣠", "⢤", "⢢", "⢡", "⢨", "⢰", "⣰", "⢴", "⢲", "⢱", "⢸", "⣸", "⢼", "⢺", "⢹", "⣹", "⢽", "⢻", "⣻", "⢿", "⣿" },
---             generating = { "·", "✢", "✳", "∗", "✻", "✽" }, -- Spinner characters for the 'generating' state
---             thinking = { "🤯", "🙄" }, -- Spinner characters for the 'thinking' state
---         },
---         input = {
---             prefix = "> ",
---             height = 8, -- Height of the input window in vertical layout
---         },
---         edit = {
---             border = "rounded",
---             start_insert = true, -- Start insert mode when opening the edit window
---         },
---         ask = {
---             floating = false, -- Open the 'AvanteAsk' prompt in a floating window
---             start_insert = true, -- Start insert mode when opening the ask window
---             border = "rounded",
---             ---@type "ours" | "theirs"
---             focus_on_apply = "ours", -- which diff to focus after applying
---         },
---     },
---     highlights = {
---         ---@type AvanteConflictHighlights
---         diff = {
---             current = "DiffText",
---             incoming = "DiffAdd",
---         },
---     },
---     --- @class AvanteConflictUserConfig
---     diff = {
---         autojump = true,
---         ---@type string | fun(): any
---         list_opener = "copen",
---         --- Override the 'timeoutlen' setting while hovering over a diff (see :help timeoutlen).
---         --- Helps to avoid entering operator-pending mode with diff mappings starting with `c`.
---         --- Disable by setting to -1.
---         override_timeoutlen = 500,
---     },
---     suggestion = {
---         debounce = 600,
---         throttle = 600,
---     },
--- })
 
 -- views can only be fully collapsed with the global statusline
 vim.opt.laststatus = 3

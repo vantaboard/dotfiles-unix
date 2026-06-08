@@ -6,13 +6,12 @@
 sleep 1 # Reduced sleep
 
 declare -a wallpapers=(
-     "pexels-didsss-9656151.jpg"
-     "pexels-nadezhda-moryak-6063609.jpg"
-     "pexels-codioful-6985184.jpg"
+    "pexels-kanhaiya-sharma-284427440-13062567.jpg"
+    "pexels-moose-photos-170195-1037994.jpg"
+    "pexels-marek-piwnicki-3907296-33149738.jpg"
 )
 
 # Use your specific user's nitrogen config
-export DISPLAY=:1
 export XAUTHORITY="/run/user/{{ .chezmoi.uid }}/gdm/Xauthority"
 
 # Get current connected count accurately

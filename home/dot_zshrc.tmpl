@@ -45,6 +45,7 @@ zstyle ':completion:*' rehash false
 # disable sort when completing `git checkout`
 zstyle ':completion:*:git-checkout:*' sort false
 # set descriptions format to enable group support
+# NOTE: don't use escape sequences (like '%F{red}%d%f') here, fzf-tab will ignore them
 zstyle ':completion:*:descriptions' format '[%d]'
 # set list-colors to enable filename colorizing
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
@@ -89,15 +90,9 @@ export DISABLE_UPDATE_PROMPT="true"
 export DIRSTACKSIZE=100000000000000000
 export DISABLE_MAGIC_FUNCTIONS=true
 
-export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin:${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
+export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin"
 
-{{- if index $f "mise" }}
-if [[ -x {{ .chezmoi.homeDir }}/.local/bin/mise ]]; then
-  eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
-fi
-{{- end }}
-
-plugins=({{- if index $f "omz_codeclimate" }}codeclimate {{ end -}}{{- if index $f "omz_extract" }}extract {{ end -}}{{- if index $f "omz_python" }}python {{ end -}}{{- if index $f "omz_virtualenv" }}virtualenv {{ end -}}{{- if index $f "zsh_autosuggestions" }}zsh-autosuggestions {{ end -}}{{- if index $f "omz_ssh_agent" }}ssh-agent {{ end -}}{{- if index $f "omz_fzf" }}fzf {{ end -}}{{- if index $f "omz_git" }}git{{ end }})
+plugins=({{- if index $f "omz_codeclimate" }}codeclimate {{ end -}}{{- if index $f "omz_extract" }}extract {{ end -}}{{- if index $f "omz_python" }}python {{ end -}}{{- if index $f "omz_virtualenv" }}virtualenv {{ end -}}{{- if index $f "zsh_autosuggestions" }}zsh-autosuggestions {{ end -}}{{- if index $f "omz_ssh_agent" }}ssh-agent {{ end -}}{{- if index $f "omz_fzf" }}fzf {{ end -}}{{- if index $f "fzf_tab" }}fzf-tab {{ end -}}{{- if index $f "omz_git" }}git{{ end }})
 
 # OMZ bootstrap (now safe—compinit/compaudit are already handled)
 source "$ZSH/oh-my-zsh.sh"
@@ -105,8 +100,13 @@ source "$ZSH/oh-my-zsh.sh"
 {{- if index $f "fzf_tab" }}
 # preview directory's content with eza when completing cd
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+# custom fzf flags
+# NOTE: fzf-tab does not follow FZF_DEFAULT_OPTS by default
 zstyle ':fzf-tab:*' fzf-flags --color=fg:1,fg+:2 --bind=tab:accept
+# To make fzf-tab follow FZF_DEFAULT_OPTS.
+# NOTE: This may lead to unexpected behavior since some flags break this plugin. See Aloxaf/fzf-tab#455.
 zstyle ':fzf-tab:*' use-fzf-default-opts yes
+# switch group using `<` and `>`
 zstyle ':fzf-tab:*' switch-group '<' '>'
 {{- end }}
 {{- end }}
@@ -153,22 +153,23 @@ source_files "${files[@]}"
 ##### History settings
 ##### ─────────────────────────────────────────────────────────────────────────────
 
-setopt inc_append_history
-setopt share_history
-setopt extended_history
-setopt hist_ignoredups
+setopt inc_append_history     # write to history immediately
+setopt share_history          # share history across sessions
+setopt extended_history       # save timestamp/duration
+setopt hist_ignoredups        # skip duplicate commands
 
 ##### ─────────────────────────────────────────────────────────────────────────────
 ##### keychain, GPG
 ##### ─────────────────────────────────────────────────────────────────────────────
 
 {{- if index $f "gpg_signing" }}
-eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"
+# GPG (only if you actually have $GIT_GPG_KEY set)
+eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"  # ignore if unset
 source "$HOME/.keychain/$(hostname)-sh-gpg" 2>/dev/null
 {{- end }}
 
 ##### ─────────────────────────────────────────────────────────────────────────────
-##### Optional: manual recompile helper
+##### Optional: manual recompile helper (run only when you change files)
 ##### ─────────────────────────────────────────────────────────────────────────────
 
 recompile_zsh() {
@@ -188,12 +189,21 @@ recompile_zsh() {
   echo "Recompiled."
 }
 
+##### ─────────────────────────────────────────────────────────────────────────────
+##### Profiling (optional)
+##### ─────────────────────────────────────────────────────────────────────────────
+
+# Comment out when you're done profiling
+# zprof
+
 {{- if index $f "fzf_tab" }}
 autoload -U compinit
 source $HOME/.fzf-tab/fzf-tab.zsh
 {{- end }}
 
 {{- if index $f "zoxide" }}
+# Must be set *before* the init line above if you want it to apply there too,
+# but it's fine after if you only care about manual calls like the widget below.
 export _ZO_FZF_OPTS="--height 40% --layout=reverse --info=inline"
 
 if command -v zoxide >/dev/null 2>&1; then
@@ -202,30 +212,35 @@ fi
 
 __zox_fzf_cd_widget() {
   setopt localoptions no_shwordsplit
-  zle -I
+  zle -I  # clear pending keys
 
   local dir
   local exit_code
 
+  # Use the real TTY for input so Ctrl-C cancels fzf itself
   dir="$(zoxide query -i </dev/tty 2>/dev/tty)"
   exit_code=$?
 
+  # Ctrl-C inside fzf: just repaint a clean prompt (no literal $PROMPT echo)
   if (( exit_code == 130 )); then
-    BUFFER=''
+    BUFFER=''            # ensure nothing remains on the line
     zle reset-prompt
     zle redisplay
     return 0
   fi
 
+  # Esc or other nonzero → repaint and bail
   if (( exit_code != 0 )); then
     zle reset-prompt
     zle redisplay
+
     zle accept-line
     return 0
   fi
 
   [[ -n $dir ]] || { zle reset-prompt; zle redisplay; return 0; }
 
+  # Jump immediately
   builtin cd -- "$dir" || return
   zoxide add -- "$dir" &>/dev/null
   zle reset-prompt
@@ -239,9 +254,11 @@ bindkey -M vicmd '^U' __zox_fzf_cd_widget
 {{- end }}
 
 {{- if index $f "p10k" }}
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 {{- end }}
 
+# cursor-clip auto completions
 fpath+=(~/.local/share/zsh/site-functions)
 autoload -Uz compinit && compinit
 
@@ -249,3 +266,18 @@ autoload -Uz compinit && compinit
 export CC=clang
 export CXX=clang++
 {{- end }}
+
+eval "$(task --completion zsh)"
+
+{{- if index $f "mise" }}
+# mise must run after every PATH change (OMZ, dotfiles) so managed tools win over system/Cursor paths.
+eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
+{{- end }}
+
+# pnpm
+export PNPM_HOME="{{ .chezmoi.homeDir }}/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end

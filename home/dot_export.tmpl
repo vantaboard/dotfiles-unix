@@ -61,12 +61,6 @@ export PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_
 export PERL_MB_OPT="--install_base \"$HOME/perl5\"";
 export PERL_MM_OPT="INSTALL_BASE=$HOME/perl5";
 
-export PNPM_HOME="{{ .chezmoi.homeDir }}/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-
 export NVIM_ALIAS="/usr/local/bin/nvim"
 export GIT_ALIAS="git"
 export nvim_cfg_alias="chezmoi edit -- /usr/local/bin/nvim"

@@ -14,14 +14,28 @@ function webcam() {
 }
 
 DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
+. "$HOME/.cargo/env"
 
-[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "mise" }}
+eval "$(mise activate zsh)"
+{{- end }}
+{{- if index $f "direnv" }}
+eval "$(direnv hook zsh)"
 
-if command -v mise >/dev/null 2>&1; then
-  eval "$(mise activate zsh)"
-  if mise direnv --help >/dev/null 2>&1; then
-    eval "$(mise direnv activate)"
-  fi
+# Non-interactive shells (Cursor agent, scripts, IDE-spawned commands) don't
+# draw a prompt and aren't always entered via `cd`, so neither direnv's
+# `precmd` nor `chpwd` hooks fire. Force a one-shot evaluation against the
+# spawn-time CWD so `.envrc`-supplied PATH and env vars are available to those
+# shells too. The `direnv allow` whitelist still applies, so the security
+# model is unchanged.
+if [[ ! -o interactive ]] && command -v direnv >/dev/null 2>&1; then
+    eval "$(direnv export zsh 2>/dev/null)"
 fi
+{{- end }}
 
 # Dotfiles are managed by chezmoi. Use `chezmoi edit` to modify tracked files.
