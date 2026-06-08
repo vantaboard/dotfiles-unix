@@ -1,0 +1,4 @@
+#!/bin/bash
+# System-level deploy is handled by chezmoi's run_onchange_after_deploy-system script.
+# Run: chezmoi apply
+exec chezmoi apply

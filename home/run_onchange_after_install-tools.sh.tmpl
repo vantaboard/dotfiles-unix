@@ -1,0 +1,65 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features }}
+
+# hash: tools-v3
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping mise/rust/zoxide toolchain install (use apt packages)"
+  exit 0
+fi
+
+{{- if not (index $f "mise") }}
+echo "mise disabled in profile; skipping toolchain install"
+exit 0
+{{- end }}
+
+MISE_BIN="{{ .chezmoi.homeDir }}/.local/bin/mise"
+
+install_mise() {
+  if [[ -x "$MISE_BIN" ]]; then
+    return 0
+  fi
+  echo "Installing mise..."
+  curl -fsSL https://mise.jdx.dev/install.sh | sh
+}
+
+install_rust() {
+  if command -v cargo >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Installing Rust via rustup..."
+  curl -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path
+  # shellcheck disable=SC1091
+  source "{{ .chezmoi.homeDir }}/.cargo/env"
+}
+
+install_zoxide() {
+  if command -v zoxide >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Installing zoxide..."
+  cargo install zoxide
+}
+
+install_mise
+export PATH="{{ .chezmoi.homeDir }}/.local/bin:$PATH"
+
+if [[ -x "$MISE_BIN" ]]; then
+  # Install mise-managed tools if a config exists
+  if [[ -f "{{ .chezmoi.homeDir }}/.config/mise/config.toml" ]] || [[ -f "{{ .chezmoi.homeDir }}/.mise.toml" ]]; then
+    "$MISE_BIN" install -y || true
+  fi
+fi
+
+install_rust
+install_zoxide
+
+echo "Toolchain installation complete"
+{{ end -}}

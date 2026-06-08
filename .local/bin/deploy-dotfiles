@@ -1,4 +1,0 @@
-#!/bin/bash
-sudo cp ~/dotfiles-system/etc/udev/rules.d/99-dock-hotplug.rules /etc/udev/rules.d/
-sudo cp ~/dotfiles-system/usr/local/bin/hotplug_monitor.sh /usr/local/bin/
-sudo udevadm control --reload-rules

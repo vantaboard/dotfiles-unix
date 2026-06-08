@@ -1,0 +1,39 @@
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+system/
+
+{{- if not (index $f "desktop_i3") }}
+dot_config/i3/**
+dot_config/i3status/**
+{{- end }}
+{{- if not (index $f "picom") }}
+dot_config/picom.conf
+{{- end }}
+{{- if not (index $f "kitty") }}
+dot_config/kitty/**
+{{- end }}
+{{- if not (index $f "autorandr") }}
+dot_config/autorandr/**
+dot_screenlayout/**
+{{- end }}
+{{- if not (index $f "nitrogen") }}
+dot_wallpapers/**
+{{- end }}
+{{- if not (index $f "termite") }}
+dot_config/termite/**
+{{- end }}
+{{- if not (index $f "x11_session") }}
+dot_xinitrc
+dot_xsessionrc
+dot_Xmodmap
+dot_Xresources
+{{- end }}
+{{- if not (index $f "neovim") }}
+dot_config/nvim/**
+{{- end }}
+{{- if not (index $f "fzf") }}
+dot_fzf.zsh.tmpl
+{{- end }}

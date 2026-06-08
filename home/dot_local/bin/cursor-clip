@@ -1,0 +1,103 @@
+#!/bin/zsh
+
+# Usage: cursor-clip 'message with $0 and $1' /path/a /path/b ...
+# Placeholders $0 .. $N refer to the N file paths (in order). The same index may repeat ($0 $0).
+# Paths may be relative to the current directory (e.g. ./docs/... or docs/... from repo root);
+# run cursor-clip from the project folder so resolves match tab completion.
+#
+# Produces a Cursor chat–style clipboard (Lexical + HTML + plain + Chromium targets)
+# so paste matches copying the same prompt in Cursor.
+#
+# Install: ln -sf /path/to/cursor-clipboard-snap/bin/cursor-clip ~/.local/bin/cursor-clip
+# Optional: export CURSOR_CLIP_ROOT=/path/to/cursor-clipboard-snap if the script is copied
+# outside the repo (defaults to that path when lib/ is not next to the script).
+#
+# Zsh tab completion for file args: fpath+=($CURSOR_CLIP_ROOT/share/zsh/site-functions)
+# (or the repo path) then autoload -Uz compinit && compinit
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: cursor-clip 'message with \$0 [and \$1 ...]' ./first.file [./more.files ...]"
+    echo "Use single quotes so \\\$0, \\\$1, ... are placeholders (not shell positional params)."
+    echo "Relative paths resolve from the current working directory (cd to your repo first)."
+    exit 1
+fi
+
+_RESOLVE="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+_SCRIPT_DIR="$(dirname "$_RESOLVE")"
+if [[ -f "$_SCRIPT_DIR/../lib/encode_chromium_web_custom_data.py" ]]; then
+    CLIP_ROOT="$(cd "$_SCRIPT_DIR/.." && pwd)"
+elif [[ -n "${CURSOR_CLIP_ROOT:-}" ]]; then
+    CLIP_ROOT="$CURSOR_CLIP_ROOT"
+else
+    CLIP_ROOT="$HOME/cursor-clipboard-snap"
+fi
+
+ENCODER="$CLIP_ROOT/lib/encode_chromium_web_custom_data.py"
+BUILDER="$CLIP_ROOT/lib/build_cursor_clipboard.py"
+if [[ ! -f "$ENCODER" || ! -f "$BUILDER" ]]; then
+    echo "cursor-clip: missing encoder or builder under $CLIP_ROOT (set CURSOR_CLIP_ROOT?)" >&2
+    exit 1
+fi
+
+RFH_SNAP="$CLIP_ROOT/chromium_x-internal-source-rfh-token.bin"
+URL_SNAP="$CLIP_ROOT/chromium_x-source-url.bin"
+if [[ ! -f "$RFH_SNAP" || ! -f "$URL_SNAP" ]]; then
+    echo "cursor-clip: missing snapshot blobs under $CLIP_ROOT" >&2
+    exit 1
+fi
+
+# Ensure CopyQ is running
+pgrep -x copyq >/dev/null || { copyq & sleep 1; }
+
+MESSAGE_TEMPLATE=$1
+shift
+FILES=( "$@" )
+
+python3 "$BUILDER" \
+    --lexical-json /tmp/cursor_lexical.json \
+    --plain /tmp/cursor_plain_text \
+    --html /tmp/cursor_html_text \
+    "$MESSAGE_TEMPLATE" \
+    "${FILES[@]}" || exit $?
+
+# Chromium x-web-custom-data: length-prefixed map (see lib/encode_chromium_web_custom_data.py)
+python3 "$ENCODER" < /tmp/cursor_lexical.json > /tmp/cursor_custom_data
+
+cp -f "$RFH_SNAP" /tmp/cursor_chromium_rfh
+cp -f "$URL_SNAP" /tmp/cursor_chromium_url
+
+# Inject into CopyQ (multi-target). CopyQ script read() is for clipboard rows;
+# use File() to load temp files from disk.
+copyq eval "
+  function readFileBytes(path) {
+    var f = new File(path);
+    if (!f.openReadOnly()) throw 'open ' + path + ': ' + f.errorString();
+    var b = f.readAll();
+    f.close();
+    return b;
+  }
+  function readFileStr(path) {
+    return str(readFileBytes(path));
+  }
+
+  var text = readFileStr('/tmp/cursor_plain_text');
+  var html = readFileStr('/tmp/cursor_html_text');
+  var custom = readFileBytes('/tmp/cursor_custom_data');
+  var rfh = readFileBytes('/tmp/cursor_chromium_rfh');
+  var surl = readFileBytes('/tmp/cursor_chromium_url');
+
+  copy(
+    'text/plain', text,
+    'text/html', html,
+    'chromium/x-internal-source-rfh-token', rfh,
+    'chromium/x-source-url', surl,
+    'chromium/x-web-custom-data', custom
+  );
+" >/dev/null
+
+# Summary: list unique resolved paths
+_TYPES=()
+for f in "${FILES[@]}"; do
+    _TYPES+=("$(realpath "$f")")
+done
+echo "Done! Linked ${#FILES[@]} file(s): ${_TYPES[*]}. Try pasting into Cursor now."

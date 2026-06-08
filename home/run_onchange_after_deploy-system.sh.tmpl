@@ -1,0 +1,92 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $deploy := $p.system_deploy | default list }}
+
+SOURCE="{{ .chezmoi.sourceDir }}/system"
+
+# hash: {{ $deploy | toYaml | sha256sum }}
+
+deploy_file() {
+  local src="$1"
+  local dest="$2"
+  local mode="${3:-644}"
+  sudo install -Dm"$mode" "$src" "$dest"
+}
+
+deploy_dir_file() {
+  local src="$1"
+  local dest="$2"
+  local mode="${3:-644}"
+  sudo install -d "$(dirname "$dest")"
+  sudo install -m"$mode" "$src" "$dest"
+}
+
+if [[ "${CHEZMOI_SKIP_SYSTEM_DEPLOY:-}" == "1" ]]; then
+  echo "CHEZMOI_SKIP_SYSTEM_DEPLOY=1; skipping system deploy"
+  exit 0
+fi
+
+has_deploy() {
+  local key="$1"
+{{- if $deploy }}
+  case "$key" in
+{{- range $deploy }}
+    {{ . }}) return 0 ;;
+{{- end }}
+  esac
+  return 1
+{{- else }}
+  return 0
+{{- end }}
+}
+
+if has_deploy udev; then
+  deploy_file "$SOURCE/udev/99-dock-hotplug.rules" /etc/udev/rules.d/99-dock-hotplug.rules
+  deploy_file "$SOURCE/udev/hotplug_monitor.sh" /usr/local/bin/hotplug_monitor.sh 755
+  sudo udevadm control --reload-rules 2>/dev/null || true
+fi
+
+if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
+  TMP_UNIT="$(mktemp)"
+  chezmoi execute-template < "$SOURCE/systemd/displays-resume.service.tmpl" > "$TMP_UNIT"
+  deploy_file "$TMP_UNIT" /etc/systemd/system/displays-resume.service
+  rm -f "$TMP_UNIT"
+  sudo systemctl daemon-reload 2>/dev/null || true
+  sudo systemctl enable displays-resume.service 2>/dev/null || true
+fi
+
+if has_deploy grub && [[ -f /etc/default/grub ]] && command -v update-grub >/dev/null 2>&1; then
+  deploy_file "$SOURCE/grub/default" /etc/default/grub
+  sudo update-grub 2>/dev/null || true
+fi
+
+if has_deploy ssh && [[ -d /etc/ssh ]]; then
+  deploy_dir_file "$SOURCE/ssh/sshd_config.d/99-keyonly-port.conf" \
+    /etc/ssh/sshd_config.d/99-keyonly-port.conf
+  deploy_dir_file "$SOURCE/ssh/ssh.socket.d/port.conf" \
+    /etc/systemd/system/ssh.socket.d/port.conf
+  if command -v systemctl >/dev/null 2>&1; then
+    sudo mkdir -p /etc/systemd/system/ssh.service.requires
+    sudo ln -sf /usr/lib/systemd/system/ssh.socket \
+      /etc/systemd/system/ssh.service.requires/ssh.socket 2>/dev/null || true
+    sudo systemctl daemon-reload 2>/dev/null || true
+    sudo systemctl enable ssh.socket 2>/dev/null || true
+  fi
+fi
+
+if has_deploy ollama && { command -v ollama >/dev/null 2>&1 || [[ -f /usr/local/bin/ollama ]]; }; then
+  deploy_file "$SOURCE/systemd/ollama.service" /etc/systemd/system/ollama.service
+  sudo mkdir -p /etc/systemd/system/ollama.service.d
+  deploy_dir_file "$SOURCE/systemd/ollama.service.d/override.conf" \
+    /etc/systemd/system/ollama.service.d/override.conf
+  sudo systemctl daemon-reload 2>/dev/null || true
+fi
+
+echo "System configuration deployed"
+{{ end -}}

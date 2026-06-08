@@ -1,0 +1,251 @@
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+{{- if index $f "p10k" }}
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+{{- end }}
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### RUN FIRST: single-pass, cached completion init (no audit), correct order
+##### ─────────────────────────────────────────────────────────────────────────────
+
+{{- if index $f "oh_my_zsh" }}
+# Ensure completion dirs are available *before* compinit runs
+{{- if index $f "zsh_completions" }}
+fpath+=${ZSH_CUSTOM:-${ZSH:-$HOME/.oh-my-zsh}/custom}/plugins/zsh-completions/src
+{{- end }}
+{{- end }}
+
+# Prevent Debian/Ubuntu global rc from running compinit early
+export skip_global_compinit=1
+
+# Make OMZ skip its compfix (which triggers compaudit)
+export ZSH_DISABLE_COMPFIX=true
+
+# Use a fast compdump in XDG cache
+export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zcompdump-${ZSH_VERSION}"
+mkdir -p -- "${ZSH_COMPDUMP:h}"
+
+# Run the real compinit once: cached (-C), skip audit (-u), custom dump (-d)
+autoload -Uz compinit
+compinit -C -u -d "$ZSH_COMPDUMP"
+
+# Completion styles
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compcache"
+zstyle ':completion:*' rehash false
+
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# force zsh not to show completion menu, which allows fzf-tab to capture the unambiguous prefix
+zstyle ':completion:*' menu no
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### Manually installed plugins (source *before* OMZ is fine with the guard)
+##### ─────────────────────────────────────────────────────────────────────────────
+
+{{- if index $f "zsh_edit" }}
+# zsh-edit
+source "$HOME/.zshplugins/zsh-edit/zsh-edit.plugin.zsh"
+{{- end }}
+
+{{- if index $f "fzf" }}
+# If you also have ~/.fzf.zsh and want it after zvm init (harmless if var unset)
+zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
+{{- end }}
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### Oh My Zsh core
+##### ─────────────────────────────────────────────────────────────────────────────
+
+{{- if index $f "oh_my_zsh" }}
+export ZSH="$HOME/.oh-my-zsh"
+
+# OMZ / plugin settings
+export ABBR_AUTOLOAD=0
+{{- if index $f "zsh_autosuggestions" }}
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#868888,bold"
+export ZSH_AUTOSUGGEST_MANUAL_REBIND=true
+{{- end }}
+{{- if index $f "p10k" }}
+export ZSH_THEME="powerlevel10k/powerlevel10k"
+{{- end }}
+export DISABLE_UNTRACKED_FILES_DIRTY="true"
+export HYPHEN_INSENSITIVE="true"
+export MENU_COMPLETE="true"
+export DISABLE_AUTO_UPDATE=true
+export DISABLE_UPDATE_PROMPT="true"
+export DIRSTACKSIZE=100000000000000000
+export DISABLE_MAGIC_FUNCTIONS=true
+
+export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin:${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
+
+{{- if index $f "mise" }}
+if [[ -x {{ .chezmoi.homeDir }}/.local/bin/mise ]]; then
+  eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
+fi
+{{- end }}
+
+plugins=({{- if index $f "omz_codeclimate" }}codeclimate {{ end -}}{{- if index $f "omz_extract" }}extract {{ end -}}{{- if index $f "omz_python" }}python {{ end -}}{{- if index $f "omz_virtualenv" }}virtualenv {{ end -}}{{- if index $f "zsh_autosuggestions" }}zsh-autosuggestions {{ end -}}{{- if index $f "omz_ssh_agent" }}ssh-agent {{ end -}}{{- if index $f "omz_fzf" }}fzf {{ end -}}{{- if index $f "omz_git" }}git{{ end }})
+
+# OMZ bootstrap (now safe—compinit/compaudit are already handled)
+source "$ZSH/oh-my-zsh.sh"
+
+{{- if index $f "fzf_tab" }}
+# preview directory's content with eza when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+zstyle ':fzf-tab:*' fzf-flags --color=fg:1,fg+:2 --bind=tab:accept
+zstyle ':fzf-tab:*' use-fzf-default-opts yes
+zstyle ':fzf-tab:*' switch-group '<' '>'
+{{- end }}
+{{- end }}
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### Lazy-load abbreviations
+##### ─────────────────────────────────────────────────────────────────────────────
+
+{{- if index $f "zsh_abbr" }}
+autoload -Uz add-zsh-hook
+_abbr_lazy_load() {
+  add-zsh-hook -d precmd _abbr_lazy_load
+  source "$HOME/zsh-abbr/zsh-abbr.zsh"
+}
+add-zsh-hook precmd _abbr_lazy_load
+{{- end }}
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### Source your dotfiles bundle
+##### ─────────────────────────────────────────────────────────────────────────────
+
+declare -a files=(
+  "export"
+  "env"
+  "functions"
+  "alias"
+  "alias-git"
+  "bindings"
+  "inputrc"
+{{- if index $f "fzf" }}
+  "fzf.zsh"
+{{- end }}
+)
+
+source_files() {
+  local files=("$@")
+  for file in "${files[@]}"; do
+    [[ -r "$HOME/.$file" ]] && source "$HOME/.$file"
+  done
+}
+source_files "${files[@]}"
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### History settings
+##### ─────────────────────────────────────────────────────────────────────────────
+
+setopt inc_append_history
+setopt share_history
+setopt extended_history
+setopt hist_ignoredups
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### keychain, GPG
+##### ─────────────────────────────────────────────────────────────────────────────
+
+{{- if index $f "gpg_signing" }}
+eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"
+source "$HOME/.keychain/$(hostname)-sh-gpg" 2>/dev/null
+{{- end }}
+
+##### ─────────────────────────────────────────────────────────────────────────────
+##### Optional: manual recompile helper
+##### ─────────────────────────────────────────────────────────────────────────────
+
+recompile_zsh() {
+  autoload -Uz zrecompile
+  setopt localoptions null_glob
+  local globs=(
+    "$ZSH/oh-my-zsh.sh"
+    "$ZSH/lib/*.zsh"
+    "$ZSH/plugins/git/git.plugin.zsh"
+    "$HOME/.zshplugins/zsh-edit/*.zsh"
+    "$HOME/.{export,env,functions,alias,alias-git,bindings,inputrc,fzf.zsh}"
+  )
+  local f
+  for f in ${^globs}; do
+    [[ -r "$f" ]] && zrecompile -p "$f"
+  done
+  echo "Recompiled."
+}
+
+{{- if index $f "fzf_tab" }}
+autoload -U compinit
+source $HOME/.fzf-tab/fzf-tab.zsh
+{{- end }}
+
+{{- if index $f "zoxide" }}
+export _ZO_FZF_OPTS="--height 40% --layout=reverse --info=inline"
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh --cmd cd)"
+fi
+
+__zox_fzf_cd_widget() {
+  setopt localoptions no_shwordsplit
+  zle -I
+
+  local dir
+  local exit_code
+
+  dir="$(zoxide query -i </dev/tty 2>/dev/tty)"
+  exit_code=$?
+
+  if (( exit_code == 130 )); then
+    BUFFER=''
+    zle reset-prompt
+    zle redisplay
+    return 0
+  fi
+
+  if (( exit_code != 0 )); then
+    zle reset-prompt
+    zle redisplay
+    zle accept-line
+    return 0
+  fi
+
+  [[ -n $dir ]] || { zle reset-prompt; zle redisplay; return 0; }
+
+  builtin cd -- "$dir" || return
+  zoxide add -- "$dir" &>/dev/null
+  zle reset-prompt
+  zle redisplay
+}
+
+zle -N __zox_fzf_cd_widget
+bindkey '^U' __zox_fzf_cd_widget
+bindkey -M viins '^U' __zox_fzf_cd_widget
+bindkey -M vicmd '^U' __zox_fzf_cd_widget
+{{- end }}
+
+{{- if index $f "p10k" }}
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+{{- end }}
+
+fpath+=(~/.local/share/zsh/site-functions)
+autoload -Uz compinit && compinit
+
+{{- if index $f "clang" }}
+export CC=clang
+export CXX=clang++
+{{- end }}

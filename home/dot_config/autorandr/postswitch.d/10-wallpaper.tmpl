@@ -1,0 +1,28 @@
+#!/usr/bin/bash
+
+# Remove the nvidia-settings block entirely. It fights with autorandr.
+# Just keep the nitrogen part.
+
+sleep 1 # Reduced sleep
+
+declare -a wallpapers=(
+     "pexels-didsss-9656151.jpg"
+     "pexels-nadezhda-moryak-6063609.jpg"
+     "pexels-codioful-6985184.jpg"
+)
+
+# Use your specific user's nitrogen config
+export DISPLAY=:1
+export XAUTHORITY="/run/user/{{ .chezmoi.uid }}/gdm/Xauthority"
+
+# Get current connected count accurately
+count=$(xrandr | grep -c " connected")
+
+for (( i=0; i<$count; i++))
+do
+    wall="${wallpapers[$i]}"
+    # Fallback to the first wallpaper if we have more monitors than wallpapers
+    [ -z "$wall" ] && wall="${wallpapers[0]}"
+    
+    nitrogen --head=$i --set-zoom-fill "$HOME/.wallpapers/$wall"
+done

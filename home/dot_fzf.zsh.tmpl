@@ -1,0 +1,19 @@
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if index $p.features "fzf" }}
+# Setup fzf
+# ---------
+if [[ ! "$PATH" == *{{ .chezmoi.homeDir }}/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}{{ .chezmoi.homeDir }}/.fzf/bin"
+fi
+
+# Auto-completion
+# ---------------
+[[ $- == *i* ]] && source "{{ .chezmoi.homeDir }}/.fzf/shell/completion.zsh" 2> /dev/null
+
+# Key bindings
+# ------------
+source "{{ .chezmoi.homeDir }}/.fzf/shell/key-bindings.zsh"
+{{- end }}

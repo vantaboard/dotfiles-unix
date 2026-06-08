@@ -1,0 +1,313 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+CATALOG_FILE="$REPO_ROOT/home/.chezmoidata/setup-catalog.yaml"
+PROFILE_DIR="$REPO_ROOT/home/.chezmoidata"
+
+source "$SCRIPT_DIR/lib/setup-ui.sh"
+source "$SCRIPT_DIR/lib/setup-catalog.sh"
+
+APPLY=0
+DRY_RUN=0
+NON_INTERACTIVE=0
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Interactive wizard for dotfiles feature selection.
+
+Options:
+  --apply       Run chezmoi apply after writing profile
+  --dry-run     Show profile YAML without writing
+  --yes         Accept defaults without prompting (non-interactive)
+  --help        Show this help
+
+Writes:
+  home/.chezmoidata/profile.yaml       (global selections)
+  home/.chezmoidata/profile-host.yaml  (optional host overrides)
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --apply) APPLY=1; shift ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --yes|-y) NON_INTERACTIVE=1; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+  esac
+done
+
+export CATALOG_FILE
+
+find_chezmoi_source() {
+  if [[ -d "$REPO_ROOT/home" && -f "$REPO_ROOT/.chezmoiroot" ]]; then
+    echo "$REPO_ROOT"
+    return
+  fi
+  if command -v chezmoi >/dev/null 2>&1; then
+    chezmoi source-path 2>/dev/null && return
+  fi
+  echo "$REPO_ROOT"
+}
+
+resolve_profile_dir() {
+  local root
+  root="$(find_chezmoi_source)"
+  if [[ -f "$root/.chezmoiroot" ]]; then
+    local sub
+    sub="$(cat "$root/.chezmoiroot")"
+    PROFILE_DIR="$root/$sub/.chezmoidata"
+  elif [[ -d "$root/.chezmoidata" ]]; then
+    PROFILE_DIR="$root/.chezmoidata"
+  else
+    PROFILE_DIR="$REPO_ROOT/home/.chezmoidata"
+  fi
+}
+
+resolve_profile_dir
+
+declare -A ENABLED=()
+declare -A CATEGORIES=()
+
+load_defaults() {
+  local cat fid def req
+  for cat in $(catalog_get_categories); do
+    CATEGORIES[$cat]=1
+    while IFS=: read -r fid def req; do
+      [[ -z "$fid" ]] && continue
+      if [[ "$def" == "true" || "$req" == "true" ]]; then
+        ENABLED[$fid]=1
+      elif [[ -z "${ENABLED[$fid]:-}" ]]; then
+        ENABLED[$fid]=0
+      fi
+    done < <(catalog_get_features_in_category "$cat")
+  done
+  for fid in $(catalog_all_feature_ids); do
+    if [[ "$(catalog_get_feature_field "$fid" "required")" == "true" ]]; then
+      ENABLED[$fid]=1
+    fi
+  done
+}
+
+collect_profile_arrays() {
+  PACKAGES=()
+  SYSTEMD_UNITS=()
+  SYSTEM_DEPLOY=()
+  local fid pkg unit deploy
+  for fid in $(catalog_all_feature_ids); do
+    [[ "${ENABLED[$fid]:-0}" == "1" ]] || continue
+    while IFS= read -r pkg; do
+      pkg="${pkg// /}"
+      [[ -n "$pkg" ]] && PACKAGES+=("$pkg")
+    done < <(catalog_get_packages "$fid")
+    deploy="$(catalog_get_system_deploy "$fid")"
+    [[ -n "$deploy" ]] && SYSTEM_DEPLOY+=("$deploy")
+    while IFS= read -r unit; do
+      [[ -z "$unit" ]] && continue
+      SYSTEMD_UNITS+=("$unit")
+    done < <(catalog_get_systemd_units_list "$fid")
+  done
+  # Deduplicate
+  mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | sort -u)
+  mapfile -t SYSTEMD_UNITS < <(printf '%s\n' "${SYSTEMD_UNITS[@]}" | sort -u)
+  mapfile -t SYSTEM_DEPLOY < <(printf '%s\n' "${SYSTEM_DEPLOY[@]}" | sort -u)
+}
+
+write_profile_yaml() {
+  local outfile="$1"
+  local key="$2"
+  mkdir -p "$(dirname "$outfile")"
+  collect_profile_arrays
+  {
+    echo "$key:"
+    echo "  features:"
+    local fid
+    for fid in $(catalog_all_feature_ids | sort); do
+      if [[ "${ENABLED[$fid]:-0}" == "1" ]]; then
+        echo "    $fid: true"
+      else
+        echo "    $fid: false"
+      fi
+    done
+    echo "  packages:"
+    for pkg in "${PACKAGES[@]}"; do
+      echo "    - $pkg"
+    done
+    echo "  systemd_units:"
+    for unit in "${SYSTEMD_UNITS[@]}"; do
+      echo "    - $unit"
+    done
+    echo "  system_deploy:"
+    for deploy in "${SYSTEM_DEPLOY[@]}"; do
+      echo "    - $deploy"
+    done
+    echo "  secrets:"
+    echo "    git_gpg_key: \"${GIT_GPG_KEY:-}\""
+    echo "    git_signing_key_personal: \"${GIT_SIGNING_KEY_PERSONAL:-}\""
+  } > "$outfile"
+}
+
+print_summary() {
+  echo
+  echo "=== Selection summary ==="
+  local cat fid
+  for cat in $(catalog_get_categories); do
+    echo
+    echo "[$(catalog_get_category_label "$cat")]"
+    while IFS=: read -r fid def req; do
+      [[ -z "$fid" ]] && continue
+      local status="off"
+      [[ "${ENABLED[$fid]:-0}" == "1" ]] && status="on"
+      printf '  %-24s %s\n' "$fid" "$status"
+    done < <(catalog_get_features_in_category "$cat")
+  done
+  echo
+}
+
+run_wizard() {
+  load_defaults
+
+  if [[ "$NON_INTERACTIVE" == "1" ]]; then
+    catalog_resolve_features ENABLED
+    return
+  fi
+
+  echo "=== Dotfiles setup wizard ==="
+  echo "Catalog: $CATALOG_FILE"
+  echo "Profile dir: $PROFILE_DIR"
+  echo
+
+  local scope
+  scope="$(setup_ui_choose_one "Save profile scope:" $'global only\nthis host only\nglobal base + host overrides')"
+  local save_global=0 save_host=0
+  case "$scope" in
+    *global\ only*) save_global=1 ;;
+    *host\ only*) save_host=1 ;;
+    *) save_global=1; save_host=1 ;;
+  esac
+
+  # Category selection
+  local -a cat_list=()
+  local -a cat_defaults=()
+  local cat
+  for cat in $(catalog_get_categories); do
+    local label
+    label="$(catalog_get_category_label "$cat")"
+    if [[ "$(catalog_get_category_required "$cat")" == "true" ]]; then
+      cat_list+=("$cat|$label (required)")
+      cat_defaults+="$cat|$label (required)"
+    else
+      cat_list+=("$cat|$label")
+      cat_defaults+="$cat|$label"$'\n'
+    fi
+  done
+
+  local cat_options=""
+  local c
+  for c in "${cat_list[@]}"; do cat_options+="$c"$'\n'; done
+  local selected_cats
+  selected_cats="$(setup_ui_choose_multi "Enable categories:" "$cat_defaults" "$cat_options")"
+
+  # Disable all features in unselected categories
+  for cat in $(catalog_get_categories); do
+    local on=0
+    while IFS= read -r line; do
+      [[ "$line" == "$cat|"* ]] && on=1
+    done <<< "$selected_cats"
+    if [[ "$on" == "0" && "$(catalog_get_category_required "$cat")" != "true" ]]; then
+      while IFS=: read -r fid _ _; do
+        [[ -z "$fid" ]] && continue
+        [[ "$(catalog_get_feature_field "$fid" "required")" != "true" ]] && ENABLED[$fid]=0
+      done < <(catalog_get_features_in_category "$cat")
+    fi
+  done
+
+  # Per-category feature drill-down
+  while IFS= read -r cat_line; do
+    [[ -z "$cat_line" ]] && continue
+    cat="${cat_line%%|*}"
+    local feat_options="" feat_defaults=""
+    while IFS=: read -r fid def req; do
+      [[ -z "$fid" ]] && continue
+      local label
+      label="$(catalog_get_feature_field "$fid" "label")"
+      label="${label:-$fid}"
+      feat_options+="$fid|$label"$'\n'
+      if [[ "${ENABLED[$fid]:-0}" == "1" ]]; then
+        feat_defaults+="$fid|$label"$'\n'
+      fi
+    done < <(catalog_get_features_in_category "$cat")
+
+    [[ -z "$feat_options" ]] && continue
+    local cat_label
+    cat_label="$(catalog_get_category_label "$cat")"
+    local selected_feats
+    selected_feats="$(setup_ui_choose_multi "Features in $cat_label:" "$feat_defaults" "$feat_options")"
+
+    while IFS=: read -r fid _ _; do
+      [[ -z "$fid" ]] && continue
+      ENABLED[$fid]=0
+    done < <(catalog_get_features_in_category "$cat")
+
+    while IFS= read -r feat_line; do
+      [[ -z "$feat_line" ]] && continue
+      fid="${feat_line%%|*}"
+      ENABLED[$fid]=1
+    done <<< "$selected_feats"
+  done <<< "$selected_cats"
+
+  catalog_resolve_features ENABLED
+
+  # Secrets
+  if [[ "${ENABLED[gpg_signing]:-0}" == "1" ]]; then
+    GIT_GPG_KEY="$(setup_ui_input "GPG key ID for git signing" "${GIT_GPG_KEY:-}")"
+    GIT_SIGNING_KEY_PERSONAL="$(setup_ui_input "Personal git signing key ID" "${GIT_SIGNING_KEY_PERSONAL:-}")"
+  fi
+
+  print_summary
+
+  if ! setup_ui_confirm "Write profile and continue?"; then
+    echo "Aborted."
+    exit 0
+  fi
+
+  SCOPE_GLOBAL=$save_global
+  SCOPE_HOST=$save_host
+}
+
+SCOPE_GLOBAL=1
+SCOPE_HOST=0
+GIT_GPG_KEY=""
+GIT_SIGNING_KEY_PERSONAL=""
+
+run_wizard
+
+if [[ "$DRY_RUN" == "1" ]]; then
+  write_profile_yaml /dev/stdout profile
+  exit 0
+fi
+
+if [[ "${SCOPE_GLOBAL:-1}" == "1" ]]; then
+  write_profile_yaml "$PROFILE_DIR/profile.yaml" "profile"
+  echo "Wrote $PROFILE_DIR/profile.yaml"
+fi
+
+if [[ "${SCOPE_HOST:-0}" == "1" ]]; then
+  write_profile_yaml "$PROFILE_DIR/profile-host.yaml" "profile_host"
+  echo "Wrote $PROFILE_DIR/profile-host.yaml"
+fi
+
+if [[ "$APPLY" == "1" ]]; then
+  if ! command -v chezmoi >/dev/null 2>&1; then
+    echo "chezmoi not found. Install: sh -c \"\$(curl -fsSL https://get.chezmoi.io/lb)\" -- -b ~/.local/bin" >&2
+    exit 1
+  fi
+  echo "Running chezmoi apply..."
+  chezmoi apply
+fi
+
+echo "Done. Re-run this wizard anytime to change selections."

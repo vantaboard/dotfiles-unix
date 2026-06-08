@@ -1,0 +1,67 @@
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "oh_my_zsh" }}
+[".oh-my-zsh"]
+    type = "git-repo"
+    url = "https://github.com/ohmyzsh/ohmyzsh.git"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "p10k" }}
+[".oh-my-zsh/custom/themes/powerlevel10k"]
+    type = "git-repo"
+    url = "https://github.com/romkatv/powerlevel10k.git"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "zsh_autosuggestions" }}
+[".oh-my-zsh/custom/plugins/zsh-autosuggestions"]
+    type = "git-repo"
+    url = "https://github.com/zsh-users/zsh-autosuggestions"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "zsh_completions" }}
+[".oh-my-zsh/custom/plugins/zsh-completions"]
+    type = "git-repo"
+    url = "https://github.com/zsh-users/zsh-completions"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "zsh_edit" }}
+[".zshplugins/zsh-edit"]
+    type = "git-repo"
+    url = "https://github.com/marlonrichert/zsh-edit.git"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "zsh_abbr" }}
+["zsh-abbr"]
+    type = "git-repo"
+    url = "https://github.com/olets/zsh-abbr.git"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "fzf_tab" }}
+[".fzf-tab"]
+    type = "git-repo"
+    url = "https://github.com/Aloxaf/fzf-tab.git"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "fzf" }}
+[".fzf"]
+    type = "git-repo"
+    url = "https://github.com/junegunn/fzf.git"
+    refreshPeriod = "168h"
+{{- end }}
+
+{{- if index $f "neovim" }}
+[".config/nvim/brighten"]
+    type = "git-repo"
+    url = "https://github.com/vantaboard/brighten-lush.git"
+    refreshPeriod = "168h"
+{{- end }}

@@ -1,0 +1,388 @@
+# Source of truth for scripts/dotfiles-setup. Maps feature ids to packages, externals, and config blocks.
+setup_catalog:
+  categories:
+    - id: shell_core
+      label: Core shell
+      description: Essential CLI tools (always enabled)
+      required: true
+      default: true
+    - id: shell_extras
+      label: Shell extras
+      description: zoxide, eza, bat, vivid, mise toolchain
+      default: true
+    - id: zsh_stack
+      label: Zsh plugins and externals
+      description: Oh My Zsh, Powerlevel10k, fzf-tab, abbreviations
+      default: true
+    - id: desktop
+      label: Desktop / i3
+      description: i3, picom, kitty, autorandr, display tooling
+      default: true
+    - id: dev
+      label: Development
+      description: Neovim, gh, glab, docker, clang
+      default: true
+    - id: system
+      label: System services
+      description: SSH hardening, GRUB, udev, systemd units
+      default: true
+
+  features:
+    # --- shell_core (required) ---
+    zsh:
+      category: shell_core
+      label: Zsh
+      default: true
+      required: true
+      packages: [zsh]
+    git:
+      category: shell_core
+      label: Git
+      default: true
+      required: true
+      packages: [git]
+    fzf:
+      category: shell_core
+      label: fzf
+      default: true
+      packages: [fzf]
+      external: .fzf
+      zshrc_bundle: fzf.zsh
+    ripgrep:
+      category: shell_core
+      label: ripgrep
+      default: true
+      packages: [ripgrep]
+    fd:
+      category: shell_core
+      label: fd-find
+      default: true
+      packages: [fd-find]
+    trash_cli:
+      category: shell_core
+      label: trash-cli
+      default: true
+      packages: [trash-cli]
+    xclip:
+      category: shell_core
+      label: xclip
+      default: true
+      packages: [xclip]
+    keychain:
+      category: shell_core
+      label: keychain
+      default: true
+      packages: [keychain]
+    jq:
+      category: shell_core
+      label: jq
+      default: true
+      packages: [jq]
+    htop:
+      category: shell_core
+      label: htop
+      default: false
+      packages: [htop]
+    tmux:
+      category: shell_core
+      label: tmux
+      default: true
+      packages: [tmux]
+
+    # --- shell_extras ---
+    zoxide:
+      category: shell_extras
+      label: zoxide
+      description: Smarter cd (apt or cargo)
+      default: true
+      packages: [zoxide]
+      zshrc_block: zoxide
+    eza:
+      category: shell_extras
+      label: eza
+      default: true
+      packages: [eza]
+    bat:
+      category: shell_extras
+      label: bat
+      default: true
+      packages: [bat]
+    vivid:
+      category: shell_extras
+      label: vivid
+      description: LS_COLORS via vivid dracula
+      default: true
+      packages: [vivid]
+      export_block: vivid
+    mise:
+      category: shell_extras
+      label: mise
+      description: Runtime version manager (installed via script)
+      default: true
+      install_tools: true
+      zshrc_block: mise
+    direnv:
+      category: shell_extras
+      label: direnv
+      default: true
+      packages: [direnv]
+
+    # --- zsh_stack ---
+    oh_my_zsh:
+      category: zsh_stack
+      label: Oh My Zsh
+      default: true
+      external: .oh-my-zsh
+      zshrc_block: oh_my_zsh
+    p10k:
+      category: zsh_stack
+      label: Powerlevel10k
+      default: true
+      requires: [oh_my_zsh]
+      external: .oh-my-zsh/custom/themes/powerlevel10k
+      zshrc_block: p10k
+    zsh_autosuggestions:
+      category: zsh_stack
+      label: zsh-autosuggestions
+      default: true
+      requires: [oh_my_zsh]
+      external: .oh-my-zsh/custom/plugins/zsh-autosuggestions
+      omz_plugin: zsh-autosuggestions
+    zsh_completions:
+      category: zsh_stack
+      label: zsh-completions
+      default: true
+      requires: [oh_my_zsh]
+      external: .oh-my-zsh/custom/plugins/zsh-completions
+      zshrc_block: zsh_completions
+    zsh_edit:
+      category: zsh_stack
+      label: zsh-edit
+      default: true
+      requires: [oh_my_zsh]
+      external: .zshplugins/zsh-edit
+      zshrc_block: zsh_edit
+    fzf_tab:
+      category: zsh_stack
+      label: fzf-tab
+      default: true
+      requires: [fzf, oh_my_zsh]
+      external: .fzf-tab
+      zshrc_block: fzf_tab
+    zsh_abbr:
+      category: zsh_stack
+      label: zsh-abbr
+      default: true
+      requires: [oh_my_zsh]
+      external: zsh-abbr
+      zshrc_block: zsh_abbr
+    omz_git:
+      category: zsh_stack
+      label: OMZ git plugin
+      default: true
+      requires: [oh_my_zsh]
+      omz_plugin: git
+    omz_fzf:
+      category: zsh_stack
+      label: OMZ fzf plugin
+      default: true
+      requires: [oh_my_zsh, fzf]
+      omz_plugin: fzf
+    omz_ssh_agent:
+      category: zsh_stack
+      label: OMZ ssh-agent plugin
+      default: true
+      requires: [oh_my_zsh]
+      omz_plugin: ssh-agent
+    omz_python:
+      category: zsh_stack
+      label: OMZ python plugin
+      default: true
+      requires: [oh_my_zsh]
+      omz_plugin: python
+    omz_virtualenv:
+      category: zsh_stack
+      label: OMZ virtualenv plugin
+      default: false
+      requires: [oh_my_zsh]
+      omz_plugin: virtualenv
+    omz_extract:
+      category: zsh_stack
+      label: OMZ extract plugin
+      default: true
+      requires: [oh_my_zsh]
+      omz_plugin: extract
+    omz_codeclimate:
+      category: zsh_stack
+      label: OMZ codeclimate plugin
+      default: false
+      requires: [oh_my_zsh]
+      omz_plugin: codeclimate
+    gpg_signing:
+      category: zsh_stack
+      label: GPG signing via keychain
+      default: false
+      requires: [keychain]
+      zshrc_block: gpg_keychain
+
+    # --- desktop ---
+    desktop_i3:
+      category: desktop
+      label: i3 window manager
+      default: true
+      packages: [i3, i3status]
+      config_paths: [dot_config/i3, dot_config/i3status]
+    picom:
+      category: desktop
+      label: picom compositor
+      default: true
+      packages: [picom]
+      config_paths: [dot_config/picom.conf]
+    kitty:
+      category: desktop
+      label: Kitty terminal
+      default: true
+      packages: [kitty]
+      config_paths: [dot_config/kitty]
+    dunst:
+      category: desktop
+      label: dunst notifications
+      default: true
+      packages: [dunst]
+    autorandr:
+      category: desktop
+      label: autorandr
+      default: true
+      packages: [autorandr]
+      config_paths: [dot_config/autorandr, dot_screenlayout]
+      alias_block: autorandr
+    nitrogen:
+      category: desktop
+      label: nitrogen wallpapers
+      default: true
+      packages: [nitrogen]
+      config_paths: [dot_wallpapers]
+    rofi:
+      category: desktop
+      label: rofi launcher
+      default: true
+      packages: [rofi]
+    desktop_utils:
+      category: desktop
+      label: Desktop utilities
+      description: scrot, feh, brightness, playerctl, etc.
+      default: true
+      packages: [scrot, feh, numlockx, xss-lock, playerctl, brightnessctl, acpi, notify-osd, libnotify-bin, xinput, x11-xserver-utils, xinit, xorg, xrandr, xmodmap, network-manager, pulseaudio]
+    termite:
+      category: desktop
+      label: Termite terminal (legacy)
+      default: false
+      config_paths: [dot_config/termite]
+    x11_session:
+      category: desktop
+      label: X11 session files
+      default: true
+      config_paths: [dot_xinitrc, dot_xsessionrc, dot_Xmodmap, dot_Xresources]
+
+    # --- dev ---
+    neovim:
+      category: dev
+      label: Neovim
+      default: true
+      packages: [neovim]
+      config_paths: [dot_config/nvim]
+      external: .config/nvim/brighten
+    gh_cli:
+      category: dev
+      label: GitHub CLI
+      default: true
+      packages: [gh]
+    glab:
+      category: dev
+      label: GitLab CLI
+      default: true
+      packages: [glab]
+    docker:
+      category: dev
+      label: Docker
+      default: true
+      packages: [docker.io, docker-compose-v2]
+      systemd_unit: docker.service
+    clang:
+      category: dev
+      label: Clang toolchain
+      default: true
+      packages: [clang]
+      zshrc_block: clang_exports
+    ffmpeg:
+      category: dev
+      label: ffmpeg
+      default: true
+      packages: [ffmpeg]
+    diff_so_fancy:
+      category: dev
+      label: diff-so-fancy
+      default: true
+      packages: [diff-so-fancy]
+    flatpak:
+      category: dev
+      label: Flatpak
+      default: false
+      packages: [flatpak]
+
+    # --- system ---
+    ssh_hardening:
+      category: system
+      label: SSH hardening (port 9701, pubkey-only)
+      default: true
+      packages: [openssh-server]
+      system_deploy: ssh
+    grub:
+      category: system
+      label: GRUB config
+      default: true
+      packages: [grub-common, grub-efi-amd64, grub-efi-amd64-signed]
+      system_deploy: grub
+    udev_dock:
+      category: system
+      label: Dock hotplug udev rules
+      default: true
+      packages: [udev]
+      system_deploy: udev
+    displays_resume:
+      category: system
+      label: displays-resume systemd unit
+      default: true
+      requires: [autorandr]
+      system_deploy: displays_resume
+      systemd_unit: displays-resume.service
+    ollama:
+      category: system
+      label: Ollama LLM service
+      default: true
+      system_deploy: ollama
+      systemd_unit: ollama.service
+    earlyoom:
+      category: system
+      label: earlyoom
+      default: true
+      packages: [earlyoom]
+      systemd_unit: earlyoom.service
+    thermald:
+      category: system
+      label: thermald
+      default: true
+      packages: [thermald]
+      systemd_unit: thermald.service
+    lighttpd:
+      category: system
+      label: lighttpd
+      default: false
+      packages: [lighttpd]
+      systemd_unit: lighttpd.service
+    xrdp:
+      category: system
+      label: xrdp remote desktop
+      default: false
+      packages: [xrdp]
+      systemd_units: [xrdp.service, xrdp-sesman.service]

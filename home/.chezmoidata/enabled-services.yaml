@@ -1,0 +1,13 @@
+# Systemd units to enable on a fresh machine.
+# VPN units are intentionally excluded — configure those manually (see docs/vpn-setup.md).
+enabled_services:
+  - earlyoom.service
+  - thermald.service
+  - docker.service
+  - ollama.service
+  - autorandr.service
+  - autorandr-lid-listener.service
+  - displays-resume.service
+  - lighttpd.service
+  - xrdp.service
+  - xrdp-sesman.service

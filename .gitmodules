@@ -1,3 +1,0 @@
-[submodule ".config/nvim/brighten"]
-	path = .config/nvim/brighten
-	url = git@github.com:vantaboard/brighten-lush.git

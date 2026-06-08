@@ -2,3 +2,11 @@
 .env
 .wakatime.cfg
 .config/nvim/vimscript
+
+# chezmoi runtime config (generated on apply, not source)
+.chezmoi.toml
+.chezmoi.data.toml
+
+# User-specific setup profiles (written by scripts/dotfiles-setup)
+home/.chezmoidata/profile.yaml
+home/.chezmoidata/profile-host.yaml

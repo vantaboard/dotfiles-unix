@@ -1,0 +1,42 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CHEZMOI_CI=1
+ENV CHEZMOI_SKIP_SYSTEM_DEPLOY=1
+
+RUN apt-get update -qq \
+  && apt-get install -y -qq --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    sudo \
+    zsh \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG USERNAME=testuser
+ARG USER_UID=1001
+ARG USER_GID=1001
+
+RUN groupadd --gid "${USER_GID}" "${USERNAME}" \
+  && useradd --uid "${USER_UID}" --gid "${USER_GID}" -m -s /usr/bin/zsh "${USERNAME}" \
+  && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/"${USERNAME}" \
+  && chmod 0440 /etc/sudoers.d/"${USERNAME}"
+
+COPY . /repo
+RUN chown -R "${USERNAME}:${USERNAME}" /repo
+
+USER "${USERNAME}"
+WORKDIR /home/"${USERNAME}"
+
+# Seed chezmoi source from the copied repo (avoids git-clone-only-committed-state issue)
+RUN mkdir -p "${HOME}/.local/share/chezmoi" \
+  && cp /repo/.chezmoiroot "${HOME}/.local/share/chezmoi/" \
+  && cp -a /repo/home "${HOME}/.local/share/chezmoi/" \
+  && cd "${HOME}/.local/share/chezmoi" && git init -q
+
+RUN sh -c "$(curl -fsSL https://get.chezmoi.io/lb)" -- -b "${HOME}/.local/bin" \
+  && "${HOME}/.local/bin/chezmoi" init --apply \
+  && cp /repo/tests/zsh-smoke.sh /tmp/zsh-smoke.sh \
+  && bash /tmp/zsh-smoke.sh \
+  && cp /repo/tests/zsh-smoke-minimal.sh /tmp/zsh-smoke-minimal.sh \
+  && bash /tmp/zsh-smoke-minimal.sh

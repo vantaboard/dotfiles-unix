@@ -1,0 +1,29 @@
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+alias dc=false
+alias firefox=false
+alias p=false
+alias p=false
+alias gs=false
+alias gm=false
+alias vi=false
+alias help=false
+alias fzm=false
+alias craftenv="source ~/CraftRoot/craft/craftenv.sh"
+alias help=run-help
+alias expowebcam="webcam exposure"
+alias log=false
+alias cz="$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --"
+alias cpdf="xclip -selection clipboard -target application/pdf"
+alias cpng="xclip -selection clipboard -target image/png"
+{{- if index $f "neovim" }}
+alias vi=nvim
+{{- end }}
+alias rm=trash-put
+alias python=python3
+{{- if index $f "autorandr" }}
+alias autorandr="$HOME/Code/autorandr-env/.venv/bin/autorandr"
+{{- end }}

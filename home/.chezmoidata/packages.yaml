@@ -1,0 +1,88 @@
+packages:
+  ubuntu:
+    apt:
+      # Shell and core CLI
+      - zsh
+      - git
+      - curl
+      - sudo
+      - keychain
+      - fzf
+      - ripgrep
+      - fd-find
+      - trash-cli
+      - xclip
+      - vivid
+      - clang
+      - jq
+      - htop
+      - tmux
+      - direnv
+      # Desktop (installed on real machines; harmless in CI)
+      - i3
+      - i3status
+      - picom
+      - dunst
+      - autorandr
+      - nitrogen
+      - rofi
+      - scrot
+      - feh
+      - numlockx
+      - xss-lock
+      - playerctl
+      - brightnessctl
+      - acpi
+      - notify-osd
+      - libnotify-bin
+      - xinput
+      - x11-xserver-utils
+      - xinit
+      - xorg
+      - xrandr
+      - xmodmap
+      - network-manager
+      - pulseaudio
+      - flatpak
+      # Editors and dev tools
+      - neovim
+      - gh
+      - glab
+      - ffmpeg
+      - diff-so-fancy
+      # System services
+      - openssh-server
+      - grub-common
+      - grub-efi-amd64
+      - grub-efi-amd64-signed
+      - systemd
+      - udev
+      - earlyoom
+      - thermald
+      - docker.io
+      - docker-compose-v2
+      # Optional services (safe to install; enable separately)
+      - lighttpd
+      - xrdp
+      # VPN packages omitted — configure manually (see docs/vpn-setup.md)
+    apt_ci:
+      # Minimal set for Docker E2E (shell + smoke test)
+      - zsh
+      - git
+      - curl
+      - sudo
+      - keychain
+      - fzf
+      - ripgrep
+      - fd-find
+      - trash-cli
+      - xclip
+      - vivid
+      - clang
+      - jq
+      - neovim
+      - openssh-server
+      - systemd
+      - zoxide
+      - eza
+      - bat

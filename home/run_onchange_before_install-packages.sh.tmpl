@@ -1,0 +1,37 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: {{ include ".chezmoidata/setup-catalog.yaml" | sha256sum }}
+# hash: {{ include ".chezmoidata/profile.example.yaml" | sha256sum }}
+
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end }}
+
+if ! command -v apt-get >/dev/null 2>&1; then
+  echo "apt-get not found; skipping package installation"
+  exit 0
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+sudo apt-get update -qq
+sudo apt-get install -y -qq --no-install-recommends \
+{{- if env "CHEZMOI_CI" }}
+{{- range .packages.ubuntu.apt_ci }}
+  {{ . }} \
+{{- end }}
+{{- else if $p.packages }}
+{{- range $p.packages }}
+  {{ . }} \
+{{- end }}
+{{- else }}
+{{- range .packages.ubuntu.apt }}
+  {{ . }} \
+{{- end }}
+{{- end }}
+
+echo "apt packages installed"
+{{ end -}}

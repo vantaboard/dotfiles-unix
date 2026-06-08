@@ -1,0 +1,42 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end }}
+
+# hash: {{ $p.systemd_units | toYaml | sha256sum }}
+
+if [[ "${CHEZMOI_SKIP_SYSTEM_DEPLOY:-}" == "1" ]]; then
+  echo "CHEZMOI_SKIP_SYSTEM_DEPLOY=1; skipping service enablement"
+  exit 0
+fi
+
+if ! command -v systemctl >/dev/null 2>&1; then
+  echo "systemctl not found; skipping service enablement"
+  exit 0
+fi
+
+for unit in \
+{{- if $p.systemd_units }}
+{{- range $p.systemd_units }}
+  {{ . }} \
+{{- end }}
+{{- else }}
+{{- range .enabled_services }}
+  {{ . }} \
+{{- end }}
+{{- end }}
+; do
+  if systemctl list-unit-files "$unit" >/dev/null 2>&1; then
+    echo "Enabling $unit"
+    sudo systemctl enable "$unit" 2>/dev/null || echo "WARN: could not enable $unit"
+  else
+    echo "SKIP: $unit not installed on this machine"
+  fi
+done
+
+echo "Service enablement complete"
+{{ end -}}

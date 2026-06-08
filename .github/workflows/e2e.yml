@@ -1,0 +1,35 @@
+name: E2E Dotfiles Install
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint chezmoi run scripts
+        run: bash tests/lint-scripts.sh
+
+      - name: Validate systemd units
+        run: bash tests/validate-systemd.sh
+
+      - name: Validate profile manifests
+        run: |
+          bash tests/validate-profile.sh home/.chezmoidata/profile.example.yaml
+          bash tests/validate-profile.sh home/.chezmoidata/profile-ci.yaml
+
+  e2e-docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Build and run E2E container
+        run: |
+          docker build -f Dockerfile.test -t dotfiles-e2e .
+          docker run --rm dotfiles-e2e
