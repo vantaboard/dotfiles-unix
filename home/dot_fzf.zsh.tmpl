@@ -5,8 +5,10 @@
 {{- if index $p.features "fzf" }}
 # Setup fzf
 # ---------
+# Prepend so git-installed fzf wins over distro packages (e.g. Ubuntu's older
+# /usr/bin/fzf). Newer key-bindings require flags the distro build lacks.
 if [[ ! "$PATH" == *{{ .chezmoi.homeDir }}/.fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}{{ .chezmoi.homeDir }}/.fzf/bin"
+  PATH="{{ .chezmoi.homeDir }}/.fzf/bin${PATH:+:$PATH}"
 fi
 
 # Auto-completion

@@ -107,8 +107,47 @@ vim.o.number = true
 vim.o.relativenumber = true
 vim.o.scrolloff = 8
 
--- Set clipboard
-vim.opt.clipboard = "unnamedplus"
+-- Sync yanks with the system clipboard when a provider is available.
+-- xclip/wl-paste error with "target STRING not available" when the clipboard
+-- is empty; Neovim surfaces that as "clipboard error" unless paste is quiet.
+local function setup_clipboard()
+    if vim.fn.has("clipboard") ~= 1 then
+        return
+    end
+
+    if vim.fn.executable("wl-copy") == 1 and os.getenv("WAYLAND_DISPLAY") then
+        vim.g.clipboard = {
+            name = "wl-clipboard",
+            copy = {
+                ["+"] = "wl-copy",
+                ["*"] = "wl-copy --primary",
+            },
+            paste = {
+                ["+"] = "wl-paste 2>/dev/null",
+                ["*"] = "wl-paste --primary 2>/dev/null",
+            },
+            cache_enabled = 1,
+        }
+    elseif vim.fn.executable("xclip") == 1 and os.getenv("DISPLAY") then
+        vim.g.clipboard = {
+            name = "xclip",
+            copy = {
+                ["+"] = "xclip -selection clipboard",
+                ["*"] = "xclip -selection primary",
+            },
+            paste = {
+                ["+"] = "xclip -selection clipboard -o 2>/dev/null",
+                ["*"] = "xclip -selection primary -o 2>/dev/null",
+            },
+            cache_enabled = 1,
+        }
+    else
+        return
+    end
+
+    vim.opt.clipboard = "unnamedplus"
+end
+setup_clipboard()
 
 -- Set color column
 vim.wo.colorcolumn = "120"

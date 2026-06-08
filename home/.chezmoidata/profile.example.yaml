@@ -33,7 +33,7 @@ profile_example:
     ollama: true
     omz_codeclimate: false
     omz_extract: true
-    omz_fzf: true
+    omz_fzf: false
     omz_git: true
     omz_python: true
     omz_ssh_agent: true

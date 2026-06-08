@@ -289,7 +289,6 @@ require('transparent').clear_prefix('BufferLine')
 require("output_panel").setup({})
 
 require("formatting")
-require("linting")
 require("autocommands")
 require("mappings")
 require("tsconfig")

@@ -66,6 +66,8 @@ source "$HOME/.zshplugins/zsh-edit/zsh-edit.plugin.zsh"
 {{- end }}
 
 {{- if index $f "fzf" }}
+# Git fzf must precede OMZ/plugin init — distro fzf is too old for ~/.fzf bindings.
+export PATH="{{ .chezmoi.homeDir }}/.fzf/bin:$PATH"
 # If you also have ~/.fzf.zsh and want it after zvm init (harmless if var unset)
 zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 {{- end }}

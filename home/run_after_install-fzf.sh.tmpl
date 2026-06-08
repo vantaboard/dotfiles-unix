@@ -1,0 +1,38 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "fzf" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Keep ~/.fzf/bin in sync with the git external's shell scripts (chezmoi only
+# updates the repo; it does not rebuild the prebuilt binary).
+
+FZF_DIR="{{ .chezmoi.homeDir }}/.fzf"
+
+if [[ ! -x "$FZF_DIR/install" ]]; then
+  echo "fzf install script missing; skipping binary sync"
+  exit 0
+fi
+
+expected="$(grep -m1 '^version=' "$FZF_DIR/install" | cut -d= -f2)"
+installed=""
+if [[ -x "$FZF_DIR/bin/fzf" ]]; then
+  installed="$("$FZF_DIR/bin/fzf" --version 2>/dev/null | awk '{print $1}')"
+fi
+
+if [[ -n "$installed" && "$installed" == "$expected" ]]; then
+  echo "fzf binary up to date ($installed)"
+  exit 0
+fi
+
+echo "Updating fzf binary (${installed:-missing} -> $expected)..."
+# Drop stale binaries so install does not symlink to distro /usr/bin/fzf.
+rm -f "$FZF_DIR/bin/fzf"
+PATH="$FZF_DIR/bin:$PATH" "$FZF_DIR/install" --bin
+echo "fzf binary installed: $("$FZF_DIR/bin/fzf" --version)"
+{{- end -}}
+{{ end -}}

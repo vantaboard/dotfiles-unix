@@ -59,6 +59,7 @@ chezmoi update         # Pull upstream and re-apply
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
 | Before dotfiles | `run_onchange_before_install-packages` | `apt install` from profile package list |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
+| After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
 | After dotfiles | `run_onchange_after_install-tools` | mise, rust, zoxide (if enabled in profile) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |

@@ -48,6 +48,7 @@ setup_catalog:
       packages: [fzf]
       external: .fzf
       zshrc_bundle: fzf.zsh
+      description: Git external for shell integration; run_after_install-fzf syncs ~/.fzf/bin with the repo
     ripgrep:
       category: shell_core
       label: ripgrep
@@ -185,9 +186,10 @@ setup_catalog:
     omz_fzf:
       category: zsh_stack
       label: OMZ fzf plugin
-      default: true
+      default: false
       requires: [oh_my_zsh, fzf]
       omz_plugin: fzf
+      description: Optional; redundant when using git-installed fzf (~/.fzf) via the fzf feature
     omz_ssh_agent:
       category: zsh_stack
       label: OMZ ssh-agent plugin
