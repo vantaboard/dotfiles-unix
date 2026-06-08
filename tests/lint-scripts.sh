@@ -6,6 +6,17 @@ echo "=== script lint ==="
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_DIR="${REPO_ROOT}/home"
 
+# chezmoi only sets +x when the source filename uses the executable_ prefix.
+for script in "${HOME_DIR}"/dot_local/bin/*; do
+  [[ -f "$script" ]] || continue
+  base="$(basename "$script")"
+  if [[ "$base" != executable_* ]]; then
+    echo "FAIL: dot_local/bin scripts must be named executable_<name>: $script"
+    exit 1
+  fi
+done
+echo "OK: dot_local/bin executable_ naming"
+
 shopt -s globstar nullglob
 for script in "${HOME_DIR}"/run_*.sh.tmpl "${HOME_DIR}"/dot_local/bin/* "${HOME_DIR}"/dot_screenlayout/*.sh "${HOME_DIR}"/system/udev/*.sh; do
   [[ -f "$script" ]] || continue
@@ -37,9 +48,9 @@ bash -n "${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
 echo "OK: ${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
 
 for script in \
-  "${HOME_DIR}/dot_local/bin/deploy-dotfiles" \
-  "${HOME_DIR}/dot_local/bin/gimmekeys" \
-  "${HOME_DIR}/dot_local/bin/cursor-clip" \
+  "${HOME_DIR}/dot_local/bin/executable_deploy-dotfiles" \
+  "${HOME_DIR}/dot_local/bin/executable_gimmekeys" \
+  "${HOME_DIR}/dot_local/bin/executable_cursor-clip" \
   "${HOME_DIR}/system/udev/hotplug_monitor.sh"; do
   [[ -f "$script" ]] || continue
   bash -n "$script"
