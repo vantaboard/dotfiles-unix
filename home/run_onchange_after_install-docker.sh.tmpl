@@ -1,0 +1,27 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "docker" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: docker-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping docker install"
+  exit 0
+fi
+
+if command -v docker >/dev/null 2>&1; then
+  echo "docker already installed: $(docker --version)"
+  exit 0
+fi
+
+echo "Installing Docker via get.docker.com..."
+curl -fsSL https://get.docker.com | sh
+echo "docker installed: $(docker --version)"
+{{- end -}}
+{{ end -}}

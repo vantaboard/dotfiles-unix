@@ -26,7 +26,6 @@ profile_example:
     jq: true
     keychain: true
     kitty: true
-    lighttpd: false
     mise: true
     neovim: true
     nitrogen: true
@@ -44,7 +43,6 @@ profile_example:
     ripgrep: true
     rofi: true
     ssh_hardening: true
-    termite: false
     thermald: true
     tmux: true
     trash_cli: true
@@ -52,7 +50,6 @@ profile_example:
     vivid: true
     x11_session: true
     xclip: true
-    xrdp: false
     zoxide: true
     zsh: true
     zsh_abbr: true
@@ -65,10 +62,7 @@ profile_example:
     - bat
     - brightnessctl
     - clang
-    - diff-so-fancy
     - direnv
-    - docker-compose-v2
-    - docker.io
     - dunst
     - earlyoom
     - eza
@@ -109,9 +103,7 @@ profile_example:
     - xclip
     - xinit
     - xinput
-    - xmodmap
     - xorg
-    - xrandr
     - xss-lock
     - zoxide
     - zsh
@@ -129,4 +121,3 @@ profile_example:
     - udev
   secrets:
     git_gpg_key: ""
-    git_signing_key_personal: ""

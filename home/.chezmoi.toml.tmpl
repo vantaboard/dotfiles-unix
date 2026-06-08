@@ -1,10 +1,10 @@
+{{- if env "CHEZMOI_CI" -}}
 [data]
-{{- if env "CHEZMOI_CI" }}
     git_gpg_key = ""
-    git_signing_key_personal = ""
-{{- else }}
-    git_gpg_key = {{ promptStringOnce "git_gpg_key" "GPG key ID for git signing (leave empty to skip)" "" | quote }}
-    git_signing_key_personal = {{ promptStringOnce "git_signing_key_personal" "Personal git signing key ID (leave empty to skip)" "" | quote }}
+{{- else -}}
+{{-   $gitGpgKey := promptStringOnce . "git_gpg_key" "GPG key ID for git signing (leave empty to skip)" "" -}}
+[data]
+    git_gpg_key = {{ $gitGpgKey | quote }}
 {{- end }}
 
 [edit]

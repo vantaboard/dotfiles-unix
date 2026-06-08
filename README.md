@@ -8,24 +8,39 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting Ubu
 # Install chezmoi
 sh -c "$(curl -fsSL https://get.chezmoi.io/lb)" -- -b ~/.local/bin
 
-# Clone or init this repo as your chezmoi source, then run the setup wizard
+# Optional but recommended: gum powers the interactive setup wizard
+# (the wizard will offer to install it if missing)
+version=$(curl -fsSL https://api.github.com/repos/charmbracelet/gum/releases/latest \
+  | sed -n 's/.*"tag_name": "v\([^"]*\)".*/\1/p' | head -1)
+mkdir -p ~/.local/bin
+tmpdir=$(mktemp -d)
+curl -fsSL "https://github.com/charmbracelet/gum/releases/download/v${version}/gum_${version}_Linux_x86_64.tar.gz" \
+  | tar -xz -C "$tmpdir" --wildcards '*/gum'
+install -m 755 "$tmpdir"/gum_*/gum ~/.local/bin/gum
+rm -rf "$tmpdir"
+
+# Clone this repo, then run the setup wizard (configures chezmoi source automatically)
 git clone git@github.com:vantaboard/dotfiles-unix.git /tmp/dotfiles-unix
 /tmp/dotfiles-unix/scripts/dotfiles-setup --apply
 
-# Or if chezmoi is already initialized:
+# Or from an existing clone:
 ./scripts/dotfiles-setup --apply
 ```
+
+`dotfiles-setup --apply` writes `sourceDir` / `workingTree` in `~/.config/chezmoi/chezmoi.toml` when needed, so you do not need a separate `chezmoi init` step for local development.
 
 The wizard lets you choose feature categories (shell, desktop, dev, system), individual packages and zsh plugins, and whether to save a global profile, host-specific overrides, or both. Selections are written to gitignored `profile.yaml` files and drive conditional templates so disabled plugins never get sourced.
 
 ### Wizard options
 
 ```bash
-./scripts/dotfiles-setup              # interactive checklist only
+./scripts/dotfiles-setup              # interactive wizard (recommended or custom)
 ./scripts/dotfiles-setup --apply      # write profile + chezmoi apply
 ./scripts/dotfiles-setup --yes        # accept catalog defaults (non-interactive)
 ./scripts/dotfiles-setup --dry-run    # preview profile YAML
 ```
+
+The interactive wizard offers **recommended** setup (catalog defaults, no checkbox drill-down) or **custom** setup to pick categories and features individually.
 
 ## Day-to-day usage
 

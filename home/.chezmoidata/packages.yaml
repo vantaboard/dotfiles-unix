@@ -39,8 +39,6 @@ packages:
       - x11-xserver-utils
       - xinit
       - xorg
-      - xrandr
-      - xmodmap
       - network-manager
       - pulseaudio
       - flatpak
@@ -49,7 +47,6 @@ packages:
       - gh
       - glab
       - ffmpeg
-      - diff-so-fancy
       # System services
       - openssh-server
       - grub-common
@@ -59,11 +56,6 @@ packages:
       - udev
       - earlyoom
       - thermald
-      - docker.io
-      - docker-compose-v2
-      # Optional services (safe to install; enable separately)
-      - lighttpd
-      - xrdp
       # VPN packages omitted — configure manually (see docs/vpn-setup.md)
     apt_ci:
       # Minimal set for Docker E2E (shell + smoke test)

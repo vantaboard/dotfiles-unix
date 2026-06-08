@@ -29,7 +29,17 @@ echo "OK: displays-resume.service validates"
 
 OLLAMA_UNIT="${REPO_ROOT}/home/system/systemd/ollama.service"
 if [[ -f "$OLLAMA_UNIT" ]]; then
+  OLLAMA_BIN_STUB=false
+  if ! command -v ollama >/dev/null 2>&1 && ! [[ -x /usr/local/bin/ollama ]]; then
+    sudo mkdir -p /usr/local/bin
+    printf '#!/bin/sh\n' | sudo tee /usr/local/bin/ollama >/dev/null
+    sudo chmod +x /usr/local/bin/ollama
+    OLLAMA_BIN_STUB=true
+  fi
   systemd-analyze verify "$OLLAMA_UNIT"
+  if [[ "$OLLAMA_BIN_STUB" == true ]]; then
+    sudo rm -f /usr/local/bin/ollama
+  fi
   echo "OK: ollama.service validates"
 fi
 

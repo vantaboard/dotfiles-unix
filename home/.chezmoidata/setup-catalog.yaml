@@ -81,7 +81,7 @@ setup_catalog:
     htop:
       category: shell_core
       label: htop
-      default: false
+      default: true
       packages: [htop]
     tmux:
       category: shell_core
@@ -203,7 +203,7 @@ setup_catalog:
     omz_virtualenv:
       category: zsh_stack
       label: OMZ virtualenv plugin
-      default: false
+      default: true
       requires: [oh_my_zsh]
       omz_plugin: virtualenv
     omz_extract:
@@ -215,13 +215,13 @@ setup_catalog:
     omz_codeclimate:
       category: zsh_stack
       label: OMZ codeclimate plugin
-      default: false
+      default: true
       requires: [oh_my_zsh]
       omz_plugin: codeclimate
     gpg_signing:
       category: zsh_stack
       label: GPG signing via keychain
-      default: false
+      default: true
       requires: [keychain]
       zshrc_block: gpg_keychain
 
@@ -272,12 +272,7 @@ setup_catalog:
       label: Desktop utilities
       description: scrot, feh, brightness, playerctl, etc.
       default: true
-      packages: [scrot, feh, numlockx, xss-lock, playerctl, brightnessctl, acpi, notify-osd, libnotify-bin, xinput, x11-xserver-utils, xinit, xorg, xrandr, xmodmap, network-manager, pulseaudio]
-    termite:
-      category: desktop
-      label: Termite terminal (legacy)
-      default: false
-      config_paths: [dot_config/termite]
+      packages: [scrot, feh, numlockx, xss-lock, playerctl, brightnessctl, acpi, notify-osd, libnotify-bin, xinput, x11-xserver-utils, xinit, xorg, network-manager, pulseaudio]
     x11_session:
       category: desktop
       label: X11 session files
@@ -306,7 +301,7 @@ setup_catalog:
       category: dev
       label: Docker
       default: true
-      packages: [docker.io, docker-compose-v2]
+      description: Installed via get.docker.com when missing; skips if docker-ce is already present
       systemd_unit: docker.service
     clang:
       category: dev
@@ -323,17 +318,17 @@ setup_catalog:
       category: dev
       label: diff-so-fancy
       default: true
-      packages: [diff-so-fancy]
+      description: Installed via git in run_onchange_after_install-diff-so-fancy.sh
     flatpak:
       category: dev
       label: Flatpak
-      default: false
+      default: true
       packages: [flatpak]
 
     # --- system ---
     ssh_hardening:
       category: system
-      label: SSH hardening (port 9701, pubkey-only)
+      label: SSH hardening (port 9701 pubkey-only)
       default: true
       packages: [openssh-server]
       system_deploy: ssh
@@ -374,15 +369,3 @@ setup_catalog:
       default: true
       packages: [thermald]
       systemd_unit: thermald.service
-    lighttpd:
-      category: system
-      label: lighttpd
-      default: false
-      packages: [lighttpd]
-      systemd_unit: lighttpd.service
-    xrdp:
-      category: system
-      label: xrdp remote desktop
-      default: false
-      packages: [xrdp]
-      systemd_units: [xrdp.service, xrdp-sesman.service]

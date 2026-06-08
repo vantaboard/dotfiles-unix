@@ -3,4 +3,3 @@
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
 export GIT_GPG_KEY="{{ $p.secrets.git_gpg_key }}"
-export GIT_SIGNING_KEY_PERSONAL="{{ $p.secrets.git_signing_key_personal }}"

@@ -41,8 +41,6 @@ These units are enabled automatically on `chezmoi apply` (when the unit file exi
 | `autorandr-lid-listener.service` | Laptop lid display switching |
 | `autorandr.service` | Display profile management |
 | `displays-resume.service` | Resume monitors after suspend |
-| `lighttpd.service` | Web server |
-| `xrdp.service` / `xrdp-sesman.service` | Remote desktop |
 
 ---
 

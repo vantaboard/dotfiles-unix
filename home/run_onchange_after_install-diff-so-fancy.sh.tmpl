@@ -1,0 +1,34 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "diff_so_fancy" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: diff-so-fancy-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping diff-so-fancy install"
+  exit 0
+fi
+
+REPO="{{ .chezmoi.homeDir }}/.local/share/diff-so-fancy"
+BIN="{{ .chezmoi.homeDir }}/.local/bin/diff-so-fancy"
+
+if [[ -x "$BIN" ]]; then
+  echo "diff-so-fancy already installed"
+  exit 0
+fi
+
+mkdir -p "{{ .chezmoi.homeDir }}/.local/bin"
+if [[ ! -d "$REPO/.git" ]]; then
+  echo "Installing diff-so-fancy..."
+  git clone --depth 1 https://github.com/so-fancy/diff-so-fancy.git "$REPO"
+fi
+ln -sf "$REPO/diff-so-fancy" "$BIN"
+echo "diff-so-fancy installed to $BIN"
+{{- end -}}
+{{ end -}}

@@ -40,7 +40,6 @@ profile_ci:
     nitrogen: false
     rofi: false
     desktop_utils: false
-    termite: false
     x11_session: false
     neovim: true
     gh_cli: false
@@ -57,8 +56,6 @@ profile_ci:
     ollama: false
     earlyoom: false
     thermald: false
-    lighttpd: false
-    xrdp: false
   packages:
     - zsh
     - git
@@ -83,4 +80,3 @@ profile_ci:
   system_deploy: []
   secrets:
     git_gpg_key: ""
-    git_signing_key_personal: ""

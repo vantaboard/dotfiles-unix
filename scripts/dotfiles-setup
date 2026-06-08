@@ -70,6 +70,59 @@ resolve_profile_dir() {
 
 resolve_profile_dir
 
+CHEZMOI_CONFIG="${HOME}/.config/chezmoi/chezmoi.toml"
+
+chezmoi_source_ready() {
+  local path
+  path="$(chezmoi source-path 2>/dev/null || true)"
+  [[ -n "$path" && -d "$path" ]]
+}
+
+ensure_chezmoi_source_config() {
+  local repo_root="$1"
+  local config_file="$CHEZMOI_CONFIG"
+
+  if chezmoi_source_ready; then
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$config_file")"
+
+  if [[ ! -f "$config_file" ]]; then
+    echo "Initializing chezmoi for $repo_root..."
+    chezmoi init --source="$repo_root" --working-tree="$repo_root"
+  fi
+
+  if [[ -f "$config_file" ]] && grep -q '^sourceDir' "$config_file"; then
+    sed -i \
+      -e "s|^sourceDir = .*|sourceDir = \"${repo_root}\"|" \
+      -e "s|^workingTree = .*|workingTree = \"${repo_root}\"|" \
+      "$config_file"
+  elif [[ -f "$config_file" ]]; then
+    local tmp
+    tmp="$(mktemp)"
+    {
+      echo "sourceDir = \"${repo_root}\""
+      echo "workingTree = \"${repo_root}\""
+      echo
+      cat "$config_file"
+    } > "$tmp"
+    mv "$tmp" "$config_file"
+  else
+    cat > "$config_file" <<EOF
+sourceDir = "${repo_root}"
+workingTree = "${repo_root}"
+EOF
+  fi
+
+  if ! chezmoi_source_ready; then
+    echo "chezmoi source is not configured. Expected source under ${repo_root}." >&2
+    return 1
+  fi
+
+  echo "Configured chezmoi source: $(chezmoi source-path)"
+}
+
 declare -A ENABLED=()
 
 load_defaults() {
@@ -145,7 +198,6 @@ write_profile_yaml() {
     done
     echo "  secrets:"
     echo "    git_gpg_key: \"${GIT_GPG_KEY:-}\""
-    echo "    git_signing_key_personal: \"${GIT_SIGNING_KEY_PERSONAL:-}\""
   } > "$outfile"
 }
 
@@ -174,20 +226,27 @@ run_wizard() {
     return
   fi
 
+  setup_ui_ensure_gum
+
   echo "=== Dotfiles setup wizard ==="
   echo "Catalog: $CATALOG_FILE"
   echo "Profile dir: $PROFILE_DIR"
   echo
 
-  local scope
+  local setup_mode scope save_global=0 save_host=0
+  setup_mode="$(setup_ui_choose_one "Setup mode:" $'recommended (catalog defaults)\ncustom (choose categories and features)')"
+
   scope="$(setup_ui_choose_one "Save profile scope:" $'global only\nthis host only\nglobal base + host overrides')"
-  local save_global=0 save_host=0
   case "$scope" in
     *global\ only*) save_global=1 ;;
     *host\ only*) save_host=1 ;;
     *) save_global=1; save_host=1 ;;
   esac
 
+  if [[ "$setup_mode" == *recommended* ]]; then
+    echo "Using recommended catalog defaults."
+    catalog_resolve_features ENABLED
+  else
   # Category selection
   local -a cat_list=()
   local cat_defaults=""
@@ -259,11 +318,11 @@ run_wizard() {
   done <<< "$selected_cats"
 
   catalog_resolve_features ENABLED
+  fi
 
   # Secrets
   if [[ "${ENABLED[gpg_signing]:-0}" == "1" ]]; then
     GIT_GPG_KEY="$(setup_ui_input "GPG key ID for git signing" "${GIT_GPG_KEY:-}")"
-    GIT_SIGNING_KEY_PERSONAL="$(setup_ui_input "Personal git signing key ID" "${GIT_SIGNING_KEY_PERSONAL:-}")"
   fi
 
   print_summary
@@ -280,7 +339,6 @@ run_wizard() {
 SCOPE_GLOBAL=1
 SCOPE_HOST=0
 GIT_GPG_KEY=""
-GIT_SIGNING_KEY_PERSONAL=""
 
 run_wizard
 
@@ -303,6 +361,10 @@ if [[ "$APPLY" == "1" ]]; then
   if ! command -v chezmoi >/dev/null 2>&1; then
     echo "chezmoi not found. Install: sh -c \"\$(curl -fsSL https://get.chezmoi.io/lb)\" -- -b ~/.local/bin" >&2
     exit 1
+  fi
+  chezmoi_root="$(find_chezmoi_source)"
+  if [[ -f "$chezmoi_root/.chezmoiroot" && -d "$chezmoi_root/home" ]]; then
+    ensure_chezmoi_source_config "$chezmoi_root"
   fi
   echo "Running chezmoi apply..."
   chezmoi apply
