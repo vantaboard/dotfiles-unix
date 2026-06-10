@@ -4,9 +4,6 @@ exec --no-startup-id gxkb
 exec --no-startup-id sunshine
 exec_always --no-startup-id $HOME/.local/bin/gimmekeys
 exec_always setxkbmap -layout us,es
-exec_always setxkbmap -option ctrl:nocaps
-exec_always setxkbmap -option caps:escape
-exec_always xmodmap -e "clear lock"
 exec_always xset dpms 600 1200 1800
 
 # Start a hidden kitty instance for fast startup

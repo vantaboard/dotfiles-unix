@@ -88,5 +88,16 @@ if has_deploy ollama && { command -v ollama >/dev/null 2>&1 || [[ -f /usr/local/
   sudo systemctl daemon-reload 2>/dev/null || true
 fi
 
+if has_deploy keyd && {
+  command -v keyd >/dev/null 2>&1 ||
+  command -v keyd.rvaiya >/dev/null 2>&1 ||
+  [[ -x /usr/bin/keyd.rvaiya ]]
+}; then
+  sudo install -d /etc/keyd
+  deploy_file "$SOURCE/keyd/default.conf" /etc/keyd/default.conf
+  sudo systemctl enable keyd 2>/dev/null || true
+  sudo systemctl restart keyd 2>/dev/null || true
+fi
+
 echo "System configuration deployed"
 {{ end -}}

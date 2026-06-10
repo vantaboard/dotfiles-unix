@@ -25,6 +25,7 @@ profile_example:
     htop: false
     jq: true
     keychain: true
+    keyd: true
     kitty: true
     mise: true
     neovim: true
@@ -80,6 +81,7 @@ profile_example:
     - i3status
     - jq
     - keychain
+    - keyd
     - kitty
     - libnotify-bin
     - neovim
@@ -108,12 +110,14 @@ profile_example:
     - zoxide
     - zsh
   systemd_units:
+    - keyd.service
     - displays-resume.service
     - docker.service
     - earlyoom.service
     - ollama.service
     - thermald.service
   system_deploy:
+    - keyd
     - displays_resume
     - grub
     - ollama

@@ -36,6 +36,7 @@ packages:
       - notify-osd
       - libnotify-bin
       - xinput
+      - keyd
       - x11-xserver-utils
       - xinit
       - xorg

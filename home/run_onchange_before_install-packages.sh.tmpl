@@ -8,17 +8,45 @@ set -euo pipefail
 {{- $p := .profile_example -}}
 {{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end }}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $needsKeyd := false -}}
+{{- if not (env "CHEZMOI_CI") -}}
+{{- if $p.packages -}}
+{{- range $p.packages -}}
+{{- if eq . "keyd" -}}{{- $needsKeyd = true -}}{{- end -}}
+{{- end -}}
+{{- else -}}
+{{- range .packages.ubuntu.apt -}}
+{{- if eq . "keyd" -}}{{- $needsKeyd = true -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end }}
 
-if ! command -v apt-get >/dev/null 2>&1; then
-  echo "apt-get not found; skipping package installation"
-  exit 0
+if ! command -v apt >/dev/null 2>&1; then
+  if [[ -x /usr/bin/apt ]]; then
+    export PATH="/usr/bin:/usr/sbin:${PATH:-}"
+  else
+    echo "apt not found; skipping package installation"
+    exit 0
+  fi
 fi
 
 export DEBIAN_FRONTEND=noninteractive
 
-sudo apt-get update -qq
-sudo apt-get install -y -qq --no-install-recommends \
+sudo apt update -qq
+{{- if $needsKeyd }}
+
+if ! apt show keyd >/dev/null 2>&1; then
+  if command -v add-apt-repository >/dev/null 2>&1; then
+    echo "keyd not in default repos; adding ppa:keyd-team/ppa"
+    sudo add-apt-repository -y ppa:keyd-team/ppa
+    sudo apt update -qq
+  else
+    echo "WARN: keyd not available and add-apt-repository not found"
+  fi
+fi
+{{- end }}
+sudo apt install -y -qq --no-install-recommends \
 {{- if env "CHEZMOI_CI" }}
 {{- range .packages.ubuntu.apt_ci }}
   {{ . }} \

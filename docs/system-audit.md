@@ -18,12 +18,13 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | SSH socket port override | `home/system/ssh/ssh.socket.d/port.conf` | `/etc/systemd/system/ssh.socket.d/` |
 | Ollama base unit (clean PATH) | `home/system/systemd/ollama.service` | `/etc/systemd/system/` |
 | Ollama GPU tuning | `home/system/systemd/ollama.service.d/override.conf` | `/etc/systemd/system/ollama.service.d/` |
+| keyd key remapping | `home/system/keyd/default.conf` | `/etc/keyd/default.conf` (Debian binary: `keyd.rvaiya`) |
 | Enabled services list | `home/.chezmoidata/enabled-services.yaml` | `systemctl enable` via script |
 | Autorandr profiles | `home/dot_config/autorandr/docked-home/`, `undocked/` | `~/.config/autorandr/` |
 
 Deploy and enable scripts:
 
-- `home/run_onchange_after_deploy-system.sh.tmpl` — udev, systemd units, GRUB, SSH
+- `home/run_onchange_after_deploy-system.sh.tmpl` — udev, systemd units, GRUB, SSH, keyd
 - `home/run_onchange_after_enable-services.sh.tmpl` — enables units from `enabled-services.yaml`
 
 ---
@@ -34,6 +35,7 @@ These units are enabled automatically on `chezmoi apply` (when the unit file exi
 
 | Unit | Purpose |
 |------|---------|
+| `keyd.service` | Kernel-level key remapping (Caps→Escape, Alt+hjkl nav) |
 | `earlyoom.service` | OOM killer daemon |
 | `thermald.service` | Thermal management |
 | `docker.service` | Docker daemon |

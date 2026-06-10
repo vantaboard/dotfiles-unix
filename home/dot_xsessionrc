@@ -1,3 +1,2 @@
 /usr/bin/bash $HOME/.config/autorandr/postswitch.d/10-wallpaper
 /usr/bin/autorandr --change
-/usr/bin/python3 "$HOME/.local/bin/xmodmap_reload.py"
