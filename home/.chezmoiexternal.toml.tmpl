@@ -48,20 +48,6 @@
     refreshPeriod = "168h"
 {{- end }}
 
-{{- if index $f "zsh_abbr" }}
-["zsh-abbr"]
-    type = "git-repo"
-    url = "{{ $gh }}olets/zsh-abbr.git"
-    refreshPeriod = "168h"
-{{- end }}
-
-{{- if index $f "fzf_tab" }}
-[".fzf-tab"]
-    type = "git-repo"
-    url = "{{ $gh }}Aloxaf/fzf-tab.git"
-    refreshPeriod = "168h"
-{{- end }}
-
 {{- if index $f "fzf" }}
 [".fzf"]
     type = "git-repo"

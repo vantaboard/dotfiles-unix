@@ -111,14 +111,14 @@ setup_catalog:
     vivid:
       category: shell_extras
       label: vivid
-      description: LS_COLORS via vivid dracula
+      description: LS_COLORS via vivid dracula; .deb on Linux, pkg on Termux (install-tools)
       default: true
-      packages: [vivid]
       export_block: vivid
+      install_tools: true
     mise:
       category: shell_extras
       label: mise
-      description: Runtime version manager (installed via script)
+      description: Runtime version manager (curl https://mise.run via install-tools)
       default: true
       install_tools: true
       zshrc_block: mise
@@ -168,15 +168,17 @@ setup_catalog:
       label: fzf-tab
       default: true
       requires: [fzf, oh_my_zsh]
-      external: .fzf-tab
       zshrc_block: fzf_tab
+      install_tools: true
+      description: Installed into OMZ custom/plugins via run_onchange_after_install-tools
     zsh_abbr:
       category: zsh_stack
       label: zsh-abbr
       default: true
       requires: [oh_my_zsh]
-      external: zsh-abbr
       zshrc_block: zsh_abbr
+      install_tools: true
+      description: Installed via run_onchange_after_install-tools (v6.3.3 + submodules)
     omz_git:
       category: zsh_stack
       label: OMZ git plugin

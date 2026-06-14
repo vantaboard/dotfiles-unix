@@ -67,7 +67,7 @@ chezmoi update         # Pull upstream and re-apply
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_onchange_after_set-default-shell` | Termux: `chsh -s zsh` when zsh is enabled in profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
-| After dotfiles | `run_onchange_after_install-tools` | mise, rust, zoxide (if enabled in profile) |
+| After dotfiles | `run_onchange_after_install-tools` | mise (`mise.run`), fzf-tab (OMZ plugin), zsh-abbr (v6.3.3), vivid (`.deb` on Linux / `pkg` on Termux); Linux also rust/zoxide via cargo when mise enabled |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |
 
@@ -107,18 +107,18 @@ chezmoi execute-template '{{ .chezmoi.os }}'   # expect: android
 chezmoi execute-template -f home/.chezmoitemplates/profile.tpl | head
 ```
 
-To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.yaml` (same as on Linux). If you ran `dotfiles-setup` on Termux, its `profile.yaml` is **merged** with the Termux profile — desktop/mise/vivid flags stay off. The setup wizard targets Linux (x86_64 gum binary); prefer editing the Termux profile or a host override instead.
+To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.yaml` (same as on Linux). If you ran `dotfiles-setup` on Termux, its `profile.yaml` is **merged** with the Termux profile — desktop/system flags stay off; shell tools (mise, vivid, fzf-tab, zsh-abbr) install via `run_onchange_after_install-tools`. The setup wizard targets Linux (x86_64 gum binary); prefer editing the Termux profile or a host override instead.
 
 **Caveats on Termux:**
 
 - **Default shell:** `chezmoi apply` runs Termux `chsh -s zsh` when the zsh feature is enabled. **Restart the Termux app** (not just `exec zsh`) so new sessions pick up `~/.termux/shell`.
 - **Package upgrades:** Termux is rolling-release; never run bare `pkg install` / `pkg upgrade` on a stale system. Always `apt full-upgrade` first (chezmoi does this before installing dotfile packages). Partial upgrades desync `openssl`, `libcurl`, and `libngtcp2` and break `curl`/`git`.
 - **Git / HTTPS clones:** If HTTPS git still fails after a full upgrade, use SSH (default via `~/.gitconfig`) or `apt reinstall openssl libngtcp2 libcurl curl git`.
-- **Externals missing:** If plugins like `fzf-tab` fail to load, re-run `chezmoi apply` and ensure GitHub SSH or HTTPS git works.
+- **Externals / plugins:** fzf-tab and zsh-abbr install via `run_onchange_after_install-tools` (not chezmoi externals). Re-run `chezmoi apply` if they fail to load; ensure GitHub SSH or HTTPS git works.
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
 - **trash-cli:** Not in the curated `pkg` list; install with `pip install trash-cli` if you enable the `trash_cli` feature.
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.
-- **xclip / vivid / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android.
+- **xclip / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android. **vivid** and **mise** install via install-tools (`pkg install vivid`, `curl https://mise.run`).
 
 ## CI / E2E testing
 

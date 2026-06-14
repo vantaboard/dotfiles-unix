@@ -1,6 +1,11 @@
-{{ if eq .chezmoi.os "linux" -}}
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/sh" }}
+set -eu
+{{ else -}}
 #!/bin/bash
 set -euo pipefail
+{{ end -}}
 
 {{- $p := .profile_example -}}
 {{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
@@ -16,26 +21,93 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v3
+# hash: tools-v4
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
-  echo "CHEZMOI_CI=1; skipping mise/rust/zoxide toolchain install (use apt packages)"
+  echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
   exit 0
 fi
 
-{{- if not (index $f "mise") }}
-echo "mise disabled in profile; skipping toolchain install"
-exit 0
-{{- end }}
-
-MISE_BIN="{{ .chezmoi.homeDir }}/.local/bin/mise"
+HOME_DIR="{{ .chezmoi.homeDir }}"
+MISE_BIN="$HOME_DIR/.local/bin/mise"
+ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME_DIR/.oh-my-zsh/custom}"
+FZF_TAB_DIR="$ZSH_CUSTOM/plugins/fzf-tab"
+ZSH_ABBR_DIR="$HOME_DIR/zsh-abbr"
+VIVID_VERSION="0.10.1"
 
 install_mise() {
-  if [[ -x "$MISE_BIN" ]]; then
+  if [[ -x "$MISE_BIN" ]] || command -v mise >/dev/null 2>&1; then
+    echo "mise already installed"
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping mise install"
     return 0
   fi
   echo "Installing mise..."
-  curl -fsSL https://mise.jdx.dev/install.sh | sh
+  curl -fsSL https://mise.run | sh
+}
+
+install_fzf_tab() {
+  if [[ -d "$FZF_TAB_DIR/.git" ]]; then
+    echo "fzf-tab already installed at $FZF_TAB_DIR"
+    return 0
+  fi
+  if [[ ! -d "$HOME_DIR/.oh-my-zsh" ]]; then
+    echo "WARN: oh-my-zsh missing; skipping fzf-tab install"
+    return 0
+  fi
+  echo "Installing fzf-tab into OMZ custom plugins..."
+  mkdir -p "$ZSH_CUSTOM/plugins"
+  git clone https://github.com/Aloxaf/fzf-tab "$FZF_TAB_DIR"
+}
+
+install_zsh_abbr() {
+  if [[ -d "$ZSH_ABBR_DIR/.git" ]]; then
+    echo "zsh-abbr already installed at $ZSH_ABBR_DIR"
+    return 0
+  fi
+  echo "Installing zsh-abbr v6.3.3..."
+  git clone https://github.com/olets/zsh-abbr \
+    --recurse-submodules --single-branch --branch v6.3.3 --depth 1 \
+    "$ZSH_ABBR_DIR"
+}
+
+install_vivid_linux() {
+  if command -v vivid >/dev/null 2>&1; then
+    echo "vivid already installed"
+    return 0
+  fi
+  local arch deb url tmp
+  case "$(uname -m)" in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *)
+      echo "WARN: unsupported arch for vivid deb: $(uname -m)"
+      return 0
+      ;;
+  esac
+  deb="vivid_${VIVID_VERSION}_${arch}.deb"
+  url="https://github.com/sharkdp/vivid/releases/download/v${VIVID_VERSION}/${deb}"
+  tmp="$(mktemp -d)"
+  echo "Installing vivid ${VIVID_VERSION} (${arch})..."
+  wget -qO "$tmp/$deb" "$url"
+  sudo dpkg -i "$tmp/$deb" || sudo apt-get install -f -y
+  rm -rf "$tmp"
+}
+
+install_vivid_termux() {
+  if command -v vivid >/dev/null 2>&1; then
+    echo "vivid already installed"
+    return 0
+  fi
+  if command -v apt >/dev/null 2>&1; then
+    apt install -y vivid
+  elif command -v pkg >/dev/null 2>&1; then
+    pkg install -y vivid
+  else
+    echo "WARN: no apt/pkg; skipping vivid install"
+  fi
 }
 
 install_rust() {
@@ -45,7 +117,7 @@ install_rust() {
   echo "Installing Rust via rustup..."
   curl -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path
   # shellcheck disable=SC1091
-  source "{{ .chezmoi.homeDir }}/.cargo/env"
+  [[ -f "$HOME_DIR/.cargo/env" ]] && source "$HOME_DIR/.cargo/env"
 }
 
 install_zoxide() {
@@ -56,18 +128,36 @@ install_zoxide() {
   cargo install zoxide
 }
 
+{{- if index $f "mise" }}
 install_mise
-export PATH="{{ .chezmoi.homeDir }}/.local/bin:$PATH"
-
+export PATH="$HOME_DIR/.local/bin:${PATH:-}"
 if [[ -x "$MISE_BIN" ]]; then
-  # Install mise-managed tools if a config exists
-  if [[ -f "{{ .chezmoi.homeDir }}/.config/mise/config.toml" ]] || [[ -f "{{ .chezmoi.homeDir }}/.mise.toml" ]]; then
+  if [[ -f "$HOME_DIR/.config/mise/config.toml" ]] || [[ -f "$HOME_DIR/.mise.toml" ]]; then
     "$MISE_BIN" install -y || true
   fi
 fi
+{{- end }}
 
+{{- if and (index $f "fzf_tab") (index $f "oh_my_zsh") }}
+install_fzf_tab
+{{- end }}
+
+{{- if index $f "zsh_abbr" }}
+install_zsh_abbr
+{{- end }}
+
+{{- if index $f "vivid" }}
+{{- if eq .chezmoi.os "android" }}
+install_vivid_termux
+{{- else }}
+install_vivid_linux
+{{- end }}
+{{- end }}
+
+{{- if and (index $f "mise") (eq .chezmoi.os "linux") }}
 install_rust
 install_zoxide
+{{- end }}
 
-echo "Toolchain installation complete"
+echo "Custom tool installation complete"
 {{ end -}}

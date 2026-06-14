@@ -16,8 +16,8 @@ profile_termux_example:
     zoxide: true
     eza: true
     bat: true
-    vivid: false
-    mise: false
+    vivid: true
+    mise: true
     direnv: true
     oh_my_zsh: true
     p10k: true
@@ -25,7 +25,7 @@ profile_termux_example:
     zsh_completions: true
     zsh_edit: true
     fzf_tab: true
-    zsh_abbr: false
+    zsh_abbr: true
     omz_git: true
     omz_fzf: false
     omz_ssh_agent: true
