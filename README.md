@@ -118,7 +118,8 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
 - **trash-cli:** Installed via `run_onchange_after_install-tools` (git clone + Python venv; `trash-*` in `~/.local/bin`). On Termux, psutil is installed from the `python-psutil` pkg when available, otherwise built from source with Termux’s [Android patch](https://github.com/termux/termux-packages/blob/master/packages/python-psutil/android.patch). Some volume-scan commands may need `TRASH_VOLUMES=$PWD` — see [trash-cli#348](https://github.com/andreafrancia/trash-cli/issues/348).
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.
-- **xclip / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android. **vivid** and **mise** install via install-tools (`pkg install vivid`, `curl https://mise.run`).
+- **mise:** On Termux, `curl https://mise.run` must install the **musl** Android build (glibc Linux binaries show as "no such file or directory" even when `ls` shows the file). `chezmoi apply` removes broken binaries and reinstalls. Runtime/tool installs may still need DNS workarounds — see [mise#7026](https://github.com/jdx/mise/discussions/7026).
+- **xclip / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android.
 
 ## CI / E2E testing
 

@@ -30,7 +30,7 @@ DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
 {{- end -}}
 {{- $f := $p.features -}}
 {{- if index $f "mise" }}
-if command -v mise >/dev/null 2>&1; then
+if command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 {{- end }}

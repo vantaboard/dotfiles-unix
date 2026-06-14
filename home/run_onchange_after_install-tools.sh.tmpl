@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v9
+# hash: tools-v10
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -40,16 +40,34 @@ TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-r
 VIVID_VERSION="0.10.1"
 
 install_mise() {
-  if [[ -x "$MISE_BIN" ]] || command -v mise >/dev/null 2>&1; then
+  mise_usable() {
+    [[ -n "${1:-}" && -x "$1" ]] && "$1" --version >/dev/null 2>&1
+  }
+
+  if mise_usable "$MISE_BIN" || { command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; }; then
     echo "mise already installed"
     return 0
+  fi
+  if [[ -e "$MISE_BIN" ]]; then
+    echo "Removing non-runnable mise binary (wrong OS/arch build)..."
+    rm -f "$MISE_BIN"
   fi
   if ! command -v curl >/dev/null 2>&1; then
     echo "WARN: curl not found; skipping mise install"
     return 0
   fi
+{{- if eq .chezmoi.os "android" }}
+  echo "Installing mise (Android musl build)..."
+  MISE_INSTALL_MUSL=1 curl -fsSL https://mise.run | sh
+{{- else }}
   echo "Installing mise..."
   curl -fsSL https://mise.run | sh
+{{- end }}
+  if ! mise_usable "$MISE_BIN" && ! { command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; }; then
+    echo "WARN: mise cannot run on this platform; remove ~/.local/bin/mise and disable mise in profile if needed"
+    rm -f "$MISE_BIN" 2>/dev/null || true
+    return 0
+  fi
 }
 
 install_fzf_tab() {
@@ -241,7 +259,7 @@ install_zoxide() {
 {{- if index $f "mise" }}
 install_mise
 export PATH="$HOME_DIR/.local/bin:${PATH:-}"
-if [[ -x "$MISE_BIN" ]]; then
+if [[ -x "$MISE_BIN" ]] && "$MISE_BIN" --version >/dev/null 2>&1; then
   if [[ -f "$HOME_DIR/.config/mise/config.toml" ]] || [[ -f "$HOME_DIR/.mise.toml" ]]; then
     "$MISE_BIN" install -y || true
   fi

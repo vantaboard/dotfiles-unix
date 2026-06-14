@@ -280,9 +280,9 @@ command -v task >/dev/null 2>&1 && eval "$(task --completion zsh)"
 
 {{- if index $f "mise" }}
 # mise must run after every PATH change (OMZ, dotfiles) so managed tools win over system/Cursor paths.
-if [[ -x "{{ .chezmoi.homeDir }}/.local/bin/mise" ]]; then
+if "{{ .chezmoi.homeDir }}/.local/bin/mise" --version >/dev/null 2>&1; then
   eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
-elif command -v mise >/dev/null 2>&1; then
+elif command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 {{- end }}
