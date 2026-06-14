@@ -21,6 +21,14 @@ packages:
       # Desktop (installed on real machines; harmless in CI)
       - i3
       - i3status
+      - sway
+      - swaylock
+      - swayidle
+      - swaybg
+      - kanshi
+      - grim
+      - slurp
+      - wl-clipboard
       - picom
       - dunst
       - autorandr
@@ -79,3 +87,24 @@ packages:
       - zoxide
       - eza
       - bat
+  termux:
+    pkg:
+      # Curated Termux set (independent of profile packages:; uses Termux names)
+      - zsh
+      - git
+      - curl
+      - openssh
+      - keychain
+      - fzf
+      - ripgrep
+      - fd
+      - bat
+      - eza
+      - zoxide
+      - jq
+      - htop
+      - tmux
+      - direnv
+      - neovim
+      - gh
+      - python

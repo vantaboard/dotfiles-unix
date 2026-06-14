@@ -1,4 +1,21 @@
-{{ if eq .chezmoi.os "linux" -}}
+{{ if eq .chezmoi.os "android" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# hash: {{ .packages.termux.pkg | toYaml | sha256sum }}
+
+if ! command -v pkg >/dev/null 2>&1; then
+  echo "pkg not found; not a Termux environment, skipping"
+  exit 0
+fi
+
+pkg install -y \
+{{- range .packages.termux.pkg }}
+  {{ . }} \
+{{- end }}
+
+echo "Termux packages installed"
+{{ else if eq .chezmoi.os "linux" -}}
 #!/bin/bash
 set -euo pipefail
 

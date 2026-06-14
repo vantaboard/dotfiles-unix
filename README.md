@@ -1,6 +1,6 @@
 # dotfiles-unix
 
-Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting Ubuntu 24.04.
+Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting Ubuntu 24.04 and Termux (Android).
 
 ## Fresh install
 
@@ -57,7 +57,7 @@ chezmoi update         # Pull upstream and re-apply
 | Step | Script | Action |
 |------|--------|--------|
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
-| Before dotfiles | `run_onchange_before_install-packages` | `apt install` from profile package list |
+| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `pkg install` (Android/Termux) |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
 | After dotfiles | `run_onchange_after_install-tools` | mise, rust, zoxide (if enabled in profile) |
@@ -65,6 +65,40 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |
 
 Set `CHEZMOI_SKIP_SYSTEM_DEPLOY=1` to skip sudo system deploy (e.g. in containers).
+
+## Termux / Android
+
+On Termux, chezmoi reports `.chezmoi.os == "android"`. Dotfile templates and git externals apply from your profile `features:`; desktop/system run-scripts are Linux-only and no-op on Android. Package install uses the curated list in [packages.yaml](home/.chezmoidata/packages.yaml) (`packages.termux.pkg`), not the profile `packages:` array.
+
+```bash
+# Bootstrap Termux
+pkg update && pkg upgrade
+pkg install chezmoi git zsh openssh
+
+# Clone and configure profile (copy example → gitignored profile.yaml)
+git clone git@github.com:vantaboard/dotfiles-unix.git ~/Code/dotfiles-unix
+cd ~/Code/dotfiles-unix
+# Copy profile_termux_example body into home/.chezmoidata/profile.yaml under `profile:`
+
+chezmoi init --source="$HOME/Code/dotfiles-unix" --working-tree="$HOME/Code/dotfiles-unix"
+chezmoi apply
+chsh -s zsh
+```
+
+Verify OS detection:
+
+```bash
+chezmoi execute-template '{{ .chezmoi.os }}'   # expect: android
+```
+
+Use [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) as the starting point. The setup wizard (`scripts/dotfiles-setup`) targets Linux (x86_64 gum binary); on Termux, copy the example profile manually instead.
+
+**Caveats on Termux:**
+
+- **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
+- **trash-cli:** Not in the curated `pkg` list; install with `pip install trash-cli` if you enable the `trash_cli` feature.
+- **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.
+- **xclip / vivid / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android.
 
 ## CI / E2E testing
 
@@ -85,7 +119,7 @@ CI uses the committed minimal profile in [profile-ci.yaml](home/.chezmoidata/pro
 ```
 .chezmoiroot              → "home"
 home/                     → chezmoi source state (dot_* files)
-home/.chezmoidata/        → setup-catalog, profile.example, profile-ci
+home/.chezmoidata/        → setup-catalog, profile.example, profile-ci, profile.termux.example
 scripts/dotfiles-setup    → interactive setup wizard
 .github/workflows/        → CI
 tests/                    → smoke tests and lint
