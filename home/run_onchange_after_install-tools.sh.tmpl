@@ -1,7 +1,7 @@
 {{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
 {{ if eq .chezmoi.os "android" -}}
-#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/sh" }}
-set -eu
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+set -euo pipefail
 {{ else -}}
 #!/bin/bash
 set -euo pipefail
@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v4
+# hash: tools-v5
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"

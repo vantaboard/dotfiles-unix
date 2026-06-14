@@ -89,6 +89,7 @@ packages:
   termux:
     pkg:
       # Installed via apt full-upgrade + apt install on Android (see run_onchange_before_install-packages).
+      - bash
       - zsh
       - git
       - curl

@@ -13,10 +13,10 @@
 {{- end -}}
 {{- $f := $p.features -}}
 {{- if index $f "zsh" -}}
-#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/sh" }}
-set -eu
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+set -euo pipefail
 
-# hash: termux-default-shell-zsh-v1
+# hash: termux-default-shell-zsh-v2
 
 TERMUX_SHELL="{{ .chezmoi.homeDir }}/.termux/shell"
 ZSH_BIN="{{ joinPath (dir .chezmoi.homeDir) "usr/bin/zsh" }}"
