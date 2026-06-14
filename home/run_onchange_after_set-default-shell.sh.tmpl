@@ -1,0 +1,36 @@
+{{ if eq .chezmoi.os "android" -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "zsh" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/sh" }}
+set -eu
+
+# hash: termux-default-shell-zsh-v1
+
+TERMUX_SHELL="{{ .chezmoi.homeDir }}/.termux/shell"
+ZSH_BIN="{{ joinPath (dir .chezmoi.homeDir) "usr/bin/zsh" }}"
+
+if ! command -v chsh >/dev/null 2>&1; then
+  echo "chsh not found; skipping default shell change"
+  exit 0
+fi
+
+if [[ ! -x "$ZSH_BIN" ]]; then
+  echo "zsh not installed; skipping default shell change"
+  exit 0
+fi
+
+if [[ -L "$TERMUX_SHELL" ]] && [[ "$(readlink "$TERMUX_SHELL")" == "$ZSH_BIN" ]]; then
+  echo "Default shell already zsh ($TERMUX_SHELL)"
+  exit 0
+fi
+
+# Termux chsh (termux-tools): short name only — not $(which zsh) or a full path.
+chsh -s zsh
+echo "Default shell set to zsh via Termux chsh (~/.termux/shell). Restart Termux to use it."
+{{- end -}}
+{{ end -}}

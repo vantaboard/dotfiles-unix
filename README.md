@@ -65,6 +65,7 @@ chezmoi update         # Pull upstream and re-apply
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
 | Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `apt full-upgrade` + `apt install` (Android/Termux); Linux also installs `apt_manual` packages marked `install` |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
+| After dotfiles | `run_onchange_after_set-default-shell` | Termux: `chsh -s zsh` when zsh is enabled in profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
 | After dotfiles | `run_onchange_after_install-tools` | mise, rust, zoxide (if enabled in profile) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
@@ -96,8 +97,7 @@ pkg install chezmoi git zsh openssh
 
 git clone git@github.com:vantaboard/dotfiles-unix.git ~/Code/dotfiles-unix
 chezmoi init --source="$HOME/Code/dotfiles-unix" --working-tree="$HOME/Code/dotfiles-unix"
-chezmoi apply   # runs apt full-upgrade again, then installs the Termux package set
-chsh -s zsh
+chezmoi apply   # full-upgrade, installs packages, sets default shell to zsh (restart Termux after)
 ```
 
 Verify OS detection and effective profile:
@@ -111,6 +111,7 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 
 **Caveats on Termux:**
 
+- **Default shell:** `chezmoi apply` runs Termux `chsh -s zsh` when the zsh feature is enabled. **Restart the Termux app** (not just `exec zsh`) so new sessions pick up `~/.termux/shell`.
 - **Package upgrades:** Termux is rolling-release; never run bare `pkg install` / `pkg upgrade` on a stale system. Always `apt full-upgrade` first (chezmoi does this before installing dotfile packages). Partial upgrades desync `openssl`, `libcurl`, and `libngtcp2` and break `curl`/`git`.
 - **Git / HTTPS clones:** If HTTPS git still fails after a full upgrade, use SSH (default in these dotfiles via `~/.gitconfig`) or `apt reinstall openssl libngtcp2 libcurl curl git`.
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
