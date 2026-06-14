@@ -17,6 +17,7 @@ DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
 [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
 
 {{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
 {{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}

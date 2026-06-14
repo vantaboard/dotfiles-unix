@@ -1,5 +1,5 @@
-# Example profile for Termux / Android (committed). Copy into gitignored profile.yaml
-# under the `profile:` key. Package install uses packages.termux.pkg (not this list).
+# Termux / Android profile (auto-selected when .chezmoi.os == "android").
+# Override with gitignored profile.yaml or profile-host.yaml if needed.
 profile_termux_example:
   features:
     zsh: true

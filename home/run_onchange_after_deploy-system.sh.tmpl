@@ -3,6 +3,7 @@
 set -euo pipefail
 
 {{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
 {{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
@@ -59,6 +60,10 @@ if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
   rm -f "$TMP_UNIT"
   sudo systemctl daemon-reload 2>/dev/null || true
   sudo systemctl enable displays-resume.service 2>/dev/null || true
+fi
+
+if has_deploy sway_session; then
+  deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop
 fi
 
 if has_deploy grub && [[ -f /etc/default/grub ]] && command -v update-grub >/dev/null 2>&1; then

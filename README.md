@@ -31,6 +31,12 @@ git clone git@github.com:vantaboard/dotfiles-unix.git /tmp/dotfiles-unix
 
 The wizard lets you choose feature categories (shell, desktop, dev, system), individual packages and zsh plugins, and whether to save a global profile, host-specific overrides, or both. Selections are written to gitignored `profile.yaml` files and drive conditional templates so disabled plugins never get sourced.
 
+**Profile auto-selection:** When no `profile.yaml` exists, chezmoi picks a base profile from the environment: [profile.example.yaml](home/.chezmoidata/profile.example.yaml) on Linux, [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) when `.chezmoi.os == "android"`. Explicit `profile.yaml`, `CHEZMOI_CI=1`, or `profile-host.yaml` overrides still take precedence (see [profile.tpl](home/.chezmoitemplates/profile.tpl)). Inspect the effective profile with:
+
+```bash
+chezmoi execute-template -f home/.chezmoitemplates/profile.tpl
+```
+
 ### Wizard options
 
 ```bash
@@ -68,30 +74,27 @@ Set `CHEZMOI_SKIP_SYSTEM_DEPLOY=1` to skip sudo system deploy (e.g. in container
 
 ## Termux / Android
 
-On Termux, chezmoi reports `.chezmoi.os == "android"`. Dotfile templates and git externals apply from your profile `features:`; desktop/system run-scripts are Linux-only and no-op on Android. Package install uses the curated list in [packages.yaml](home/.chezmoidata/packages.yaml) (`packages.termux.pkg`), not the profile `packages:` array.
+On Termux, chezmoi reports `.chezmoi.os == "android"`. The Termux profile in [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) is **selected automatically** — no manual copy to `profile.yaml` required. Dotfile templates and git externals apply from that profile's `features:`; desktop/system run-scripts are Linux-only and no-op on Android. Package install uses the curated list in [packages.yaml](home/.chezmoidata/packages.yaml) (`packages.termux.pkg`), not the profile `packages:` array.
 
 ```bash
 # Bootstrap Termux
 pkg update && pkg upgrade
 pkg install chezmoi git zsh openssh
 
-# Clone and configure profile (copy example → gitignored profile.yaml)
 git clone git@github.com:vantaboard/dotfiles-unix.git ~/Code/dotfiles-unix
-cd ~/Code/dotfiles-unix
-# Copy profile_termux_example body into home/.chezmoidata/profile.yaml under `profile:`
-
 chezmoi init --source="$HOME/Code/dotfiles-unix" --working-tree="$HOME/Code/dotfiles-unix"
 chezmoi apply
 chsh -s zsh
 ```
 
-Verify OS detection:
+Verify OS detection and effective profile:
 
 ```bash
 chezmoi execute-template '{{ .chezmoi.os }}'   # expect: android
+chezmoi execute-template -f home/.chezmoitemplates/profile.tpl | head
 ```
 
-Use [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) as the starting point. The setup wizard (`scripts/dotfiles-setup`) targets Linux (x86_64 gum binary); on Termux, copy the example profile manually instead.
+To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.yaml` (same as on Linux). The setup wizard (`scripts/dotfiles-setup`) targets Linux (x86_64 gum binary); on Termux, edit the committed Termux profile or add a host override instead.
 
 **Caveats on Termux:**
 

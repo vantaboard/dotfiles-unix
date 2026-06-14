@@ -25,7 +25,7 @@ while IFS= read -r line; do
     val="${val// /}"
     [[ "$val" == "true" ]] && ENABLED[$fid]=1 || ENABLED[$fid]=0
   fi
-done < <(awk '/^(profile|profile_example|profile_ci):/{f=1;next} f && /^[a-z_]/ && !/^  /{f=0} f' "$PROFILE")
+done < <(awk '/^(profile|profile_example|profile_ci|profile_termux_example):/{f=1;next} f && /^[a-z_]/ && !/^  /{f=0} f' "$PROFILE")
 
 for fid in $(catalog_all_feature_ids); do
   if [[ -z "${ENABLED[$fid]:-}" ]]; then
