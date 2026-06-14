@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v11
+# hash: tools-v12
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -53,18 +53,14 @@ install_mise() {
     rm -f "$MISE_BIN"
   fi
 {{- if eq .chezmoi.os "android" }}
-  echo "Trying Termux mise package (apt/pkg)..."
+  echo "Installing mise via Termux package (pkg install mise)..."
   if (apt install -y mise 2>/dev/null || pkg install -y mise 2>/dev/null) \
       && command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
     echo "mise installed via Termux package"
     return 0
   fi
-  if ! command -v curl >/dev/null 2>&1; then
-    echo "WARN: mise pkg unavailable on this mirror and curl not found; skipping mise install"
-    return 0
-  fi
-  echo "Termux mise pkg not on this mirror; installing via curl (musl build)..."
-  MISE_INSTALL_MUSL=1 curl -fsSL https://mise.run | sh
+  echo "WARN: mise pkg not available (mirror may lag — try termux-change-repo). Skipping; curl install is not supported on Android."
+  return 0
 {{- else }}
   if ! command -v curl >/dev/null 2>&1; then
     echo "WARN: curl not found; skipping mise install"
@@ -72,12 +68,12 @@ install_mise() {
   fi
   echo "Installing mise..."
   curl -fsSL https://mise.run | sh
-{{- end }}
   if ! mise_usable "$MISE_BIN" && ! { command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; }; then
-    echo "WARN: mise cannot run on this platform; remove ~/.local/bin/mise and disable mise in profile if needed"
+    echo "WARN: mise install failed"
     rm -f "$MISE_BIN" 2>/dev/null || true
     return 0
   fi
+{{- end }}
 }
 
 install_fzf_tab() {
