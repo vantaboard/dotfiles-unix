@@ -89,7 +89,7 @@ packages:
       - bat
   termux:
     pkg:
-      # Curated Termux set (independent of profile packages:; uses Termux names)
+      # Installed via apt full-upgrade + apt install on Android (see run_onchange_before_install-packages).
       - zsh
       - git
       - curl

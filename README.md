@@ -63,7 +63,7 @@ chezmoi update         # Pull upstream and re-apply
 | Step | Script | Action |
 |------|--------|--------|
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
-| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `pkg install` (Android/Termux); Linux also installs `apt_manual` packages marked `install` |
+| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `apt full-upgrade` + `apt install` (Android/Termux); Linux also installs `apt_manual` packages marked `install` |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
 | After dotfiles | `run_onchange_after_install-tools` | mise, rust, zoxide (if enabled in profile) |
@@ -90,13 +90,13 @@ Entries are **append-only** (status changes, never deleted). Packages marked `in
 On Termux, chezmoi reports `.chezmoi.os == "android"`. The Termux profile in [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) is **selected automatically** — no manual copy to `profile.yaml` required. Dotfile templates and git externals apply from that profile's `features:`; desktop/system run-scripts are Linux-only and no-op on Android. Package install uses the curated list in [packages.yaml](home/.chezmoidata/packages.yaml) (`packages.termux.pkg`), not the profile `packages:` array.
 
 ```bash
-# Bootstrap Termux
-pkg update && pkg upgrade
+# Bootstrap Termux (full-upgrade before adding packages — partial upgrades break curl/openssl)
+pkg update && apt full-upgrade -y
 pkg install chezmoi git zsh openssh
 
 git clone git@github.com:vantaboard/dotfiles-unix.git ~/Code/dotfiles-unix
 chezmoi init --source="$HOME/Code/dotfiles-unix" --working-tree="$HOME/Code/dotfiles-unix"
-chezmoi apply
+chezmoi apply   # runs apt full-upgrade again, then installs the Termux package set
 chsh -s zsh
 ```
 
@@ -111,9 +111,8 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 
 **Caveats on Termux:**
 
-- **Git / HTTPS clones:** Termux `git-remote-https` can fail with OpenSSL/libngtcp2 errors (`SSL_set_quic_tls_transport_params`). Fix either way:
-  - **SSH (default in these dotfiles):** add a GitHub SSH key, then `chezmoi apply` (Android gets `~/.gitconfig` `insteadOf` for GitHub HTTPS → SSH).
-  - **Repair HTTPS:** `pkg update && pkg upgrade && pkg reinstall git openssl`
+- **Package upgrades:** Termux is rolling-release; never run bare `pkg install` / `pkg upgrade` on a stale system. Always `apt full-upgrade` first (chezmoi does this before installing dotfile packages). Partial upgrades desync `openssl`, `libcurl`, and `libngtcp2` and break `curl`/`git`.
+- **Git / HTTPS clones:** If HTTPS git still fails after a full upgrade, use SSH (default in these dotfiles via `~/.gitconfig`) or `apt reinstall openssl libngtcp2 libcurl curl git`.
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
 - **trash-cli:** Not in the curated `pkg` list; install with `pip install trash-cli` if you enable the `trash_cli` feature.
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.

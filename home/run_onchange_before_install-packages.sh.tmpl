@@ -9,7 +9,15 @@ if ! command -v pkg >/dev/null 2>&1; then
   exit 0
 fi
 
-pkg install -y \
+# Termux is rolling-release: installing packages without a full upgrade first
+# leaves openssl/libcurl/libngtcp2 out of sync (breaks curl and git-remote-https).
+# Use apt directly — it does not depend on curl the way pkg's mirror checks do.
+export DEBIAN_FRONTEND=noninteractive
+apt update
+apt full-upgrade -y \
+  -o Dpkg::Options::=--force-confdef \
+  -o Dpkg::Options::=--force-confold
+apt install -y --no-install-recommends \
 {{- range .packages.termux.pkg }}
   {{ . }} \
 {{- end }}
