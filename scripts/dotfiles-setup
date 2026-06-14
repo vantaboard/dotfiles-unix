@@ -359,7 +359,13 @@ fi
 
 if [[ "$APPLY" == "1" ]]; then
   if ! command -v chezmoi >/dev/null 2>&1; then
-    echo "chezmoi not found. Install: sh -c \"\$(curl -fsSL https://get.chezmoi.io/lb)\" -- -b ~/.local/bin" >&2
+    cat >&2 <<EOF
+chezmoi not found. Install:
+  sh -c "\$(curl -fsSL https://get.chezmoi.io/lb)" -- -b ~/.local/bin
+
+Ensure ~/.local/bin is on your PATH, then re-run to apply (profile was already saved):
+  $0 --apply
+EOF
     exit 1
   fi
   chezmoi_root="$(find_chezmoi_source)"
