@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v8
+# hash: tools-v9
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -77,6 +77,52 @@ install_zsh_abbr() {
     "$ZSH_ABBR_DIR"
 }
 
+{{- if eq .chezmoi.os "android" }}
+PSUTIL_VERSION="7.2.2"
+PSUTIL_DIR="$HOME_DIR/.local/share/psutil-android"
+
+install_psutil_termux() {
+  if "$TRASH_CLI_VENV/bin/python" -c "import psutil" 2>/dev/null; then
+    return 0
+  fi
+
+  # Optional when the mirror has it (upstream Termux package; not on all mirrors yet).
+  if (apt install -y python-psutil 2>/dev/null || pkg install -y python-psutil 2>/dev/null) \
+      && python3 -c "import psutil" 2>/dev/null; then
+    echo "psutil available via Termux python-psutil package"
+    rm -rf "$TRASH_CLI_VENV"
+    python3 -m venv --system-site-packages "$TRASH_CLI_VENV"
+    "$TRASH_CLI_VENV/bin/pip" install -q -U pip
+    if "$TRASH_CLI_VENV/bin/python" -c "import psutil" 2>/dev/null; then
+      return 0
+    fi
+  fi
+
+  echo "Building patched psutil for Termux (pip cannot build unpatched psutil on Android)..."
+  if [[ ! -d "$PSUTIL_DIR/.git" ]]; then
+    git clone --depth 1 --branch "release-${PSUTIL_VERSION}" \
+      https://github.com/giampaolo/psutil "$PSUTIL_DIR"
+  fi
+
+  if ! grep -q '"android"' "$PSUTIL_DIR/psutil/_common.py" 2>/dev/null; then
+    sed -i 's/LINUX = sys.platform.startswith("linux")/LINUX = sys.platform.startswith(("linux", "android"))/' \
+      "$PSUTIL_DIR/psutil/_common.py"
+  fi
+
+  if ! command -v clang >/dev/null 2>&1; then
+    echo "Installing clang (needed to build psutil)..."
+    apt install -y clang 2>/dev/null || pkg install -y clang 2>/dev/null || {
+      echo "WARN: clang not available; cannot build psutil"
+      return 1
+    }
+  fi
+
+  "$TRASH_CLI_VENV/bin/pip" install -q -U pip
+  "$TRASH_CLI_VENV/bin/pip" install -q "$PSUTIL_DIR"
+  "$TRASH_CLI_VENV/bin/python" -c "import psutil"
+}
+{{- end }}
+
 install_trash_cli() {
   if ! command -v python3 >/dev/null 2>&1; then
     echo "WARN: python3 not found; skipping trash-cli install"
@@ -93,26 +139,19 @@ install_trash_cli() {
   fi
 
 {{- if eq .chezmoi.os "android" }}
-  if ! python3 -c "import psutil" 2>/dev/null; then
-    echo "Installing python-psutil (pip cannot build psutil on Android)..."
-    if command -v apt >/dev/null 2>&1; then
-      apt install -y python-psutil
-    elif command -v pkg >/dev/null 2>&1; then
-      pkg install -y python-psutil
-    else
-      echo "WARN: python-psutil not available; skipping trash-cli install"
-      return 0
-    fi
-  fi
-
   if [[ -d "$TRASH_CLI_VENV" ]] && ! "$TRASH_CLI_VENV/bin/python" -c "import psutil" 2>/dev/null; then
-    echo "Recreating trash-cli venv with system site-packages..."
+    echo "Recreating trash-cli venv..."
     rm -rf "$TRASH_CLI_VENV"
   fi
 
   if [[ ! -d "$TRASH_CLI_VENV" ]]; then
-    echo "Creating trash-cli virtualenv (system-site-packages)..."
-    python3 -m venv --system-site-packages "$TRASH_CLI_VENV"
+    echo "Creating trash-cli virtualenv..."
+    python3 -m venv "$TRASH_CLI_VENV"
+  fi
+
+  if ! install_psutil_termux; then
+    echo "WARN: psutil not available; skipping trash-cli install"
+    return 0
   fi
 
   echo "Installing trash-cli into venv..."
