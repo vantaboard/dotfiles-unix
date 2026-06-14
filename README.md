@@ -67,7 +67,7 @@ chezmoi update         # Pull upstream and re-apply
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_onchange_after_set-default-shell` | Termux: `chsh -s zsh` when zsh is enabled in profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
-| After dotfiles | `run_onchange_after_install-tools` | mise (`mise.run`), fzf-tab (OMZ plugin), zsh-abbr (v6.3.3), trash-cli (git + venv), vivid (`.deb` on Linux / `pkg` on Termux); Linux also rust/zoxide via cargo when mise enabled |
+| After dotfiles | `run_onchange_after_install-tools` | mise (Termux `pkg` when available, else `mise.run` musl), fzf-tab (OMZ plugin), zsh-abbr (v6.3.3), trash-cli (git + venv), vivid (`.deb` on Linux / `pkg` on Termux); Linux also rust/zoxide via cargo when mise enabled |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |
 
@@ -118,7 +118,7 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
 - **trash-cli:** Installed via `run_onchange_after_install-tools` (git clone + Python venv; `trash-*` in `~/.local/bin`). On Termux, psutil is installed from the `python-psutil` pkg when available, otherwise built from source with Termux’s [Android patch](https://github.com/termux/termux-packages/blob/master/packages/python-psutil/android.patch). Some volume-scan commands may need `TRASH_VOLUMES=$PWD` — see [trash-cli#348](https://github.com/andreafrancia/trash-cli/issues/348).
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.
-- **mise:** On Termux, `curl https://mise.run` must install the **musl** Android build (glibc Linux binaries show as "no such file or directory" even when `ls` shows the file). `chezmoi apply` removes broken binaries and reinstalls. Runtime/tool installs may still need DNS workarounds — see [mise#7026](https://github.com/jdx/mise/discussions/7026).
+- **mise:** Termux main repo now ships `mise` ([termux-packages#29075](https://github.com/termux/termux-packages/pull/29075)); `install-tools` tries `pkg install mise` first, then falls back to the musl `mise.run` installer. Third-party mirrors (e.g. `mirrors.sau.edu.cn`) can lag — run `termux-change-repo` to pick an official mirror, or wait for sync. Avoid glibc Linux builds (`file ~/.local/bin/mise` showing `/lib/ld-linux-*`); `chezmoi apply` removes broken copies. Runtime installs may still be limited on Android — see [mise#7026](https://github.com/jdx/mise/discussions/7026).
 - **xclip / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android.
 
 ## CI / E2E testing

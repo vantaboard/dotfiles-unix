@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v10
+# hash: tools-v11
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -52,14 +52,24 @@ install_mise() {
     echo "Removing non-runnable mise binary (wrong OS/arch build)..."
     rm -f "$MISE_BIN"
   fi
+{{- if eq .chezmoi.os "android" }}
+  echo "Trying Termux mise package (apt/pkg)..."
+  if (apt install -y mise 2>/dev/null || pkg install -y mise 2>/dev/null) \
+      && command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
+    echo "mise installed via Termux package"
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: mise pkg unavailable on this mirror and curl not found; skipping mise install"
+    return 0
+  fi
+  echo "Termux mise pkg not on this mirror; installing via curl (musl build)..."
+  MISE_INSTALL_MUSL=1 curl -fsSL https://mise.run | sh
+{{- else }}
   if ! command -v curl >/dev/null 2>&1; then
     echo "WARN: curl not found; skipping mise install"
     return 0
   fi
-{{- if eq .chezmoi.os "android" }}
-  echo "Installing mise (Android musl build)..."
-  MISE_INSTALL_MUSL=1 curl -fsSL https://mise.run | sh
-{{- else }}
   echo "Installing mise..."
   curl -fsSL https://mise.run | sh
 {{- end }}
@@ -259,9 +269,9 @@ install_zoxide() {
 {{- if index $f "mise" }}
 install_mise
 export PATH="$HOME_DIR/.local/bin:${PATH:-}"
-if [[ -x "$MISE_BIN" ]] && "$MISE_BIN" --version >/dev/null 2>&1; then
+if command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
   if [[ -f "$HOME_DIR/.config/mise/config.toml" ]] || [[ -f "$HOME_DIR/.mise.toml" ]]; then
-    "$MISE_BIN" install -y || true
+    mise install -y || true
   fi
 fi
 {{- end }}

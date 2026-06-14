@@ -119,7 +119,7 @@ setup_catalog:
     mise:
       category: shell_extras
       label: mise
-      description: Runtime version manager (curl https://mise.run via install-tools)
+      description: Runtime version manager (Termux pkg on Android when available, else mise.run)
       default: true
       install_tools: true
       zshrc_block: mise
