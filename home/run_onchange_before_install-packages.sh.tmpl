@@ -1,6 +1,6 @@
 {{ if eq .chezmoi.os "android" -}}
-#!/usr/bin/env bash
-set -euo pipefail
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/sh" }}
+set -eu
 
 # hash: {{ .packages.termux.pkg | toYaml | sha256sum }}
 
