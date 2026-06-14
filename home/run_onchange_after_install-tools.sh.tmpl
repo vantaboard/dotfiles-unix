@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v5
+# hash: tools-v6
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -32,7 +32,10 @@ HOME_DIR="{{ .chezmoi.homeDir }}"
 MISE_BIN="$HOME_DIR/.local/bin/mise"
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME_DIR/.oh-my-zsh/custom}"
 FZF_TAB_DIR="$ZSH_CUSTOM/plugins/fzf-tab"
-ZSH_ABBR_DIR="$HOME_DIR/zsh-abbr"
+TRASH_CLI_DIR="$HOME_DIR/trash-cli"
+TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
+LOCAL_BIN="$HOME_DIR/.local/bin"
+TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-rm)
 VIVID_VERSION="0.10.1"
 
 install_mise() {
@@ -71,6 +74,39 @@ install_zsh_abbr() {
   git clone https://github.com/olets/zsh-abbr \
     --recurse-submodules --single-branch --branch v6.3.3 --depth 1 \
     "$ZSH_ABBR_DIR"
+}
+
+install_trash_cli() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARN: python3 not found; skipping trash-cli install"
+    return 0
+  fi
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping trash-cli install"
+    return 0
+  fi
+
+  if [[ ! -d "$TRASH_CLI_DIR/.git" ]]; then
+    echo "Cloning trash-cli into $TRASH_CLI_DIR..."
+    git clone https://github.com/andreafrancia/trash-cli "$TRASH_CLI_DIR"
+  fi
+
+  if [[ ! -d "$TRASH_CLI_VENV" ]]; then
+    echo "Creating trash-cli virtualenv..."
+    python3 -m venv "$TRASH_CLI_VENV"
+  fi
+
+  echo "Installing trash-cli into venv..."
+  "$TRASH_CLI_VENV/bin/pip" install -q -U pip
+  "$TRASH_CLI_VENV/bin/pip" install -q -e "$TRASH_CLI_DIR"
+
+  mkdir -p "$LOCAL_BIN"
+  for cmd in "${TRASH_CLI_COMMANDS[@]}"; do
+    if [[ -x "$TRASH_CLI_VENV/bin/$cmd" ]]; then
+      ln -sf "$TRASH_CLI_VENV/bin/$cmd" "$LOCAL_BIN/$cmd"
+    fi
+  done
+  echo "trash-cli ready (~/.local/bin -> $TRASH_CLI_VENV/bin/*)"
 }
 
 install_vivid_linux() {
@@ -144,6 +180,10 @@ install_fzf_tab
 
 {{- if index $f "zsh_abbr" }}
 install_zsh_abbr
+{{- end }}
+
+{{- if index $f "trash_cli" }}
+install_trash_cli
 {{- end }}
 
 {{- if index $f "vivid" }}

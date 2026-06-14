@@ -30,7 +30,9 @@ alias cpng="xclip -selection clipboard -target image/png"
 {{- if index $f "neovim" }}
 alias vi=nvim
 {{- end }}
+{{- if index $f "trash_cli" }}
 alias rm=trash-put
+{{- end }}
 alias python=python3
 {{- if index $f "autorandr" }}
 alias autorandr="$HOME/Code/autorandr-env/.venv/bin/autorandr"

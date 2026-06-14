@@ -7,7 +7,7 @@ profile_termux_example:
     fzf: true
     ripgrep: true
     fd: true
-    trash_cli: false
+    trash_cli: true
     xclip: false
     keychain: true
     jq: true

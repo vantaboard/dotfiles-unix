@@ -10,7 +10,6 @@ packages:
       - fzf
       - ripgrep
       - fd-find
-      - trash-cli
       - xclip
       - clang
       - jq

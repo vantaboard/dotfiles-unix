@@ -63,7 +63,8 @@ setup_catalog:
       category: shell_core
       label: trash-cli
       default: true
-      packages: [trash-cli]
+      install_tools: true
+      description: Git clone + Python venv; trash-* wrappers in ~/.local/bin
     xclip:
       category: shell_core
       label: xclip
