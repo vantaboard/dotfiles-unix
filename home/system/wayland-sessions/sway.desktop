@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Sway
+Comment=Sway Wayland compositor
+Exec=sway --unsupported-gpu
+Type=Application

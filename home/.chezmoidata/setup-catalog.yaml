@@ -15,8 +15,8 @@ setup_catalog:
       description: Oh My Zsh, Powerlevel10k, fzf-tab, abbreviations
       default: true
     - id: desktop
-      label: Desktop / i3
-      description: i3, picom, kitty, autorandr, display tooling
+      label: Desktop / i3 + Sway
+      description: i3, Sway, picom, kitty, autorandr, kanshi, display tooling
       default: true
     - id: dev
       label: Development
@@ -234,6 +234,24 @@ setup_catalog:
       default: true
       packages: [i3, i3status]
       config_paths: [dot_config/i3, dot_config/i3status]
+    desktop_sway:
+      category: desktop
+      label: Sway window manager
+      default: true
+      packages: [sway, swaylock, swayidle, swaybg, grim, slurp, wl-clipboard]
+      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/environment.d/wayland.conf]
+      system_deploy: sway_session
+    kanshi:
+      category: desktop
+      label: kanshi
+      default: true
+      packages: [kanshi]
+      config_paths: [dot_config/kanshi]
+    wayland_session:
+      category: desktop
+      label: Wayland session helpers
+      default: true
+      config_paths: [dot_config/environment.d/wayland.conf]
     picom:
       category: desktop
       label: picom compositor
@@ -358,7 +376,6 @@ setup_catalog:
       category: system
       label: displays-resume systemd unit
       default: true
-      requires: [autorandr]
       system_deploy: displays_resume
       systemd_unit: displays-resume.service
     ollama:

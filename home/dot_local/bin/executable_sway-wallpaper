@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+declare -a wallpapers=(
+    "pexels-kanhaiya-sharma-284427440-13062567.jpg"
+    "pexels-moose-photos-170195-1037994.jpg"
+    "pexels-marek-piwnicki-3907296-33149738.jpg"
+)
+
+mapfile -t outputs < <(
+    swaymsg -t get_outputs | jq -r '.[] | select(.active) | .name' | sort
+)
+
+count="${#outputs[@]}"
+for (( i=0; i<count; i++ )); do
+    wall="${wallpapers[$i]:-${wallpapers[0]}}"
+    swaymsg "output ${outputs[$i]} bg fill $HOME/.wallpapers/$wall"
+done

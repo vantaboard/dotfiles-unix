@@ -8,7 +8,7 @@ StartLimitBurst=5
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/sh {{ .chezmoi.homeDir }}/.screenlayout/main-one-monitor.sh && /usr/bin/sh {{ .chezmoi.homeDir }}/.screenlayout/main.sh
+ExecStart={{ .chezmoi.homeDir }}/.local/bin/displays-resume
 Restart=on-failure
 RestartSec=30
 

@@ -4,7 +4,10 @@ profile_example:
     bat: true
     clang: true
     desktop_i3: true
+    desktop_sway: true
     desktop_utils: true
+    kanshi: true
+    wayland_session: true
     diff_so_fancy: true
     direnv: true
     displays_resume: true
@@ -79,6 +82,14 @@ profile_example:
     - grub-efi-amd64-signed
     - i3
     - i3status
+    - sway
+    - swaylock
+    - swayidle
+    - swaybg
+    - kanshi
+    - grim
+    - slurp
+    - wl-clipboard
     - jq
     - keychain
     - keyd
@@ -119,6 +130,7 @@ profile_example:
   system_deploy:
     - keyd
     - displays_resume
+    - sway_session
     - grub
     - ollama
     - ssh

@@ -1,0 +1,62 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+pass=0
+fail=0
+
+check() {
+    local label="$1"
+    shift
+    if "$@"; then
+        echo "PASS: $label"
+        pass=$((pass + 1))
+    else
+        echo "FAIL: $label"
+        fail=$((fail + 1))
+    fi
+}
+
+echo "=== Sway migration validation ==="
+
+check "sway installed" command -v sway
+check "swaylock installed" command -v swaylock
+check "kanshi installed" command -v kanshi
+check "grim installed" command -v grim
+check "wl-copy installed" command -v wl-copy
+check "sway config exists" test -f "$HOME/.config/sway/config"
+check "kanshi config exists" test -f "$HOME/.config/kanshi/config"
+check "swaylock config exists" test -f "$HOME/.config/swaylock/config"
+check "wayland env file exists" test -f "$HOME/.config/environment.d/wayland.conf"
+check "GDM sway session exists" test -f /usr/share/wayland-sessions/sway.desktop
+check "Intel DRM device exists" test -e /dev/dri/card1
+check "sway config syntax" sway -C --unsupported-gpu -c "$HOME/.config/sway/config"
+check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
+
+if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
+    check "active session is wayland" test "$XDG_SESSION_TYPE" = "wayland"
+    check "sway IPC responds" swaymsg -t get_version
+    check "kanshi running" pgrep -x kanshi
+    active_outputs="$(swaymsg -t get_outputs | jq '[.[] | select(.active)] | length')"
+    check "at least one active output" test "$active_outputs" -ge 1
+else
+    echo "INFO: not in an active Sway session; skipping runtime checks"
+fi
+
+echo
+echo "Results: $pass passed, $fail failed"
+echo
+echo "Manual checks after logging into Sway from GDM:"
+echo "  - Docked 3-monitor layout and undocked eDP switch"
+echo "  - Mod+1..8 workspace routing after dock/undock"
+echo "  - Mod+d launcher, Mod+Return kitty, swaylock, suspend/resume"
+echo "  - flameshot, copyq, sunshine, NVIDIA offload apps"
+echo
+echo "After 1-2 weeks of daily Sway use, cut over by setting in profile.yaml:"
+echo "  desktop_i3: false"
+echo "  x11_session: false"
+echo "  autorandr: false"
+echo "  picom: false"
+
+if [[ "$fail" -gt 0 ]]; then
+    exit 1
+fi

@@ -1,0 +1,44 @@
+#!/usr/bin/bash
+
+ACTIVE_MONITORS=$(
+    swaymsg -t get_outputs | jq -r '
+        .[] | select(.active) | .rect.x as $x | "\($x) \(.name)"' | sort -n | awk '{print $2}'
+)
+
+MONITOR_ARRAY=($ACTIVE_MONITORS)
+MOVE_KEYS=("b" "n" "m")
+
+CONFIG_OUTPUT="############# Auto-generated for use with kanshi #############\n"
+
+for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
+    SCREEN_NAME="screen$i"
+    monitor=${MONITOR_ARRAY[$i]}
+
+    CONFIG_OUTPUT+="set \$$SCREEN_NAME $monitor\n"
+    CONFIG_OUTPUT+="workspace \$ws$i output \$$SCREEN_NAME\n"
+
+    if [ $i -lt ${#MOVE_KEYS[@]} ]; then
+        CONFIG_OUTPUT+="bindsym \$mod+shift+${MOVE_KEYS[$i]} move workspace to output \$$SCREEN_NAME\n"
+    fi
+done
+
+WORKSPACE_NAMES=("web" "code" "media" "comms" "misc" "av" "other" "other")
+
+for i in {0..7}; do
+    INDEX_FROM_ONE=$((i + 1))
+    WS="\$ws$i"
+
+    CONFIG_OUTPUT+="bindsym \$mod+$INDEX_FROM_ONE workspace $WS\n"
+    CONFIG_OUTPUT+="bindsym \$mod+Ctrl+$INDEX_FROM_ONE move container to workspace $WS\n"
+    CONFIG_OUTPUT+="bindsym \$mod+Shift+$INDEX_FROM_ONE move container to workspace $WS; workspace $WS\n"
+    CONFIG_OUTPUT+="set $WS $INDEX_FROM_ONE:${WORKSPACE_NAMES[$i]}\n"
+done
+
+sed -i '/############# Auto-generated for use with kanshi #############/,$d' "$HOME/.config/sway/config"
+echo -e "$CONFIG_OUTPUT" >> "$HOME/.config/sway/config"
+
+if [ -n "${SWAYSOCK:-}" ]; then
+    swaymsg reload
+fi
+
+echo "sway config reloaded."

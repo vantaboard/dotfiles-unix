@@ -33,10 +33,13 @@ profile_ci:
     omz_codeclimate: false
     gpg_signing: false
     desktop_i3: false
+    desktop_sway: false
     picom: false
     kitty: false
     dunst: false
     autorandr: false
+    kanshi: false
+    wayland_session: false
     nitrogen: false
     rofi: false
     desktop_utils: false

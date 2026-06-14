@@ -1,0 +1,19 @@
+# Ported from betterlockscreen styling.
+color=000000
+font=ZedMono Nerd Font
+font-size=24
+indicator-radius=100
+indicator-thickness=7
+ring-color=adf7ffdd
+ring-clear-color=adf7ffdd
+ring-ver-color=adff3bdd
+ring-wrong-color=dc9ab6dd
+key-hl-color=ffffff
+bs-hl-color=918d8fdd
+text-color=ffffff
+line-color=00000000
+inside-color=00000000
+inside-ver-color=00000000
+inside-clear-color=00000000
+inside-wrong-color=00000000
+separator-color=00000000
