@@ -109,7 +109,6 @@ profile_example:
     - scrot
     - thermald
     - tmux
-    - trash-cli
     - udev
     - vivid
     - x11-xserver-utils
