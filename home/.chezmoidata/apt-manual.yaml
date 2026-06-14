@@ -7,5 +7,1638 @@
 #
 # Entries are never removed; change status with: apt-manual-sync mark <pkg> <status>
 apt_manual:
-  exclude: []
+  exclude:
+    []
   packages:
+    7zip:
+      status: install
+      first_seen: "2026-06-14"
+    adb:
+      status: install
+      first_seen: "2026-06-14"
+    alacritty:
+      status: ignore
+      first_seen: "2026-06-14"
+    arandr:
+      status: install
+      first_seen: "2026-06-14"
+    autoconf:
+      status: install
+      first_seen: "2026-06-14"
+    autotools-dev:
+      status: install
+      first_seen: "2026-06-14"
+    binutils-aarch64-linux-gnu:
+      status: install
+      first_seen: "2026-06-14"
+    binutils-arm-linux-gnueabihf:
+      status: install
+      first_seen: "2026-06-14"
+    binutils-mips64el-linux-gnuabi64:
+      status: install
+      first_seen: "2026-06-14"
+    binutils-mipsel-linux-gnu:
+      status: install
+      first_seen: "2026-06-14"
+    bison:
+      status: install
+      first_seen: "2026-06-14"
+    blueman:
+      status: install
+      first_seen: "2026-06-14"
+    bsdutils:
+      status: install
+      first_seen: "2026-06-14"
+    build-essential:
+      status: install
+      first_seen: "2026-06-14"
+    bzip2-doc:
+      status: install
+      first_seen: "2026-06-14"
+    ca-certificates:
+      status: install
+      first_seen: "2026-06-14"
+    cdbs:
+      status: install
+      first_seen: "2026-06-14"
+    cheese:
+      status: install
+      first_seen: "2026-06-14"
+    chromium-browser:
+      status: install
+      first_seen: "2026-06-14"
+    clang-16:
+      status: install
+      first_seen: "2026-06-14"
+    clang-format:
+      status: install
+      first_seen: "2026-06-14"
+    clang-tidy:
+      status: install
+      first_seen: "2026-06-14"
+    cmake:
+      status: install
+      first_seen: "2026-06-14"
+    comerr-dev:
+      status: install
+      first_seen: "2026-06-14"
+    containerd.io:
+      status: install
+      first_seen: "2026-06-14"
+    cppcheck:
+      status: install
+      first_seen: "2026-06-14"
+    cursor:
+      status: install
+      first_seen: "2026-06-14"
+    dash:
+      status: install
+      first_seen: "2026-06-14"
+    dbus-x11:
+      status: install
+      first_seen: "2026-06-14"
+    dctrl-tools:
+      status: install
+      first_seen: "2026-06-14"
+    debugedit:
+      status: install
+      first_seen: "2026-06-14"
+    devscripts:
+      status: install
+      first_seen: "2026-06-14"
+    diffstat:
+      status: install
+      first_seen: "2026-06-14"
+    diffutils:
+      status: install
+      first_seen: "2026-06-14"
+    dkms:
+      status: install
+      first_seen: "2026-06-14"
+    docker-buildx-plugin:
+      status: install
+      first_seen: "2026-06-14"
+    docker-ce:
+      status: install
+      first_seen: "2026-06-14"
+    docker-ce-cli:
+      status: install
+      first_seen: "2026-06-14"
+    docker-compose-plugin:
+      status: install
+      first_seen: "2026-06-14"
+    dpkg-dev:
+      status: install
+      first_seen: "2026-06-14"
+    dput:
+      status: install
+      first_seen: "2026-06-14"
+    efibootmgr:
+      status: install
+      first_seen: "2026-06-14"
+    elfutils:
+      status: install
+      first_seen: "2026-06-14"
+    equivs:
+      status: install
+      first_seen: "2026-06-14"
+    fakeroot:
+      status: install
+      first_seen: "2026-06-14"
+    findutils:
+      status: install
+      first_seen: "2026-06-14"
+    flameshot:
+      status: install
+      first_seen: "2026-06-14"
+    flex:
+      status: install
+      first_seen: "2026-06-14"
+    font-manager:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-freefont-ttf:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-ipafont-gothic:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-lato:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-liberation:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-noto-color-emoji:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-tlwg-loma-otf:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-unifont:
+      status: install
+      first_seen: "2026-06-14"
+    fonts-wqy-zenhei:
+      status: install
+      first_seen: "2026-06-14"
+    g++:
+      status: install
+      first_seen: "2026-06-14"
+    g++-13:
+      status: ignore
+      first_seen: "2026-06-14"
+    g++-13-x86-64-linux-gnu:
+      status: ignore
+      first_seen: "2026-06-14"
+    gcc:
+      status: ignore
+      first_seen: "2026-06-14"
+    gdal-bin:
+      status: ignore
+      first_seen: "2026-06-14"
+    gettext:
+      status: ignore
+      first_seen: "2026-06-14"
+    gimp:
+      status: ignore
+      first_seen: "2026-06-14"
+    gir1.2-freedesktop-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    gir1.2-glib-2.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    gir1.2-gtk-3.0:
+      status: ignore
+      first_seen: "2026-06-14"
+    git-filter-repo:
+      status: pending
+      first_seen: "2026-06-14"
+    glmark2-x11:
+      status: ignore
+      first_seen: "2026-06-14"
+    gnome-keyring:
+      status: pending
+      first_seen: "2026-06-14"
+    google-chrome-stable:
+      status: ignore
+      first_seen: "2026-06-14"
+    gperf:
+      status: ignore
+      first_seen: "2026-06-14"
+    grep:
+      status: ignore
+      first_seen: "2026-06-14"
+    g++-x86-64-linux-gnu:
+      status: ignore
+      first_seen: "2026-06-14"
+    gzip:
+      status: ignore
+      first_seen: "2026-06-14"
+    hostname:
+      status: ignore
+      first_seen: "2026-06-14"
+    hyphen-en-ca:
+      status: ignore
+      first_seen: "2026-06-14"
+    hyphen-en-gb:
+      status: ignore
+      first_seen: "2026-06-14"
+    hyphen-en-us:
+      status: ignore
+      first_seen: "2026-06-14"
+    ibus-table-cangjie3:
+      status: ignore
+      first_seen: "2026-06-14"
+    ibus-table-cangjie5:
+      status: ignore
+      first_seen: "2026-06-14"
+    ibus-table-cangjie-big:
+      status: ignore
+      first_seen: "2026-06-14"
+    icu-devtools:
+      status: ignore
+      first_seen: "2026-06-14"
+    init:
+      status: ignore
+      first_seen: "2026-06-14"
+    inkscape:
+      status: ignore
+      first_seen: "2026-06-14"
+    intltool-debian:
+      status: ignore
+      first_seen: "2026-06-14"
+    keepassxc:
+      status: ignore
+      first_seen: "2026-06-14"
+    krb5-multidev:
+      status: ignore
+      first_seen: "2026-06-14"
+    lcov:
+      status: ignore
+      first_seen: "2026-06-14"
+    lib32gcc-s1:
+      status: ignore
+      first_seen: "2026-06-14"
+    lib32stdc++6:
+      status: ignore
+      first_seen: "2026-06-14"
+    lib32z1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libalgorithm-diff-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libalgorithm-diff-xs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libalgorithm-merge-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libaliased-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libapt-pkg-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libarchive-zip-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libarray-intspan-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libasm1t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libasound2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libasound2t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libatk1.0-0t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libatk1.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libatk-bridge2.0-0t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libatk-bridge2.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libatspi2.0-0t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libatspi2.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libavdevice-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libavformat60:
+      status: ignore
+      first_seen: "2026-06-14"
+    libavformat-dev:
+      status: pending
+      first_seen: "2026-06-14"
+    libberkeleydb-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libb-hooks-endofscope-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libb-hooks-op-check-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libblkid-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libbluetooth-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libbrlapi-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libbrotli-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libbz2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libc6-i386:
+      status: install
+      first_seen: "2026-06-14"
+    libcairo2:
+      status: pending
+      first_seen: "2026-06-14"
+    libcairo2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcap-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcapture-tiny-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcgi-fast-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcgi-pm-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcgi-session-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libchewing3:
+      status: ignore
+      first_seen: "2026-06-14"
+    libchewing3-data:
+      status: ignore
+      first_seen: "2026-06-14"
+    libclass-data-inheritable-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libclass-method-modifiers-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libclass-xsaccessor-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcommon-sense-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libconfig-tiny-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libconst-fast-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcpanel-json-xs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcups2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcups2t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcupsfilters-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcupsimage2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdata-dpath-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdata-messagepack-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdata-optlist-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdata-validate-domain-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdata-validate-ip-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdata-validate-uri-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdatrie-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdbd-pg-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdbi-perl:
+      status: pending
+      first_seen: "2026-06-14"
+    libdbus-1-3:
+      status: pending
+      first_seen: "2026-06-14"
+    libdbus-1-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdeflate-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdevel-callchecker-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdevel-size-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdevel-stacktrace-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdistro-info-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdpkg-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdrm2:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdrm-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libdynaloader-functions-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libegl1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libegl1-mesa-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libegl-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libelf-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libemail-address-xs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libepoxy-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libev-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libevdev-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libexception-class-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libexpat1-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libexporter-tiny-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfakeroot:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfcgi0t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfcgi-bin:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfcgi-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libffi-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-chdir-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-dirlist-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-fcntllock-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-find-rule-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-homedir-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-touch-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfile-which-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfl2:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfl-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfontconfig1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfontconfig1-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfontconfig-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfont-ttf-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfreetype6:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfreetype-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfreezethaw-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfribidi-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfsverity0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libfuse2t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgbm1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgbm-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgdal-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgdk-pixbuf-2.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgif-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgirepository1.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgirepository-2.0-0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgirepository-2.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgit-wrapper-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgl1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgl1-mesa-dri:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgl-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgles1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgles-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglib2.0-0t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglib2.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglib2.0-dev-bin:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglu1-mesa-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglvnd-core-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglvnd-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libglx-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgraphite2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgrpc++-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgrpc-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgssrpc4t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgtk-3-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgudev-1.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libharfbuzz-cairo0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libharfbuzz-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libharfbuzz-subset0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libhtml-html5-entities-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libhtml-tokeparser-simple-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libice-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libicu-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libid3tag0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libimage-exiftool-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libimlib2t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libimport-into-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libindirect-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libinput-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libio-interactive-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libio-pty-perl:
+      status: pending
+      first_seen: "2026-06-14"
+    libio-string-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libipc-run3-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libipc-run-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libiterator-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libiterator-util-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjbig-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjpeg8-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjpeg-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjpeg-turbo8-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjson-maybexs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjson-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libjson-xs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libkadm5clnt-mit12:
+      status: ignore
+      first_seen: "2026-06-14"
+    libkadm5srv-mit12:
+      status: ignore
+      first_seen: "2026-06-14"
+    libkdb5-10t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libkrb5-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblerc-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblist-compare-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblist-someutils-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblist-someutils-xs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblist-utilsby-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblog-any-adapter-screen-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblog-any-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblua5.3-0:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblzma-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libm17n-0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmarisa0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmarkdown2:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmath-base85-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmldbm-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmodule-implementation-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmodule-runtime-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmoo-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmoox-aliases-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmount-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmouse-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmtdev-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnamespace-clean-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnetaddr-ip-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnet-domain-tld-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnet-ipv6addr-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnet-netmask-perl:
+      status: pending
+      first_seen: "2026-06-14"
+    libnspr4:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnspr4-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnss3:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnss3-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnumber-compare-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libobject-pad-perl:
+      status: pending
+      first_seen: "2026-06-14"
+    libobrender32v5:
+      status: pending
+      first_seen: "2026-06-14"
+    libobt2v5:
+      status: ignore
+      first_seen: "2026-06-14"
+    libomp-dev:
+      status: pending
+      first_seen: "2026-06-14"
+    libopencc1.1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libopencc-data:
+      status: ignore
+      first_seen: "2026-06-14"
+    libopengl-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libotf1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpackage-stash-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpackage-stash-xs-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpam0g-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpango-1.0-0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpango1.0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libparams-classify-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libparams-util-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpath-iterator-rule-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpath-tiny-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpciaccess-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpci-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpcre2-16-0:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpcre2-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpcre2-posix3:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpcre3:
+      status: ignore
+      first_seen: "2026-06-14"
+    libperlio-gzip-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libperlio-utf8-strict-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpinyin15:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpinyin-data:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpixman-1-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpng-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpng-tools:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpod-constants-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpod-parser-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpq5:
+      status: ignore
+      first_seen: "2026-06-14"
+    libproc-processtable-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libprotobuf-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libpthread-stubs0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libpulse-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libre2-10:
+      status: ignore
+      first_seen: "2026-06-14"
+    libre-engine-re2-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libregexp-pattern-license-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libregexp-pattern-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libregexp-wildcards-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libreoffice-help-common:
+      status: install
+      first_seen: "2026-06-14"
+    libreoffice-help-en-gb:
+      status: ignore
+      first_seen: "2026-06-14"
+    libreoffice-help-en-us:
+      status: ignore
+      first_seen: "2026-06-14"
+    libreoffice-l10n-en-gb:
+      status: install
+      first_seen: "2026-06-14"
+    libreoffice-l10n-en-za:
+      status: install
+      first_seen: "2026-06-14"
+    librole-tiny-perl:
+      status: install
+      first_seen: "2026-06-14"
+    librpm9t64:
+      status: install
+      first_seen: "2026-06-14"
+    librpmbuild9t64:
+      status: install
+      first_seen: "2026-06-14"
+    librpmio9t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    librpmsign9t64:
+      status: ignore
+      first_seen: "2026-06-14"
+    libruby:
+      status: install
+      first_seen: "2026-06-14"
+    libruby3.2:
+      status: install
+      first_seen: "2026-06-14"
+    libsctp1:
+      status: install
+      first_seen: "2026-06-14"
+    libsctp-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libsdl2-2.0-0:
+      status: install
+      first_seen: "2026-06-14"
+    libselinux1-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libsepol-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libsereal-decoder-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsereal-encoder-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libset-intspan-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libset-scalar-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsharpyuv-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libsm-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libsocket6-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsort-versions-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libspeechd-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libsqlite3-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libssl-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libstdc++-13-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libstrictures-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libstring-copyright-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libstring-escape-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libstring-license-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libstring-shellquote-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsub-exporter-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsub-exporter-progressive-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsub-identify-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsub-install-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsub-name-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsub-quote-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsyntax-keyword-try-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libsystemd-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libterm-readkey-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libtext-glob-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libtext-levenshteinxs-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libtext-markdown-discount-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libtext-xslate-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libthai-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libtiff-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libtiffxx6:
+      status: install
+      first_seen: "2026-06-14"
+    libtime-duration-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libtime-moment-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libturbojpeg:
+      status: install
+      first_seen: "2026-06-14"
+    libtypes-serialiser-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libudev-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libunicode-utf8-perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libusb-1.0-0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libva-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libva-glx2:
+      status: install
+      first_seen: "2026-06-14"
+    libvariable-magic-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libvulkan-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libwacom-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libwayland-bin:
+      status: install
+      first_seen: "2026-06-14"
+    libwayland-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libwebpdecoder3:
+      status: install
+      first_seen: "2026-06-14"
+    libwebp-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libwww-mechanize-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libx11-6:
+      status: install
+      first_seen: "2026-06-14"
+    libx11-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libx11-xcb-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxau-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb1:
+      status: ignore
+      first_seen: "2026-06-14"
+    libxcb1-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libxcb-composite0-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    libxcb-image0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-randr0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-render0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-shm0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-util0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-xinerama0-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-xkb-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcb-xrm-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcomposite1:
+      status: install
+      first_seen: "2026-06-14"
+    libxcomposite-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxcursor-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxdamage1:
+      status: install
+      first_seen: "2026-06-14"
+    libxdamage-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxdmcp-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxext6:
+      status: install
+      first_seen: "2026-06-14"
+    libxext-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxfixes3:
+      status: install
+      first_seen: "2026-06-14"
+    libxfixes-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxft-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxi-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxinerama-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxkbcommon0:
+      status: install
+      first_seen: "2026-06-14"
+    libxkbcommon-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxkbcommon-x11-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxml2-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxml-libxml-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxml-namespacesupport-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxml-sax-base-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxml-sax-expat-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxml-sax-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxrandr2:
+      status: install
+      first_seen: "2026-06-14"
+    libxrandr-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxrender-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxshmfence-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxslt1-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxs-parse-keyword-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxs-parse-sublike-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libxss-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxt-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libxtst-dev:
+      status: install
+      first_seen: "2026-06-14"
+    libyaml-libyaml-perl:
+      status: install
+      first_seen: "2026-06-14"
+    libzstd-dev:
+      status: install
+      first_seen: "2026-06-14"
+    licensecheck:
+      status: install
+      first_seen: "2026-06-14"
+    lighttpd:
+      status: install
+      first_seen: "2026-06-14"
+    lighttpd-mod-deflate:
+      status: install
+      first_seen: "2026-06-14"
+    lighttpd-mod-openssl:
+      status: install
+      first_seen: "2026-06-14"
+    lintian:
+      status: install
+      first_seen: "2026-06-14"
+    linux-generic-hwe-24.04:
+      status: install
+      first_seen: "2026-06-14"
+    llvm-18-tools:
+      status: install
+      first_seen: "2026-06-14"
+    login:
+      status: install
+      first_seen: "2026-06-14"
+    lto-disabled-list:
+      status: install
+      first_seen: "2026-06-14"
+    lzip:
+      status: install
+      first_seen: "2026-06-14"
+    lzop:
+      status: install
+      first_seen: "2026-06-14"
+    m17n-db:
+      status: install
+      first_seen: "2026-06-14"
+    m4:
+      status: install
+      first_seen: "2026-06-14"
+    make:
+      status: install
+      first_seen: "2026-06-14"
+    mesa-common-dev:
+      status: install
+      first_seen: "2026-06-14"
+    mesa-libgallium:
+      status: install
+      first_seen: "2026-06-14"
+    mesa-utils:
+      status: install
+      first_seen: "2026-06-14"
+    mesa-va-drivers:
+      status: install
+      first_seen: "2026-06-14"
+    mesa-vdpau-drivers:
+      status: install
+      first_seen: "2026-06-14"
+    mesa-vulkan-drivers:
+      status: install
+      first_seen: "2026-06-14"
+    meson:
+      status: install
+      first_seen: "2026-06-14"
+    miniupnpc:
+      status: install
+      first_seen: "2026-06-14"
+    mythes-en-au:
+      status: install
+      first_seen: "2026-06-14"
+    mythes-en-us:
+      status: install
+      first_seen: "2026-06-14"
+    nautilus:
+      status: install
+      first_seen: "2026-06-14"
+    ncurses-base:
+      status: install
+      first_seen: "2026-06-14"
+    ncurses-bin:
+      status: install
+      first_seen: "2026-06-14"
+    ngrok:
+      status: install
+      first_seen: "2026-06-14"
+    nvidia-driver-595-open:
+      status: install
+      first_seen: "2026-06-14"
+    obconf:
+      status: install
+      first_seen: "2026-06-14"
+    openbox:
+      status: install
+      first_seen: "2026-06-14"
+    p7zip:
+      status: install
+      first_seen: "2026-06-14"
+    pango1.0-tools:
+      status: install
+      first_seen: "2026-06-14"
+    patchutils:
+      status: install
+      first_seen: "2026-06-14"
+    pavucontrol:
+      status: install
+      first_seen: "2026-06-14"
+    peek:
+      status: install
+      first_seen: "2026-06-14"
+    pkg-config:
+      status: install
+      first_seen: "2026-06-14"
+    protobuf-compiler:
+      status: install
+      first_seen: "2026-06-14"
+    protobuf-compiler-grpc:
+      status: install
+      first_seen: "2026-06-14"
+    proton-vpn-gnome-desktop:
+      status: install
+      first_seen: "2026-06-14"
+    protonvpn-stable-release:
+      status: install
+      first_seen: "2026-06-14"
+    py3status:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-fastapi:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-gi:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-gi-cairo:
+      status: pending
+      first_seen: "2026-06-14"
+    python3-gpg:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-html5lib:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-magic:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-netifaces:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-packaging:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-scour:
+      status: ignore
+      first_seen: "2026-06-14"
+    python3-unidiff:
+      status: ignore
+      first_seen: "2026-06-14"
+    qbittorrent:
+      status: ignore
+      first_seen: "2026-06-14"
+    qpdf:
+      status: ignore
+      first_seen: "2026-06-14"
+    qrencode:
+      status: ignore
+      first_seen: "2026-06-14"
+    rake:
+      status: ignore
+      first_seen: "2026-06-14"
+    rpm:
+      status: install
+      first_seen: "2026-06-14"
+    rpm2cpio:
+      status: install
+      first_seen: "2026-06-14"
+    rpm-common:
+      status: install
+      first_seen: "2026-06-14"
+    ruby:
+      status: install
+      first_seen: "2026-06-14"
+    ruby3.2:
+      status: install
+      first_seen: "2026-06-14"
+    rubygems-integration:
+      status: install
+      first_seen: "2026-06-14"
+    ruby-net-telnet:
+      status: install
+      first_seen: "2026-06-14"
+    ruby-rubygems:
+      status: install
+      first_seen: "2026-06-14"
+    ruby-sass:
+      status: install
+      first_seen: "2026-06-14"
+    ruby-sdbm:
+      status: ignore
+      first_seen: "2026-06-14"
+    ruby-webrick:
+      status: install
+      first_seen: "2026-06-14"
+    ruby-xmlrpc:
+      status: install
+      first_seen: "2026-06-14"
+    scour:
+      status: install
+      first_seen: "2026-06-14"
+    screenfetch:
+      status: install
+      first_seen: "2026-06-14"
+    shim-signed:
+      status: ignore
+      first_seen: "2026-06-14"
+    spawn-fcgi:
+      status: install
+      first_seen: "2026-06-14"
+    ssh-askpass:
+      status: install
+      first_seen: "2026-06-14"
+    sunshine:
+      status: ignore
+      first_seen: "2026-06-14"
+    t1utils:
+      status: ignore
+      first_seen: "2026-06-14"
+    terminator:
+      status: ignore
+      first_seen: "2026-06-14"
+    thunderbird-locale-en:
+      status: install
+      first_seen: "2026-06-14"
+    thunderbird-locale-en-gb:
+      status: ignore
+      first_seen: "2026-06-14"
+    thunderbird-locale-en-us:
+      status: ignore
+      first_seen: "2026-06-14"
+    tldr:
+      status: ignore
+      first_seen: "2026-06-14"
+    ubuntu-restricted-addons:
+      status: ignore
+      first_seen: "2026-06-14"
+    ubuntu-wallpapers:
+      status: ignore
+      first_seen: "2026-06-14"
+    ungoogled-chromium-build-deps:
+      status: ignore
+      first_seen: "2026-06-14"
+    uuid-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    vlc:
+      status: install
+      first_seen: "2026-06-14"
+    watchman:
+      status: ignore
+      first_seen: "2026-06-14"
+    wayland-protocols:
+      status: install
+      first_seen: "2026-06-14"
+    wdiff:
+      status: install
+      first_seen: "2026-06-14"
+    wireguard:
+      status: install
+      first_seen: "2026-06-14"
+    x11proto-core-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    x11proto-dev:
+      status: ignore
+      first_seen: "2026-06-14"
+    xcompmgr:
+      status: ignore
+      first_seen: "2026-06-14"
+    xfonts-cyrillic:
+      status: ignore
+      first_seen: "2026-06-14"
+    xfonts-scalable:
+      status: ignore
+      first_seen: "2026-06-14"
+    xorg-sgml-doctools:
+      status: ignore
+      first_seen: "2026-06-14"
+    xournalpp:
+      status: ignore
+      first_seen: "2026-06-14"
+    xrdp:
+      status: ignore
+      first_seen: "2026-06-14"
+    xserver-xorg-video-dummy:
+      status: ignore
+      first_seen: "2026-06-14"
+    xterm:
+      status: install
+      first_seen: "2026-06-14"
+    xtrans-dev:
+      status: install
+      first_seen: "2026-06-14"
+    xvfb:
+      status: ignore
+      first_seen: "2026-06-14"
+    zlib1g-dev:
+      status: ignore
+      first_seen: "2026-06-14"
