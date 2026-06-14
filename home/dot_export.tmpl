@@ -1,12 +1,21 @@
 {{- $p := .profile_example -}}
 {{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
 {{- $f := $p.features -}}
 #!/usr/bin/sh
 {{- if index $f "vivid" }}
-export LS_COLORS="$(vivid generate dracula)"
+if command -v vivid >/dev/null 2>&1; then
+  export LS_COLORS="$(vivid generate dracula)"
+fi
 {{- end }}
 export TSS_LOG="-level verbose -file $HOME/.tsserver_temp/tsserver.log";
 export MANPAGER='less -X';

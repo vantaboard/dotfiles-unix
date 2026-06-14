@@ -25,7 +25,7 @@ profile_termux_example:
     zsh_completions: true
     zsh_edit: true
     fzf_tab: true
-    zsh_abbr: true
+    zsh_abbr: false
     omz_git: true
     omz_fzf: false
     omz_ssh_agent: true

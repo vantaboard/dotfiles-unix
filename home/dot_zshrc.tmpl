@@ -1,8 +1,15 @@
 {{- $p := .profile_example -}}
 {{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
 {{- $f := $p.features -}}
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
@@ -63,7 +70,7 @@ zstyle ':completion:*' menu no
 
 {{- if index $f "zsh_edit" }}
 # zsh-edit
-source "$HOME/.zshplugins/zsh-edit/zsh-edit.plugin.zsh"
+[[ -r "$HOME/.zshplugins/zsh-edit/zsh-edit.plugin.zsh" ]] && source "$HOME/.zshplugins/zsh-edit/zsh-edit.plugin.zsh"
 {{- end }}
 
 {{- if index $f "fzf" }}
@@ -99,7 +106,7 @@ export DISABLE_MAGIC_FUNCTIONS=true
 
 export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin"
 
-plugins=({{- if index $f "omz_codeclimate" }}codeclimate {{ end -}}{{- if index $f "omz_extract" }}extract {{ end -}}{{- if index $f "omz_python" }}python {{ end -}}{{- if index $f "omz_virtualenv" }}virtualenv {{ end -}}{{- if index $f "zsh_autosuggestions" }}zsh-autosuggestions {{ end -}}{{- if index $f "omz_ssh_agent" }}ssh-agent {{ end -}}{{- if index $f "omz_fzf" }}fzf {{ end -}}{{- if index $f "fzf_tab" }}fzf-tab {{ end -}}{{- if index $f "omz_git" }}git{{ end }})
+plugins=({{- if index $f "omz_codeclimate" }}codeclimate {{ end -}}{{- if index $f "omz_extract" }}extract {{ end -}}{{- if index $f "omz_python" }}python {{ end -}}{{- if index $f "omz_virtualenv" }}virtualenv {{ end -}}{{- if index $f "zsh_autosuggestions" }}zsh-autosuggestions {{ end -}}{{- if index $f "omz_ssh_agent" }}ssh-agent {{ end -}}{{- if index $f "omz_fzf" }}fzf {{ end -}}{{- if index $f "omz_git" }}git{{ end }})
 
 # OMZ bootstrap (now safe—compinit/compaudit are already handled)
 source "$ZSH/oh-my-zsh.sh"
@@ -126,7 +133,7 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 autoload -Uz add-zsh-hook
 _abbr_lazy_load() {
   add-zsh-hook -d precmd _abbr_lazy_load
-  source "$HOME/zsh-abbr/zsh-abbr.zsh"
+  [[ -r "$HOME/zsh-abbr/zsh-abbr.zsh" ]] && source "$HOME/zsh-abbr/zsh-abbr.zsh"
 }
 add-zsh-hook precmd _abbr_lazy_load
 {{- end }}
@@ -204,8 +211,7 @@ recompile_zsh() {
 # zprof
 
 {{- if index $f "fzf_tab" }}
-autoload -U compinit
-source $HOME/.fzf-tab/fzf-tab.zsh
+[[ -r "$HOME/.fzf-tab/fzf-tab.zsh" ]] && source "$HOME/.fzf-tab/fzf-tab.zsh"
 {{- end }}
 
 {{- if index $f "zoxide" }}
@@ -278,7 +284,11 @@ command -v task >/dev/null 2>&1 && eval "$(task --completion zsh)"
 
 {{- if index $f "mise" }}
 # mise must run after every PATH change (OMZ, dotfiles) so managed tools win over system/Cursor paths.
-eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
+if [[ -x "{{ .chezmoi.homeDir }}/.local/bin/mise" ]]; then
+  eval "$({{ .chezmoi.homeDir }}/.local/bin/mise activate zsh)"
+elif command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 {{- end }}
 
 # pnpm
