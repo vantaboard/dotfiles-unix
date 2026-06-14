@@ -21,6 +21,7 @@ set -euo pipefail
 
 # hash: {{ include ".chezmoidata/setup-catalog.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/profile.example.yaml" | sha256sum }}
+# hash: {{ include ".chezmoidata/apt-manual.yaml" | sha256sum }}
 
 {{- $p := .profile_example -}}
 {{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
@@ -76,6 +77,17 @@ sudo apt install -y -qq --no-install-recommends \
 {{- else }}
 {{- range .packages.ubuntu.apt }}
   {{ . }} \
+{{- end }}
+{{- end }}
+{{- if not (env "CHEZMOI_CI") }}
+{{- with index . "apt_manual" }}
+{{- with .packages }}
+{{- range $pkg, $meta := . }}
+{{- if eq $meta.status "install" }}
+  {{ $pkg }} \
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 

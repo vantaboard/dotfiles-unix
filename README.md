@@ -63,7 +63,7 @@ chezmoi update         # Pull upstream and re-apply
 | Step | Script | Action |
 |------|--------|--------|
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
-| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `pkg install` (Android/Termux) |
+| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `pkg install` (Android/Termux); Linux also installs `apt_manual` packages marked `install` |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
 | After dotfiles | `run_onchange_after_install-tools` | mise, rust, zoxide (if enabled in profile) |
@@ -71,6 +71,19 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |
 
 Set `CHEZMOI_SKIP_SYSTEM_DEPLOY=1` to skip sudo system deploy (e.g. in containers).
+
+### Tracking manually installed apt packages
+
+After installing packages by hand, run [scripts/apt-manual-sync](scripts/apt-manual-sync) to discover new ones and record them in [apt-manual.yaml](home/.chezmoidata/apt-manual.yaml):
+
+```bash
+./scripts/apt-manual-sync scan      # add unseen manual packages as pending
+./scripts/apt-manual-sync review    # mark each pending: install | ignore | keep pending
+./scripts/apt-manual-sync list      # show tracked packages
+./scripts/apt-manual-sync mark foo install
+```
+
+Entries are **append-only** (status changes, never deleted). Packages marked `install` are appended to chezmoi's `apt install` on apply. `ignore` keeps them tracked but out of automated install. Already-managed packages (`packages.yaml`, profiles) are skipped on scan.
 
 ## Termux / Android
 
@@ -122,7 +135,8 @@ CI uses the committed minimal profile in [profile-ci.yaml](home/.chezmoidata/pro
 ```
 .chezmoiroot              → "home"
 home/                     → chezmoi source state (dot_* files)
-home/.chezmoidata/        → setup-catalog, profile.example, profile-ci, profile.termux.example
+home/.chezmoidata/        → setup-catalog, profiles, apt-manual.yaml
+scripts/apt-manual-sync   → track manual apt installs for chezmoi
 scripts/dotfiles-setup    → interactive setup wizard
 .github/workflows/        → CI
 tests/                    → smoke tests and lint

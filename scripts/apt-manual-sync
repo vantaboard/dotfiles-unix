@@ -1,0 +1,131 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+source "$SCRIPT_DIR/lib/apt-manual.sh"
+source "$SCRIPT_DIR/lib/setup-ui.sh"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") <command> [args]
+
+Track manually installed apt packages and opt them into chezmoi install.
+
+Commands:
+  scan                 Add newly seen manual packages as pending (never removes)
+  list [status]        List tracked packages (optional: pending|install|ignore)
+  review               Interactively mark pending packages install or ignore
+  mark <pkg> <status>  Set status: pending, install, or ignore
+  status               Summary counts
+
+Managed packages (packages.yaml, profiles) and packages already in
+$(basename "${APT_MANUAL_FILE:-home/.chezmoidata/apt-manual.yaml}") are skipped on scan.
+Packages with status install are appended to chezmoi apt install on apply.
+EOF
+}
+
+cmd_scan() {
+  apt_manual_load
+  local added=0 pkg
+  while IFS= read -r pkg; do
+    [[ -z "$pkg" ]] && continue
+    if apt_manual_add_pending "$pkg"; then
+      echo "NEW pending: $pkg"
+      ((added++)) || true
+    fi
+  done < <(apt_manual_find_new_packages)
+
+  apt_manual_save
+  if ((added == 0)); then
+    echo "No new manual packages to track."
+  else
+    echo "Added $added package(s) as pending. Run: $(basename "$0") review"
+  fi
+}
+
+cmd_list() {
+  local filter="${1:-}"
+  apt_manual_load
+  local pkg status
+  for pkg in $(printf '%s\n' "${!APT_MANUAL_STATUS[@]}" | sort); do
+    status="${APT_MANUAL_STATUS[$pkg]}"
+    [[ -n "$filter" && "$status" != "$filter" ]] && continue
+    printf '%-40s %s  (%s)\n' "$pkg" "$status" "${APT_MANUAL_FIRST_SEEN[$pkg]}"
+  done
+}
+
+cmd_mark() {
+  local pkg="${1:-}" status="${2:-}"
+  if [[ -z "$pkg" || -z "$status" ]]; then
+    echo "Usage: $(basename "$0") mark <pkg> <pending|install|ignore>" >&2
+    exit 1
+  fi
+  apt_manual_load
+  if [[ -z "${APT_MANUAL_STATUS[$pkg]:-}" ]]; then
+    apt_manual_set_status "$pkg" "$status"
+    echo "Added $pkg as $status"
+  else
+    apt_manual_set_status "$pkg" "$status"
+    echo "Updated $pkg → $status"
+  fi
+  apt_manual_save
+}
+
+cmd_review() {
+  apt_manual_load
+  local pending=() pkg choice
+  for pkg in $(printf '%s\n' "${!APT_MANUAL_STATUS[@]}" | sort); do
+    [[ "${APT_MANUAL_STATUS[$pkg]}" == "pending" ]] && pending+=("$pkg")
+  done
+
+  if ((${#pending[@]} == 0)); then
+    echo "No pending packages to review."
+    return 0
+  fi
+
+  echo "Review ${#pending[@]} pending package(s)."
+  for pkg in "${pending[@]}"; do
+    echo
+    echo "Package: $pkg"
+    if command -v gum >/dev/null 2>&1; then
+      choice="$(gum choose --header "Action for $pkg" install ignore "keep pending")"
+    else
+      PS3="Action for $pkg: "
+      select choice in install ignore "keep pending"; do
+        [[ -n "$choice" ]] && break
+      done
+    fi
+    case "$choice" in
+      install|ignore) apt_manual_set_status "$pkg" "$choice" ;;
+      "keep pending") ;;
+      *) echo "Skipping $pkg" ;;
+    esac
+  done
+  apt_manual_save
+  echo "Review complete."
+}
+
+cmd_status() {
+  apt_manual_load
+  printf 'pending: %s\n' "$(apt_manual_count_by_status pending)"
+  printf 'install: %s\n' "$(apt_manual_count_by_status install)"
+  printf 'ignore:  %s\n' "$(apt_manual_count_by_status ignore)"
+  printf 'file:    %s\n' "$APT_MANUAL_FILE"
+}
+
+main() {
+  local cmd="${1:-}"
+  case "$cmd" in
+    scan) shift; cmd_scan "$@" ;;
+    list) shift; cmd_list "$@" ;;
+    review) shift; cmd_review "$@" ;;
+    mark) shift; cmd_mark "$@" ;;
+    status) shift; cmd_status "$@" ;;
+    -h|--help|help|"") usage ;;
+    *) echo "Unknown command: $cmd" >&2; usage >&2; exit 1 ;;
+  esac
+}
+
+main "$@"

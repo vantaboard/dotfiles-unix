@@ -1,0 +1,11 @@
+# Manually installed apt packages discovered on this machine.
+#
+# Run scripts/apt-manual-sync to scan for new packages and set status:
+#   pending  — seen but not yet decided (not installed by chezmoi)
+#   install  — include in chezmoi apt install on apply
+#   ignore   — tracked only; never installed by chezmoi
+#
+# Entries are never removed; change status with: apt-manual-sync mark <pkg> <status>
+apt_manual:
+  exclude: []
+  packages:
