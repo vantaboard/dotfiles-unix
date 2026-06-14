@@ -1,0 +1,7 @@
+{{ if eq .chezmoi.os "android" -}}
+# Termux: prefer SSH for GitHub (HTTPS git-remote-https often breaks until packages
+# are upgraded). Requires a GitHub SSH key (~/.ssh/id_ed25519 + github.com in known_hosts).
+# Alternative fix: pkg update && pkg upgrade && pkg reinstall git openssl
+[url "git@github.com:"]
+    insteadOf = https://github.com/
+{{ end -}}

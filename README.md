@@ -111,6 +111,9 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 
 **Caveats on Termux:**
 
+- **Git / HTTPS clones:** Termux `git-remote-https` can fail with OpenSSL/libngtcp2 errors (`SSL_set_quic_tls_transport_params`). Fix either way:
+  - **SSH (default in these dotfiles):** add a GitHub SSH key, then `chezmoi apply` (Android gets `~/.gitconfig` `insteadOf` for GitHub HTTPS → SSH).
+  - **Repair HTTPS:** `pkg update && pkg upgrade && pkg reinstall git openssl`
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
 - **trash-cli:** Not in the curated `pkg` list; install with `pip install trash-cli` if you enable the `trash_cli` feature.
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.

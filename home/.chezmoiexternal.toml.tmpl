@@ -4,65 +4,67 @@
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
 {{- $f := $p.features -}}
+{{- $gh := "https://github.com/" -}}
+{{- if eq .chezmoi.os "android" -}}{{- $gh = "git@github.com:" -}}{{- end -}}
 {{- if index $f "oh_my_zsh" }}
 [".oh-my-zsh"]
     type = "git-repo"
-    url = "https://github.com/ohmyzsh/ohmyzsh.git"
+    url = "{{ $gh }}ohmyzsh/ohmyzsh.git"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "p10k" }}
 [".oh-my-zsh/custom/themes/powerlevel10k"]
     type = "git-repo"
-    url = "https://github.com/romkatv/powerlevel10k.git"
+    url = "{{ $gh }}romkatv/powerlevel10k.git"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "zsh_autosuggestions" }}
 [".oh-my-zsh/custom/plugins/zsh-autosuggestions"]
     type = "git-repo"
-    url = "https://github.com/zsh-users/zsh-autosuggestions"
+    url = "{{ $gh }}zsh-users/zsh-autosuggestions"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "zsh_completions" }}
 [".oh-my-zsh/custom/plugins/zsh-completions"]
     type = "git-repo"
-    url = "https://github.com/zsh-users/zsh-completions"
+    url = "{{ $gh }}zsh-users/zsh-completions"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "zsh_edit" }}
 [".zshplugins/zsh-edit"]
     type = "git-repo"
-    url = "https://github.com/marlonrichert/zsh-edit.git"
+    url = "{{ $gh }}marlonrichert/zsh-edit.git"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "zsh_abbr" }}
 ["zsh-abbr"]
     type = "git-repo"
-    url = "https://github.com/olets/zsh-abbr.git"
+    url = "{{ $gh }}olets/zsh-abbr.git"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "fzf_tab" }}
 [".fzf-tab"]
     type = "git-repo"
-    url = "https://github.com/Aloxaf/fzf-tab.git"
+    url = "{{ $gh }}Aloxaf/fzf-tab.git"
     refreshPeriod = "168h"
 {{- end }}
 
 {{- if index $f "fzf" }}
 [".fzf"]
     type = "git-repo"
-    url = "https://github.com/junegunn/fzf.git"
+    url = "{{ $gh }}junegunn/fzf.git"
     refreshPeriod = "168h"
 {{- end }}
 
-{{- if index $f "neovim" }}
+{{- if and (index $f "neovim") (not (eq .chezmoi.os "android")) }}
 [".config/nvim/brighten"]
     type = "git-repo"
-    url = "https://github.com/vantaboard/brighten-lush.git"
+    url = "{{ $gh }}vantaboard/brighten-lush.git"
     refreshPeriod = "168h"
 {{- end }}
