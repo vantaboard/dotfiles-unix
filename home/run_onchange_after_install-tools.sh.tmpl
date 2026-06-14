@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v6
+# hash: tools-v7
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -32,6 +32,7 @@ HOME_DIR="{{ .chezmoi.homeDir }}"
 MISE_BIN="$HOME_DIR/.local/bin/mise"
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME_DIR/.oh-my-zsh/custom}"
 FZF_TAB_DIR="$ZSH_CUSTOM/plugins/fzf-tab"
+ZSH_ABBR_DIR="$HOME_DIR/zsh-abbr"
 TRASH_CLI_DIR="$HOME_DIR/trash-cli"
 TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
 LOCAL_BIN="$HOME_DIR/.local/bin"
