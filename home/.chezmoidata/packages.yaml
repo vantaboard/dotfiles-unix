@@ -107,4 +107,5 @@ packages:
       - neovim
       - gh
       - python
+      - python-psutil
       - vivid

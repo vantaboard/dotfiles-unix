@@ -116,7 +116,7 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 - **Git / HTTPS clones:** If HTTPS git still fails after a full upgrade, use SSH (default via `~/.gitconfig`) or `apt reinstall openssl libngtcp2 libcurl curl git`.
 - **Externals / plugins:** fzf-tab and zsh-abbr install via `run_onchange_after_install-tools` (not chezmoi externals). Re-run `chezmoi apply` if they fail to load; ensure GitHub SSH or HTTPS git works.
 - **fzf binary:** `run_after_install-fzf` is Linux-only. The git external `~/.fzf` is still fetched; rely on `pkg install fzf` (included in the Termux package list) rather than `~/.fzf/bin/fzf`.
-- **trash-cli:** Installed via `run_onchange_after_install-tools` (git clone + Python venv; `trash-*` in `~/.local/bin`). Requires `python` in the Termux package list.
+- **trash-cli:** Installed via `run_onchange_after_install-tools` (git clone + Python venv; `trash-*` in `~/.local/bin`). On Termux, `python-psutil` comes from pkg (pip cannot build psutil on Android). Some volume-scan commands may need `TRASH_VOLUMES=$PWD` — see [trash-cli#348](https://github.com/andreafrancia/trash-cli/issues/348).
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.
 - **xclip / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android. **vivid** and **mise** install via install-tools (`pkg install vivid`, `curl https://mise.run`).
 

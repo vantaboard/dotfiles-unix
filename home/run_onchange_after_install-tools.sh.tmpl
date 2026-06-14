@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v7
+# hash: tools-v8
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -92,6 +92,34 @@ install_trash_cli() {
     git clone https://github.com/andreafrancia/trash-cli "$TRASH_CLI_DIR"
   fi
 
+{{- if eq .chezmoi.os "android" }}
+  if ! python3 -c "import psutil" 2>/dev/null; then
+    echo "Installing python-psutil (pip cannot build psutil on Android)..."
+    if command -v apt >/dev/null 2>&1; then
+      apt install -y python-psutil
+    elif command -v pkg >/dev/null 2>&1; then
+      pkg install -y python-psutil
+    else
+      echo "WARN: python-psutil not available; skipping trash-cli install"
+      return 0
+    fi
+  fi
+
+  if [[ -d "$TRASH_CLI_VENV" ]] && ! "$TRASH_CLI_VENV/bin/python" -c "import psutil" 2>/dev/null; then
+    echo "Recreating trash-cli venv with system site-packages..."
+    rm -rf "$TRASH_CLI_VENV"
+  fi
+
+  if [[ ! -d "$TRASH_CLI_VENV" ]]; then
+    echo "Creating trash-cli virtualenv (system-site-packages)..."
+    python3 -m venv --system-site-packages "$TRASH_CLI_VENV"
+  fi
+
+  echo "Installing trash-cli into venv..."
+  "$TRASH_CLI_VENV/bin/pip" install -q -U pip
+  "$TRASH_CLI_VENV/bin/pip" install -q six
+  "$TRASH_CLI_VENV/bin/pip" install -q -e "$TRASH_CLI_DIR" --no-deps
+{{- else }}
   if [[ ! -d "$TRASH_CLI_VENV" ]]; then
     echo "Creating trash-cli virtualenv..."
     python3 -m venv "$TRASH_CLI_VENV"
@@ -100,6 +128,12 @@ install_trash_cli() {
   echo "Installing trash-cli into venv..."
   "$TRASH_CLI_VENV/bin/pip" install -q -U pip
   "$TRASH_CLI_VENV/bin/pip" install -q -e "$TRASH_CLI_DIR"
+{{- end }}
+
+  if ! "$TRASH_CLI_VENV/bin/python" -c "import trashcli" 2>/dev/null; then
+    echo "WARN: trash-cli install verification failed"
+    return 0
+  fi
 
   mkdir -p "$LOCAL_BIN"
   for cmd in "${TRASH_CLI_COMMANDS[@]}"; do
