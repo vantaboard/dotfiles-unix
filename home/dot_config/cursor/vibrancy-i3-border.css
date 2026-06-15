@@ -1,13 +1,41 @@
 /* i3 pixel borders are not visible on frameless Vibrancy windows; draw them in-app. */
+:root {
+  --cursor-pane-border-active: #86a83e;
+  --cursor-pane-border-inactive: #083905;
+}
+
 .monaco-workbench {
-  box-shadow: inset 0 0 0 4px #86a83e !important;
+  box-shadow: inset 0 0 0 4px var(--cursor-pane-border-active) !important;
+  --vscode-sideBar-border: var(--cursor-pane-border-active) !important;
+  --vscode-editorGroup-border: var(--cursor-pane-border-active) !important;
+  --vscode-panel-border: var(--cursor-pane-border-active) !important;
+  --vscode-sash-hoverBorder: var(--cursor-pane-border-active) !important;
 }
 
 body:not(:focus-within) .monaco-workbench {
-  box-shadow: inset 0 0 0 4px #083905 !important;
+  box-shadow: inset 0 0 0 4px var(--cursor-pane-border-inactive) !important;
+  --vscode-sideBar-border: var(--cursor-pane-border-inactive) !important;
+  --vscode-editorGroup-border: var(--cursor-pane-border-inactive) !important;
+  --vscode-panel-border: var(--cursor-pane-border-inactive) !important;
+  --vscode-sash-hoverBorder: var(--cursor-pane-border-inactive) !important;
 }
 
 body.i3-grouped .monaco-workbench,
 body.i3-grouped:not(:focus-within) .monaco-workbench {
   box-shadow: none !important;
+}
+
+/* Vibrancy Cursor theme fixes strip part borders; restore them. */
+.monaco-workbench .part.sidebar.left#workbench\.parts\.sidebar {
+  border-right: 1px solid var(--vscode-sideBar-border) !important;
+}
+
+#workbench\.parts\.auxiliarybar {
+  border-left: 1px solid var(--vscode-sideBar-border) !important;
+  border-right: none !important;
+}
+
+/* Sash dividers (chat, editor splits, panel) only paint on hover by default. */
+.monaco-sash::before {
+  background: var(--vscode-sash-hoverBorder) !important;
 }
