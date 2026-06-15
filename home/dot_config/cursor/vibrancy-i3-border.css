@@ -14,14 +14,13 @@ body:not(.i3-grouped) {
   position: relative !important;
 }
 
-/* Draw the frame in the padding gutter, behind the workbench — not over UI. */
 body:not(.i3-grouped)::before {
   content: "" !important;
   position: fixed !important;
   inset: 0 !important;
   border: var(--cursor-window-border) solid var(--cursor-window-border-active) !important;
   pointer-events: none !important;
-  z-index: 0 !important;
+  z-index: 999999 !important;
   box-sizing: border-box !important;
 }
 
@@ -30,17 +29,10 @@ body:not(.i3-grouped):not(:focus-within)::before {
 }
 
 body:not(.i3-grouped) .monaco-workbench {
-  position: relative !important;
-  z-index: 1 !important;
   height: 100% !important;
   width: 100% !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
-}
-
-body:not(.i3-grouped) .monaco-workbench .part.statusbar,
-body:not(.i3-grouped) #workbench\.parts\.statusbar {
-  box-sizing: border-box !important;
 }
 
 /* Fixed overlays ignore normal layout; inset them from the window edge. */
@@ -48,7 +40,6 @@ body:not(.i3-grouped) .notifications-toasts,
 body:not(.i3-grouped) .notification-toast-container {
   bottom: var(--cursor-window-border) !important;
   right: var(--cursor-window-border) !important;
-  z-index: 2 !important;
 }
 
 body:not(.i3-grouped) .monaco-workbench .notification-toast,
