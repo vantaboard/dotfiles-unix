@@ -58,7 +58,7 @@ function edit_script ()
 
 commands_string="${commands[*]}"
 collated="${commands_string// /\\n}"
-selection=$(echo -e "$collated" | dmenu -nb '#0f0a05' -nf '#84c137' -sb '#083905' -sf '#23ff18' -fn 'ZedMono Nerd Font-11' -p '    run    ')
+selection=$(echo -e "$collated" | dmenu -nb '#0f0a05' -nf '#84c137' -sb '#083905' -sf '#23ff18' -fn 'FixedsysExcelsior Nerd Font Mono-10' -p '    run    ')
 
 if [ $? = 4 ]; then
     edit_script
