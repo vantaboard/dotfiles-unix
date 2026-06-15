@@ -1,62 +1,13 @@
 /* i3 pixel borders are not visible on frameless Vibrancy windows; draw them in-app. */
-:root {
-  --cursor-window-border: 4px;
-  --cursor-window-border-active: #86a83e;
-  --cursor-window-border-inactive: #083905;
+.monaco-workbench {
+  box-shadow: inset 0 0 0 4px #86a83e !important;
 }
 
-body:not(.i3-grouped) {
-  padding: var(--cursor-window-border) !important;
-  box-sizing: border-box !important;
-  height: 100vh !important;
-  overflow: hidden !important;
-  background: transparent !important;
-  position: relative !important;
+body:not(:focus-within) .monaco-workbench {
+  box-shadow: inset 0 0 0 4px #083905 !important;
 }
 
-body:not(.i3-grouped)::before {
-  content: "" !important;
-  position: fixed !important;
-  inset: 0 !important;
-  border: var(--cursor-window-border) solid var(--cursor-window-border-active) !important;
-  pointer-events: none !important;
-  z-index: 999999 !important;
-  box-sizing: border-box !important;
-}
-
-body:not(.i3-grouped):not(:focus-within)::before {
-  border-color: var(--cursor-window-border-inactive) !important;
-}
-
-body:not(.i3-grouped) .monaco-workbench {
-  height: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-
-/* Fixed overlays ignore normal layout; inset them from the window edge. */
-body:not(.i3-grouped) .notifications-toasts,
-body:not(.i3-grouped) .notification-toast-container {
-  bottom: var(--cursor-window-border) !important;
-  right: var(--cursor-window-border) !important;
-}
-
-body:not(.i3-grouped) .monaco-workbench .notification-toast,
-body:not(.i3-grouped) .monaco-workbench .monaco-banner,
-body:not(.i3-grouped) .monaco-workbench .banner-item {
-  margin-left: var(--cursor-window-border) !important;
-  margin-right: var(--cursor-window-border) !important;
-}
-
-body:not(.i3-grouped) .monaco-workbench .monaco-banner {
-  margin-bottom: var(--cursor-window-border) !important;
-}
-
-body.i3-grouped {
-  padding: 0 !important;
-}
-
-body.i3-grouped::before {
-  display: none !important;
+body.i3-grouped .monaco-workbench,
+body.i3-grouped:not(:focus-within) .monaco-workbench {
+  box-shadow: none !important;
 }
