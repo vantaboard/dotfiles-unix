@@ -3,6 +3,28 @@ local dap_python = require('dap-python')
 local Job = require("plenary.job")
 require('dap-go').setup()
 
+--- Desktop: notify-send. Termux: termux-toast (termux-api).
+local function notify(message, opts)
+    opts = opts or {}
+    local cmd, args
+    if vim.fn.executable("termux-toast") == 1 then
+        cmd, args = "termux-toast", { message }
+    elseif vim.fn.executable("notify-send") == 1 then
+        cmd, args = "notify-send", { message }
+    else
+        vim.notify(message, vim.log.levels.INFO)
+        if opts.on_exit then
+            opts.on_exit()
+        end
+        return
+    end
+    Job:new({
+        command = cmd,
+        args = args,
+        on_exit = opts.on_exit,
+    }):start()
+end
+
 -- require("nvim-dap-virtual-text").setup()
 dap_python.setup()
 
@@ -166,24 +188,15 @@ local continue = function()
 end
 
 local function pytest_coverage()
-    local cov_end = Job:new({
-        command = "notify-send",
-        args = { 'Coverage done...' },
-    })
-
     local test = Job:new({
         command = "pdm",
         args = { "run", "test" },
         on_exit = function()
-            cov_end:start()
-        end
+            notify("Coverage done...")
+        end,
     })
 
-    Job:new({
-        command = "notify-send",
-        args = { 'Coverage started...' },
-        on_exit = function() test:start() end
-    }):start()
+    notify("Coverage started...", { on_exit = function() test:start() end })
 end
 
 -- dap
