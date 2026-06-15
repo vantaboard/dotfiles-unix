@@ -5,46 +5,47 @@
   --cursor-window-border-inactive: #083905;
 }
 
-body:not(.i3-grouped) {
-  height: 100vh !important;
-  overflow: hidden !important;
-  background: transparent !important;
-}
-
 body:not(.i3-grouped) .monaco-workbench {
-  box-sizing: border-box !important;
-  margin: var(--cursor-window-border) !important;
-  width: calc(100% - 2 * var(--cursor-window-border)) !important;
-  height: calc(100vh - 2 * var(--cursor-window-border)) !important;
-  border: var(--cursor-window-border) solid var(--cursor-window-border-active) !important;
-  overflow: hidden !important;
+  box-shadow: inset 0 0 0 var(--cursor-window-border) var(--cursor-window-border-active) !important;
 }
 
 body:not(.i3-grouped):not(:focus-within) .monaco-workbench {
-  border-color: var(--cursor-window-border-inactive) !important;
+  box-shadow: inset 0 0 0 var(--cursor-window-border) var(--cursor-window-border-inactive) !important;
 }
 
-/* Fixed overlays ignore normal layout; inset them from the window edge. */
+/*
+ * Workbench parts are absolutely positioned and ignore normal padding.
+ * Inset the layout grid (and title bar) so edge UI stays inside the frame.
+ */
+body:not(.i3-grouped) .monaco-workbench .monaco-grid-view {
+  inset: var(--cursor-window-border) !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+body:not(.i3-grouped) .monaco-workbench .part.titlebar {
+  top: var(--cursor-window-border) !important;
+  left: var(--cursor-window-border) !important;
+  right: var(--cursor-window-border) !important;
+  width: auto !important;
+}
+
 body:not(.i3-grouped) .notifications-toasts,
 body:not(.i3-grouped) .notification-toast-container {
-  bottom: calc(2 * var(--cursor-window-border)) !important;
-  right: calc(2 * var(--cursor-window-border)) !important;
-}
-
-body:not(.i3-grouped) .monaco-workbench .notification-toast,
-body:not(.i3-grouped) .monaco-workbench .monaco-banner,
-body:not(.i3-grouped) .monaco-workbench .banner-item {
-  margin-left: var(--cursor-window-border) !important;
-  margin-right: var(--cursor-window-border) !important;
-}
-
-body:not(.i3-grouped) .monaco-workbench .monaco-banner {
-  margin-bottom: var(--cursor-window-border) !important;
+  bottom: var(--cursor-window-border) !important;
+  right: var(--cursor-window-border) !important;
 }
 
 body.i3-grouped .monaco-workbench {
-  margin: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  border: none !important;
+  box-shadow: none !important;
+}
+
+body.i3-grouped .monaco-workbench .monaco-grid-view {
+  inset: 0 !important;
+}
+
+body.i3-grouped .monaco-workbench .part.titlebar {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
 }
