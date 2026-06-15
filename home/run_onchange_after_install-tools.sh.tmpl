@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v12
+# hash: tools-v13
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -33,6 +33,8 @@ MISE_BIN="$HOME_DIR/.local/bin/mise"
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME_DIR/.oh-my-zsh/custom}"
 FZF_TAB_DIR="$ZSH_CUSTOM/plugins/fzf-tab"
 ZSH_ABBR_DIR="$HOME_DIR/zsh-abbr"
+ZSH_ABBR_VERSION="v6.3.3"
+ZSH_ABBR_JOB_QUEUE="$ZSH_ABBR_DIR/zsh-job-queue/zsh-job-queue.zsh"
 TRASH_CLI_DIR="$HOME_DIR/trash-cli"
 TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
 LOCAL_BIN="$HOME_DIR/.local/bin"
@@ -91,14 +93,52 @@ install_fzf_tab() {
 }
 
 install_zsh_abbr() {
-  if [[ -d "$ZSH_ABBR_DIR/.git" ]]; then
+  zsh_abbr_ready() {
+    [[ -r "$ZSH_ABBR_DIR/zsh-abbr.zsh" && -r "$ZSH_ABBR_JOB_QUEUE" ]]
+  }
+
+  if zsh_abbr_ready; then
     echo "zsh-abbr already installed at $ZSH_ABBR_DIR"
     return 0
   fi
-  echo "Installing zsh-abbr v6.3.3..."
+
+  if [[ -d "$ZSH_ABBR_DIR/.git" ]]; then
+    echo "Ensuring zsh-abbr submodules (zsh-job-queue)..."
+    if git -C "$ZSH_ABBR_DIR" submodule update --init --recursive && zsh_abbr_ready; then
+      echo "zsh-abbr submodules ready"
+      return 0
+    fi
+    echo "Incomplete zsh-abbr install; re-cloning..."
+    rm -rf "$ZSH_ABBR_DIR"
+  elif [[ -d "$ZSH_ABBR_DIR" ]]; then
+    rm -rf "$ZSH_ABBR_DIR"
+  fi
+
+  echo "Installing zsh-abbr ${ZSH_ABBR_VERSION}..."
   git clone https://github.com/olets/zsh-abbr \
-    --recurse-submodules --single-branch --branch v6.3.3 --depth 1 \
+    --recurse-submodules --single-branch --branch "${ZSH_ABBR_VERSION}" \
     "$ZSH_ABBR_DIR"
+
+  if ! zsh_abbr_ready; then
+    echo "Retrying zsh-abbr submodule init..."
+    git -C "$ZSH_ABBR_DIR" submodule update --init --recursive || true
+  fi
+
+  if ! zsh_abbr_ready && [[ -d "$ZSH_ABBR_DIR/.git" ]]; then
+    echo "Cloning zsh-job-queue at pinned commit..."
+    submodule_commit="$(git -C "$ZSH_ABBR_DIR" ls-tree HEAD zsh-job-queue | awk '{print $3}')"
+    rm -rf "$ZSH_ABBR_DIR/zsh-job-queue"
+    if [[ -n "$submodule_commit" ]]; then
+      git clone https://github.com/olets/zsh-job-queue "$ZSH_ABBR_DIR/zsh-job-queue"
+      git -C "$ZSH_ABBR_DIR/zsh-job-queue" checkout "$submodule_commit"
+    fi
+  fi
+
+  if ! zsh_abbr_ready; then
+    echo "WARN: zsh-abbr install incomplete (missing zsh-job-queue); abbr will not load"
+    return 0
+  fi
+  echo "zsh-abbr ready (${ZSH_ABBR_DIR})"
 }
 
 {{- if eq .chezmoi.os "android" }}
