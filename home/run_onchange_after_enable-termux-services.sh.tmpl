@@ -2,7 +2,7 @@
 #!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
 set -euo pipefail
 
-# hash: termux-services-v1
+# hash: termux-services-v2
 
 {{ $p := .profile_termux_example }}
 {{ if index . "profile" }}
@@ -36,12 +36,15 @@ if [[ "$OLLAMA_FEATURE" != "1" ]] && ! command -v ollama >/dev/null 2>&1; then
 fi
 
 PREFIX="${PREFIX:-{{ dir .chezmoi.homeDir }}/usr}"
+export SVDIR="${SVDIR:-$PREFIX/var/service}"
+export LOGDIR="${LOGDIR:-$PREFIX/var/log}"
 SH_BIN="$PREFIX/bin/sh"
-SERVICE_DIR="$PREFIX/var/service/ollama"
+SERVICE_DIR="$SVDIR/ollama"
 RUN_SCRIPT="$SERVICE_DIR/run"
+START_SERVICES="$PREFIX/etc/profile.d/start-services.sh"
 
 install_termux_services() {
-  if command -v sv >/dev/null 2>&1; then
+  if command -v sv >/dev/null 2>&1 && command -v service-daemon >/dev/null 2>&1; then
     return 0
   fi
   if ! command -v apt >/dev/null 2>&1; then
@@ -50,6 +53,45 @@ install_termux_services() {
   fi
   echo "Installing termux-services for runit service management..."
   apt install -y termux-services
+}
+
+ensure_service_daemon() {
+  if pgrep -f '[r]unsvdir' >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ -f "$START_SERVICES" ]]; then
+    # shellcheck source=/dev/null
+    . "$START_SERVICES"
+  elif command -v service-daemon >/dev/null 2>&1; then
+    service-daemon start
+  else
+    echo "WARN: runsvdir not running and start-services.sh missing"
+    return 1
+  fi
+  local i
+  for i in $(seq 1 20); do
+    if pgrep -f '[r]unsvdir' >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  return 1
+}
+
+wait_for_supervise() {
+  local path="$1"
+  local i
+  for i in $(seq 1 20); do
+    if [[ -e "$path/supervise/ok" ]]; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  return 1
+}
+
+ollama_service_running() {
+  sv status ollama 2>/dev/null | grep -q 'run: ollama: (pid [0-9]'
 }
 
 setup_ollama_service() {
@@ -63,27 +105,46 @@ setup_ollama_service() {
   fi
 
   mkdir -p "$SERVICE_DIR/log"
-  if [[ -e "$PREFIX/share/termux-services/svlogger" ]]; then
-    ln -sfn "$PREFIX/share/termux-services/svlogger" "$SERVICE_DIR/log/run"
+  local new_service=false
+  if [[ ! -x "$RUN_SCRIPT" ]]; then
+    new_service=true
   fi
-
   cat > "$RUN_SCRIPT" << EOF
 #!$SH_BIN
 exec ollama serve
 EOF
   chmod 700 "$RUN_SCRIPT"
+  if [[ -e "$PREFIX/share/termux-services/svlogger" ]]; then
+    ln -sfn "$PREFIX/share/termux-services/svlogger" "$SERVICE_DIR/log/run"
+  fi
+  if [[ "$new_service" == true ]]; then
+    : > "$SERVICE_DIR/down"
+  fi
+
+  if ! ensure_service_daemon; then
+    echo "WARN: runsvdir not running. Restart Termux, then: sv-enable ollama && sv up ollama"
+    return 0
+  fi
+
+  wait_for_supervise "$SERVICE_DIR" || true
 
   if command -v sv-enable >/dev/null 2>&1; then
-    sv-enable ollama 2>/dev/null || rm -f "$SERVICE_DIR/down"
+    sv-enable ollama
   else
     rm -f "$SERVICE_DIR/down"
   fi
 
-  if pgrep -f '[r]unsvdir' >/dev/null 2>&1; then
-    sv up ollama 2>/dev/null || true
-    echo "Ollama service running (sv up ollama)"
+  wait_for_supervise "$SERVICE_DIR" || sleep 2
+  sv up ollama 2>/dev/null || true
+  wait_for_supervise "$SERVICE_DIR/log" || true
+  sv up ollama 2>/dev/null || true
+
+  if ollama_service_running; then
+    echo "Ollama service running (sv status ollama)"
   else
-    echo "Ollama service enabled. Restart Termux, then run: sv up ollama"
+    echo "Ollama service files installed but not running yet."
+    echo "  Restart Termux, then run: sv-enable ollama && sv up ollama"
+    echo "  Logs: $PREFIX/var/log/sv/ollama/current"
   fi
 }
 
