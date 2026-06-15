@@ -169,6 +169,9 @@ pkg_manual:
     net-tools:
       status: ignore
       first_seen: "2026-06-14"
+    ollama:
+      status: install
+      first_seen: "2026-06-14"
     openssl:
       status: ignore
       first_seen: "2026-06-14"
