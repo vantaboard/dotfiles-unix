@@ -1,0 +1,86 @@
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+set -euo pipefail
+
+{{- $p := .profile_termux_example -}}
+{{- if index . "profile" -}}
+{{-   $p = mergeOverwrite $p .profile -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- $f := $p.features -}}
+
+# hash: termux-services-v1
+# hash: {{ index $f "ollama" }}
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Termux service setup"
+  exit 0
+fi
+
+if ! command -v pkg >/dev/null 2>&1; then
+  echo "Not Termux; skipping Termux service setup"
+  exit 0
+fi
+
+OLLAMA_FEATURE={{ if index $f "ollama" }}1{{ else }}0{{ end }}
+if [[ "$OLLAMA_FEATURE" != "1" ]] && ! command -v ollama >/dev/null 2>&1; then
+  echo "ollama not installed and feature disabled; skipping Termux service setup"
+  exit 0
+fi
+
+PREFIX="${PREFIX:-{{ dir .chezmoi.homeDir }}/usr}"
+SH_BIN="$PREFIX/bin/sh"
+SERVICE_DIR="$PREFIX/var/service/ollama"
+RUN_SCRIPT="$SERVICE_DIR/run"
+
+install_termux_services() {
+  if command -v sv >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! command -v apt >/dev/null 2>&1; then
+    echo "WARN: termux-services not installed. Run: pkg install termux-services"
+    return 1
+  fi
+  echo "Installing termux-services for runit service management..."
+  apt install -y termux-services
+}
+
+setup_ollama_service() {
+  if ! command -v ollama >/dev/null 2>&1; then
+    echo "WARN: ollama feature enabled but ollama not installed (pkg install ollama)"
+    return 0
+  fi
+
+  if ! install_termux_services; then
+    return 0
+  fi
+
+  mkdir -p "$SERVICE_DIR/log"
+  if [[ -e "$PREFIX/share/termux-services/svlogger" ]]; then
+    ln -sfn "$PREFIX/share/termux-services/svlogger" "$SERVICE_DIR/log/run"
+  fi
+
+  cat > "$RUN_SCRIPT" << EOF
+#!$SH_BIN
+exec ollama serve
+EOF
+  chmod 700 "$RUN_SCRIPT"
+
+  if command -v sv-enable >/dev/null 2>&1; then
+    sv-enable ollama 2>/dev/null || rm -f "$SERVICE_DIR/down"
+  else
+    rm -f "$SERVICE_DIR/down"
+  fi
+
+  if pgrep -f '[r]unsvdir' >/dev/null 2>&1; then
+    sv up ollama 2>/dev/null || true
+    echo "Ollama service running (sv up ollama)"
+  else
+    echo "Ollama service enabled. Restart Termux, then run: sv up ollama"
+  fi
+}
+
+setup_ollama_service
+{{ end -}}

@@ -2,8 +2,18 @@
 #!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/sh" }}
 set -eu
 
+{{- $p := .profile_termux_example -}}
+{{- if index . "profile" -}}
+{{-   $p = mergeOverwrite $p .profile -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- $f := $p.features -}}
+
 # hash: {{ .packages.termux.pkg | toYaml | sha256sum }}
 # hash: {{ include ".chezmoidata/pkg-manual.yaml" | sha256sum }}
+# hash: {{ index $f "ollama" }}
 
 if ! command -v pkg >/dev/null 2>&1; then
   echo "pkg not found; not a Termux environment, skipping"
@@ -32,6 +42,10 @@ apt install -y --no-install-recommends \
 {{- end }}
 {{- end }}
 {{- end }}
+{{- end }}
+{{- if index $f "ollama" }}
+  ollama \
+  termux-services \
 {{- end }}
 
 echo "Termux packages installed"
