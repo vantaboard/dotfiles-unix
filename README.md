@@ -63,7 +63,7 @@ chezmoi update         # Pull upstream and re-apply
 | Step | Script | Action |
 |------|--------|--------|
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
-| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `apt full-upgrade` + `apt install` (Android/Termux); Linux also installs `apt_manual` packages marked `install` |
+| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `apt full-upgrade` + `apt install` (Android/Termux); Linux also installs `apt_manual` packages marked `install`; Termux also installs `pkg_manual` packages marked `install` |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_onchange_after_set-default-shell` | Termux: `chsh -s zsh` when zsh is enabled in profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
@@ -87,6 +87,8 @@ After installing packages by hand, run [scripts/apt-manual-sync](scripts/apt-man
 
 Entries are **append-only** (status changes, never deleted). Packages marked `install` are appended to chezmoi's `apt install` on apply. `ignore` keeps them tracked but out of automated install. Already-managed packages (`packages.yaml`, profiles) are skipped on scan.
 
+On Termux, use [scripts/pkg-manual-sync](scripts/pkg-manual-sync) the same way — it writes [pkg-manual.yaml](home/.chezmoidata/pkg-manual.yaml) and `install` entries are appended on `chezmoi apply` (Android branch of `run_onchange_before_install-packages`).
+
 ## Termux / Android
 
 On Termux, chezmoi reports `.chezmoi.os == "android"`. The Termux profile in [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) is **selected automatically** — no manual copy to `profile.yaml` required. Dotfile templates and git externals apply from that profile's `features:`; desktop/system run-scripts are Linux-only and no-op on Android. Package install uses the curated list in [packages.yaml](home/.chezmoidata/packages.yaml) (`packages.termux.pkg`), not the profile `packages:` array.
@@ -95,6 +97,11 @@ On Termux, chezmoi reports `.chezmoi.os == "android"`. The Termux profile in [pr
 # Bootstrap Termux (full-upgrade before adding packages — partial upgrades break curl/openssl)
 pkg update && apt full-upgrade -y
 pkg install chezmoi git zsh openssh
+
+# Track manual pkg installs (same workflow as apt-manual-sync on Ubuntu)
+./scripts/pkg-manual-sync scan
+./scripts/pkg-manual-sync review
+```
 
 git clone git@github.com:vantaboard/dotfiles-unix.git ~/Code/dotfiles-unix
 chezmoi init --source="$HOME/Code/dotfiles-unix" --working-tree="$HOME/Code/dotfiles-unix"
@@ -142,8 +149,9 @@ CI uses the committed minimal profile in [profile-ci.yaml](home/.chezmoidata/pro
 ```
 .chezmoiroot              → "home"
 home/                     → chezmoi source state (dot_* files)
-home/.chezmoidata/        → setup-catalog, profiles, apt-manual.yaml
-scripts/apt-manual-sync   → track manual apt installs for chezmoi
+home/.chezmoidata/        → setup-catalog, profiles, apt-manual.yaml, pkg-manual.yaml
+scripts/apt-manual-sync   → track manual apt installs for chezmoi (Ubuntu)
+scripts/pkg-manual-sync   → track manual Termux pkg installs for chezmoi
 scripts/dotfiles-setup    → interactive setup wizard
 .github/workflows/        → CI
 tests/                    → smoke tests and lint

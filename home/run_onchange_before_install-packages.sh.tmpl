@@ -3,6 +3,7 @@
 set -eu
 
 # hash: {{ .packages.termux.pkg | toYaml | sha256sum }}
+# hash: {{ include ".chezmoidata/pkg-manual.yaml" | sha256sum }}
 
 if ! command -v pkg >/dev/null 2>&1; then
   echo "pkg not found; not a Termux environment, skipping"
@@ -20,6 +21,17 @@ apt full-upgrade -y \
 apt install -y --no-install-recommends \
 {{- range .packages.termux.pkg }}
   {{ . }} \
+{{- end }}
+{{- if not (env "CHEZMOI_CI") }}
+{{- with index . "pkg_manual" }}
+{{- with .packages }}
+{{- range $pkg, $meta := . }}
+{{- if eq $meta.status "install" }}
+  {{ $pkg }} \
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 echo "Termux packages installed"

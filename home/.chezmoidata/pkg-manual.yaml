@@ -1,0 +1,12 @@
+# Manually installed Termux packages discovered on this machine.
+#
+# Run scripts/pkg-manual-sync to scan for new packages and set status:
+#   pending  — seen but not yet decided (not installed by chezmoi)
+#   install  — include in chezmoi apt install on apply
+#   ignore   — tracked only; never installed by chezmoi
+#
+# Entries are never removed; change status with: pkg-manual-sync mark <pkg> <status>
+pkg_manual:
+  exclude:
+    []
+  packages:
