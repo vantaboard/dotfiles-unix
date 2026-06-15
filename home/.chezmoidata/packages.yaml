@@ -105,6 +105,8 @@ packages:
       - tmux
       - direnv
       - neovim
+      - make
+      - clang
       - gh
       - python
       - vivid

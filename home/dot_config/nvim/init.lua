@@ -1,5 +1,3 @@
-local is_termux = vim.fn.executable('termux-info') == 1
-
 local hooks = function(ev)
   local name, kind = ev.data.spec.name, ev.data.kind
   local path = ev.data.path
@@ -24,9 +22,9 @@ local hooks = function(ev)
   elseif name == 'peek' and vim.fn.executable('deno') == 1 then
     run_cmd({ 'deno', 'task', '--quiet', 'build:fast' })
 
-  elseif name == 'telescope-fzf-native' and not is_termux and vim.fn.executable('cmake') == 1 then
-    -- Using 'sh -c' to handle the '&&' chain correctly
-    run_cmd({ 'sh', '-c', 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' })
+  elseif name == 'telescope-fzf-native' and vim.fn.executable('make') == 1 then
+    -- make is more reliable than cmake on Termux and with newer cmake versions
+    run_cmd({ 'make' })
 
   elseif name == 'avante.nvim' and vim.fn.executable('make') == 1 then
     run_cmd({ 'make' })
@@ -224,6 +222,10 @@ local pack_plugins = {
         -- version control
 'https://github.com/tpope/vim-fugitive',
 'https://github.com/pwntester/octo.nvim',
+  {
+    src = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim',
+    name = 'telescope-fzf-native',
+  },
         -- navigation
 'https://github.com/johmsalas/text-case.nvim',
 'https://github.com/s1n7ax/nvim-search-and-replace',
@@ -251,13 +253,6 @@ local pack_plugins = {
 'https://github.com/jakewvincent/texmagic.nvim',
 'https://github.com/tpope/vim-sleuth',
 }
-
-if not is_termux then
-  table.insert(pack_plugins, {
-    src = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim',
-    name = 'telescope-fzf-native',
-  })
-end
 
 vim.pack.add(pack_plugins)
 
