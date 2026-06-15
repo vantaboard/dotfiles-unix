@@ -10,3 +10,210 @@ pkg_manual:
   exclude:
     []
   packages:
+    apt:
+      status: install
+      first_seen: "2026-06-14"
+    bzip2:
+      status: install
+      first_seen: "2026-06-14"
+    ca-certificates:
+      status: install
+      first_seen: "2026-06-14"
+    chezmoi:
+      status: install
+      first_seen: "2026-06-14"
+    command-not-found:
+      status: install
+      first_seen: "2026-06-14"
+    coreutils:
+      status: install
+      first_seen: "2026-06-14"
+    dash:
+      status: install
+      first_seen: "2026-06-14"
+    debianutils:
+      status: install
+      first_seen: "2026-06-14"
+    dialog:
+      status: install
+      first_seen: "2026-06-14"
+    diffutils:
+      status: install
+      first_seen: "2026-06-14"
+    dos2unix:
+      status: install
+      first_seen: "2026-06-14"
+    dpkg:
+      status: install
+      first_seen: "2026-06-14"
+    ed:
+      status: install
+      first_seen: "2026-06-14"
+    findutils:
+      status: install
+      first_seen: "2026-06-14"
+    gawk:
+      status: install
+      first_seen: "2026-06-14"
+    gpgv:
+      status: ignore
+      first_seen: "2026-06-14"
+    grep:
+      status: ignore
+      first_seen: "2026-06-14"
+    gzip:
+      status: ignore
+      first_seen: "2026-06-14"
+    inetutils:
+      status: install
+      first_seen: "2026-06-14"
+    less:
+      status: ignore
+      first_seen: "2026-06-14"
+    libandroid-glob:
+      status: ignore
+      first_seen: "2026-06-14"
+    libandroid-selinux:
+      status: ignore
+      first_seen: "2026-06-14"
+    libandroid-support:
+      status: ignore
+      first_seen: "2026-06-14"
+    libassuan:
+      status: ignore
+      first_seen: "2026-06-14"
+    libbz2:
+      status: ignore
+      first_seen: "2026-06-14"
+    libc++:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcap-ng:
+      status: ignore
+      first_seen: "2026-06-14"
+    libcurl:
+      status: ignore
+      first_seen: "2026-06-14"
+    libevent:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgcrypt:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgmp:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgnutls:
+      status: ignore
+      first_seen: "2026-06-14"
+    libgpg-error:
+      status: ignore
+      first_seen: "2026-06-14"
+    libiconv:
+      status: ignore
+      first_seen: "2026-06-14"
+    libidn2:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblz4:
+      status: ignore
+      first_seen: "2026-06-14"
+    liblzma:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmd:
+      status: ignore
+      first_seen: "2026-06-14"
+    libmpfr:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnettle:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnghttp2:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnghttp3:
+      status: ignore
+      first_seen: "2026-06-14"
+    libnpth:
+      status: ignore
+      first_seen: "2026-06-14"
+    libsmartcols:
+      status: ignore
+      first_seen: "2026-06-14"
+    libssh2:
+      status: ignore
+      first_seen: "2026-06-14"
+    libtirpc:
+      status: ignore
+      first_seen: "2026-06-14"
+    libunbound:
+      status: ignore
+      first_seen: "2026-06-14"
+    libunistring:
+      status: ignore
+      first_seen: "2026-06-14"
+    lsof:
+      status: ignore
+      first_seen: "2026-06-14"
+    mise:
+      status: ignore
+      first_seen: "2026-06-14"
+    nano:
+      status: ignore
+      first_seen: "2026-06-14"
+    ncurses:
+      status: ignore
+      first_seen: "2026-06-14"
+    net-tools:
+      status: ignore
+      first_seen: "2026-06-14"
+    openssl:
+      status: ignore
+      first_seen: "2026-06-14"
+    patch:
+      status: ignore
+      first_seen: "2026-06-14"
+    pcre2:
+      status: ignore
+      first_seen: "2026-06-14"
+    perl:
+      status: ignore
+      first_seen: "2026-06-14"
+    procps:
+      status: ignore
+      first_seen: "2026-06-14"
+    psmisc:
+      status: ignore
+      first_seen: "2026-06-14"
+    readline:
+      status: ignore
+      first_seen: "2026-06-14"
+    resolv-conf:
+      status: ignore
+      first_seen: "2026-06-14"
+    sed:
+      status: ignore
+      first_seen: "2026-06-14"
+    tar:
+      status: ignore
+      first_seen: "2026-06-14"
+    unzip:
+      status: ignore
+      first_seen: "2026-06-14"
+    util-linux:
+      status: ignore
+      first_seen: "2026-06-14"
+    xxhash:
+      status: ignore
+      first_seen: "2026-06-14"
+    xz-utils:
+      status: ignore
+      first_seen: "2026-06-14"
+    zlib:
+      status: ignore
+      first_seen: "2026-06-14"
+    zstd:
+      status: ignore
+      first_seen: "2026-06-14"
