@@ -135,7 +135,6 @@ vim.pack.add({
 'https://github.com/oxfist/night-owl.nvim',
 'https://github.com/uloco/bluloco.nvim',
 'https://github.com/rktjmp/lush.nvim',
-'https://github.com/vantaboard/vim-colorscheme-switcher',
 'https://github.com/kyazdani42/nvim-web-devicons',
 'https://github.com/junegunn/seoul256.vim',
 'https://github.com/morhetz/gruvbox',
