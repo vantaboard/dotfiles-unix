@@ -1,16 +1,22 @@
 local Job = require("plenary.job")
 
-local cmake = Job:new({
-    command = "cmake",
-    args = { "--build", "." },
-})
+local function start_cmake_build()
+    if vim.fn.executable("cmake") ~= 1 then
+        return
+    end
+    Job:new({
+        command = "cmake",
+        args = { "--build", "." },
+        cwd = vim.fn.getcwd(),
+    }):start()
+end
 
 require("auto-save").setup({
     enabled = true,
     execution_message = {
         message = function()
             if vim.bo.filetype == "cpp" then
-                cmake:start()
+                start_cmake_build()
             end
 
             return ("AutoSave: saved at " .. vim.fn.strftime("%H:%M:%S"))
