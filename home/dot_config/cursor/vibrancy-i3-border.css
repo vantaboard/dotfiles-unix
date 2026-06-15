@@ -10,11 +10,22 @@ body:not(.i3-grouped) {
   box-sizing: border-box !important;
   height: 100vh !important;
   overflow: hidden !important;
-  background: var(--cursor-window-border-active) !important;
+  background: transparent !important;
+  position: relative !important;
 }
 
-body:not(.i3-grouped):not(:focus-within) {
-  background: var(--cursor-window-border-inactive) !important;
+body:not(.i3-grouped)::before {
+  content: "" !important;
+  position: fixed !important;
+  inset: 0 !important;
+  border: var(--cursor-window-border) solid var(--cursor-window-border-active) !important;
+  pointer-events: none !important;
+  z-index: 999999 !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.i3-grouped):not(:focus-within)::before {
+  border-color: var(--cursor-window-border-inactive) !important;
 }
 
 body:not(.i3-grouped) .monaco-workbench {
@@ -44,5 +55,8 @@ body:not(.i3-grouped) .monaco-workbench .monaco-banner {
 
 body.i3-grouped {
   padding: 0 !important;
-  background: transparent !important;
+}
+
+body.i3-grouped::before {
+  display: none !important;
 }
