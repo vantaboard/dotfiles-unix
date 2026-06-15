@@ -107,6 +107,7 @@ packages:
       - neovim
       - make
       - clang
+      - cmake
       - gh
       - python
       - vivid
