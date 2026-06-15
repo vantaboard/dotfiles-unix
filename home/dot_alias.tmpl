@@ -25,8 +25,10 @@ alias help=run-help
 alias expowebcam="webcam exposure"
 alias log=false
 alias cz="$HOME/.zplug/repos/vantaboard/commitizen-deno/commitizen-deno --"
+{{- if index $f "xclip" }}
 alias cpdf="xclip -selection clipboard -target application/pdf"
 alias cpng="xclip -selection clipboard -target image/png"
+{{- end }}
 {{- if index $f "neovim" }}
 alias vi=nvim
 {{- end }}

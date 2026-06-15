@@ -40,7 +40,7 @@ function gitlab-path() {
 function commit() {
     route=$1
     hash=$2
-    echo "https://github.com/$route/commit/$hash" | xclip -selection clipboard
+    echo "https://github.com/$route/commit/$hash" | clip_copy
 }
 
 function whatport() {

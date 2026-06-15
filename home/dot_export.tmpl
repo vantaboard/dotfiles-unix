@@ -17,6 +17,32 @@ if command -v vivid >/dev/null 2>&1; then
   export LS_COLORS="$(vivid generate dracula)"
 fi
 {{- end }}
+{{- if eq .chezmoi.os "android" }}
+# Clipboard + notifications via termux-api (requires Termux:API app).
+clip_copy() {
+  if command -v termux-clipboard-set >/dev/null 2>&1; then
+    termux-clipboard-set
+  fi
+}
+clip_paste() {
+  command -v termux-clipboard-get >/dev/null 2>&1 && termux-clipboard-get
+}
+notify_user() {
+  if command -v termux-toast >/dev/null 2>&1; then
+    termux-toast "$1"
+  else
+    echo "$1"
+  fi
+}
+{{- else if index $f "xclip" }}
+clip_copy() { xclip -selection clipboard; }
+clip_paste() { xclip -selection clipboard -o; }
+notify_user() {
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "$1"
+  fi
+}
+{{- end }}
 export TSS_LOG="-level verbose -file $HOME/.tsserver_temp/tsserver.log";
 export MANPAGER='less -X';
 export EDITOR='nvim';

@@ -1,3 +1,5 @@
+# Clipboard bindings (clip_copy, clip_paste, notify_user from ~/.export).
+
 function copy-path {
     cwd=$(pwd | tr -d '\n')
 
@@ -6,16 +8,16 @@ function copy-path {
         cwd="\"$cwd\""
     fi
 
-    echo $cwd | xclip -selection clipboard
-    notify-send "$cwd copied to clipboard"
+    echo $cwd | clip_copy
+    notify_user "$cwd copied to clipboard"
 }
 
 function paste-clipboard-r {
-    RBUFFER="${BUFFER}  $(xclip -selection clipboard -o)"
+    RBUFFER="${BUFFER}  $(clip_paste)"
 }
 
 function paste-clipboard {
-    LBUFFER="${BUFFER}$(xclip -selection clipboard -o)"
+    LBUFFER="${BUFFER}$(clip_paste)"
 }
 
 function copy-clipboard {
@@ -23,8 +25,8 @@ function copy-clipboard {
         return
     fi
 
-    echo $BUFFER | xclip -selection clipboard
-    notify-send "$BUFFER copied to clipboard"
+    echo $BUFFER | clip_copy
+    notify_user "$BUFFER copied to clipboard"
 }
 
 function fzf-dir {
