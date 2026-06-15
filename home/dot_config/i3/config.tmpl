@@ -94,6 +94,7 @@ exec_always $HOME/.local/bin/betterlockscreen --display 1 --span --nofx --positi
 bindsym $mod+Ctrl+Shift+k exec --no-startup-id $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#23FF18DD --ringwrong-color=#B6204ADD --ring-color=#84C137DD --keyhl-color=#EEEEEE --bshl-color=#666666DD --separator-color=#00000000 --verif-color=#EEEEEE --wrong-color=#E50000 --layout-color=#84C137 --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
 
 for_window [class="Vncviewer"] fullscreen enable global
+for_window [class="Cursor"] border none
 for_window [class="kooha"] floating enable border pixel 1
 for_window [title="alsamixer"] floating enable border pixel 1
 for_window [class="calamares"] floating enable border normal
