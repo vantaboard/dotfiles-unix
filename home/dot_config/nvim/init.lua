@@ -273,8 +273,20 @@ vim.api.nvim_create_autocmd("FileType", {
 require("transparent").setup({
     enable = true,
     extra_groups = {
-        "NormalFloat",    -- plugins which have float panel such as Lazy, Mason, LspInfo
-        "NvimTreeNormal", -- NvimTree
+        "NormalFloat",
+        "NormalNC",
+        "MsgArea",
+        "NvimTreeNormal",
+        "NvimTreeNormalNC",
+        "TelescopeNormal",
+        "TelescopeBorder",
+        "StatusLine",
+        "StatusLineNC",
+        "WinBar",
+        "WinBarNC",
+        "TabLine",
+        "TabLineFill",
+        "TabLineSel",
         "BufferLineTabClose",
         "BufferlineBufferSelected",
         "BufferLineFill",

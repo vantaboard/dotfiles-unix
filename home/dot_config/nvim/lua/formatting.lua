@@ -58,6 +58,7 @@ vim.opt.showbreak = "↳  "
 vim.g.camelcasemotion_key = "<leader>"
 
 local favorite_colorschemes = {
+    "hipster-green",
     "kanagawa",
     "nightfox",
     "cyberdream",
@@ -93,10 +94,10 @@ local favorite_colorschemes = {
 }
 
 vim.cmd(
-    "colorscheme boo"
+    "colorscheme hipster-green"
 )
 
-vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#002b80" })
+vim.api.nvim_set_hl(0, "LspInlayHint", { fg = "#246db2", italic = true })
 
 -- unicode
 vim.opt.encoding = "utf8"
