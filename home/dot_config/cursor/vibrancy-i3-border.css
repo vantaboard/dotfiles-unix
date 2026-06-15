@@ -6,3 +6,8 @@
 body:not(:focus-within) .monaco-workbench {
   box-shadow: inset 0 0 0 4px #666666 !important;
 }
+
+body.i3-grouped .monaco-workbench,
+body.i3-grouped:not(:focus-within) .monaco-workbench {
+  box-shadow: none !important;
+}
