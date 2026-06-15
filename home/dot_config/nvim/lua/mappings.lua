@@ -3,9 +3,15 @@
 local Job = require("plenary.job")
 
 local function clipboard_job(url)
+    local command = "xclip"
+    local args = { "-selection", "clipboard" }
+    if vim.fn.executable("termux-clipboard-set") == 1 then
+        command = "termux-clipboard-set"
+        args = {}
+    end
     return Job:new({
-        command = "xclip",
-        args = { "-selection", "clipboard" },
+        command = command,
+        args = args,
         writer = url,
     })
 end

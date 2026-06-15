@@ -111,3 +111,4 @@ packages:
       - gh
       - python
       - vivid
+      - termux-api

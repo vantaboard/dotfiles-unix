@@ -115,7 +115,20 @@ local function setup_clipboard()
         return
     end
 
-    if vim.fn.executable("wl-copy") == 1 and os.getenv("WAYLAND_DISPLAY") then
+    if vim.fn.executable("termux-clipboard-set") == 1 and vim.fn.executable("termux-clipboard-get") == 1 then
+        vim.g.clipboard = {
+            name = "termux-clipboard",
+            copy = {
+                ["+"] = "termux-clipboard-set",
+                ["*"] = "termux-clipboard-set",
+            },
+            paste = {
+                ["+"] = "termux-clipboard-get",
+                ["*"] = "termux-clipboard-get",
+            },
+            cache_enabled = 1,
+        }
+    elseif vim.fn.executable("wl-copy") == 1 and os.getenv("WAYLAND_DISPLAY") then
         vim.g.clipboard = {
             name = "wl-clipboard",
             copy = {
