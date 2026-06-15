@@ -1,4 +1,4 @@
-{{ if and (eq .chezmoi.os "linux") -}}
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
 {{- $p := .profile_example -}}
 {{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
 {{- if index . "profile" -}}
@@ -13,30 +13,69 @@
 {{- end -}}
 {{- $f := $p.features -}}
 {{- if index $f "diff_so_fancy" -}}
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+set -euo pipefail
+{{ else -}}
 #!/bin/bash
 set -euo pipefail
+{{ end -}}
 
-# hash: diff-so-fancy-v1
+# hash: diff-so-fancy-v2
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping diff-so-fancy install"
   exit 0
 fi
 
-REPO="{{ .chezmoi.homeDir }}/.local/share/diff-so-fancy"
-BIN="{{ .chezmoi.homeDir }}/.local/bin/diff-so-fancy"
+HOME_DIR="{{ .chezmoi.homeDir }}"
+DSF_VERSION="1.4.10"
+DSF_BIN="$HOME_DIR/.local/bin/diff-so-fancy"
+DSF_URL="https://github.com/so-fancy/diff-so-fancy/releases/download/v${DSF_VERSION}/diff-so-fancy"
+LEGACY_REPO="$HOME_DIR/.local/share/diff-so-fancy"
 
-if [[ -x "$BIN" ]]; then
-  echo "diff-so-fancy already installed"
+dsf_usable() {
+  [[ -x "$DSF_BIN" ]] && head -1 "$DSF_BIN" | grep -q perl
+}
+
+if dsf_usable; then
+  echo "diff-so-fancy already installed at $DSF_BIN"
   exit 0
 fi
 
-mkdir -p "{{ .chezmoi.homeDir }}/.local/bin"
-if [[ ! -d "$REPO/.git" ]]; then
-  echo "Installing diff-so-fancy..."
-  git clone --depth 1 https://github.com/so-fancy/diff-so-fancy.git "$REPO"
+if ! command -v perl >/dev/null 2>&1; then
+{{- if eq .chezmoi.os "android" }}
+  echo "Installing perl (required by diff-so-fancy)..."
+  apt install -y perl 2>/dev/null || pkg install -y perl 2>/dev/null || {
+    echo "WARN: perl not available; skipping diff-so-fancy install"
+    exit 0
+  }
+{{- else }}
+  echo "WARN: perl not found; skipping diff-so-fancy install"
+  exit 0
+{{- end }}
 fi
-ln -sf "$REPO/diff-so-fancy" "$BIN"
-echo "diff-so-fancy installed to $BIN"
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping diff-so-fancy install"
+  exit 0
+fi
+
+mkdir -p "$HOME_DIR/.local/bin"
+echo "Installing diff-so-fancy v${DSF_VERSION}..."
+curl -fsSL "$DSF_URL" -o "$DSF_BIN"
+chmod +x "$DSF_BIN"
+
+if [[ -d "$LEGACY_REPO" ]]; then
+  rm -rf "$LEGACY_REPO"
+fi
+
+if dsf_usable; then
+  echo "diff-so-fancy installed to $DSF_BIN"
+else
+  echo "WARN: diff-so-fancy install failed"
+  rm -f "$DSF_BIN"
+  exit 0
+fi
 {{- end -}}
 {{ end -}}

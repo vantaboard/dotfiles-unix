@@ -349,7 +349,8 @@ setup_catalog:
       category: dev
       label: diff-so-fancy
       default: true
-      description: Installed via git in run_onchange_after_install-diff-so-fancy.sh
+      install_tools: true
+      description: Git pager helper; release binary in ~/.local/bin (v1.4.10)
     flatpak:
       category: dev
       label: Flatpak
