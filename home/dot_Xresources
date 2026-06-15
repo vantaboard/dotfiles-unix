@@ -24,29 +24,29 @@ XTerm*reverseVideo:      on
 XTerm*selectToClipboard: true
 
 !black
-*color0:  #4d4d4d
-*color8:  #5a5a5a
+*color0:  #000000
+*color8:  #666666
 !red
-*color1:  #C70031
-*color9:  #F05178
+*color1:  #b6204a
+*color9:  #e50000
 !green
-*color2:  #29CF13
-*color10: #6CE05C
+*color2:  #00a600
+*color10: #86a83e
 !yellow
-*color3:  #D8E30E
-*color11: #F3F79E
+*color3:  #bebe00
+*color11: #e5e500
 !blue
-*color4:  #3449D1
-*color12: #97A4F7
+*color4:  #246db2
+*color12: #0000ff
 !magenta
-*color5:  #8400FF
-*color13: #C495F0
+*color5:  #b200b2
+*color13: #e500e5
 !cyan
-*color6:  #0798AB
-*color14: #68F2E0
+*color6:  #00a6b2
+*color14: #00e5e5
 !white
-*color7:  #E2D1E3
-*color15: #FFFFFF
+*color7:  #bfbfbf
+*color15: #e5e5e5
 
 Xcursor.theme: Adwaita
 Xcursor.size:                     0
@@ -58,7 +58,7 @@ URxvt.font:                       xft:FiraCode Nerd Font Mono:size=11:style=bold
 >>>>>>> c7d3792 (chore: stash)
 
 URxvt.depth:                      32
-URxvt.background:                 [100]#222D31
+URxvt.background:                 [100]#0f0a05
 URxvt*scrollBar:                  false
 URxvt*mouseWheelScrollPage:       false
 URxvt*cursorBlink:                true

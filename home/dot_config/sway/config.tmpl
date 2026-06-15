@@ -45,7 +45,7 @@ bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev
 bindsym $mod+d exec rofi -show drun
 bindsym $mod+z exec --no-startup-id morc_menu
 
-font pango:ZedMono Nerd Font 10
+font pango:FixedsysExcelsior Nerd Font Mono 10
 
 floating_modifier $mod
 
@@ -170,32 +170,32 @@ bar {
     bindsym button5 nop
 
     colors {
-        background #222D31
-        statusline #F9FAF9
-        separator  #454947
+        background #0f0a05
+        statusline #84c137
+        separator  #083905
 
 #                          border   backgr.   text
-        focused_workspace  #F9FAF9  #f98304   #2C2C2C
-        active_workspace   #595b5b  #2C2C2C   #FDF6E3
-        inactive_workspace #595b5b  #222D31   #EEE8D5
-        binding_mode       #f98304  #2C2C2C   #F9FAF9
-        urgent_workspace   #f98304  #FDF6E3   #E5201D
+        focused_workspace  #84c137  #083905   #eeeeee
+        active_workspace   #666666  #0c0804   #86a83e
+        inactive_workspace #666666  #0f0a05   #666666
+        binding_mode       #23ff18  #083905   #eeeeee
+        urgent_workspace   #e50000  #b6204a   #e5e5e5
     }
 }
 
 bindsym $mod+m bar mode toggle
 
 # class                 border   bground  text     indicator child_border
-client.focused          #b36204  #f98304  #2C2C2C  #ffae42   #ffb866
-client.focused_inactive #4a2b0a  #d87404  #FFFFFF  #c46f00   #663b0a
-client.unfocused        #3a2a1a  #a55e03  #FFFFFF  #9c5300
-client.urgent           #2F343A  #900000  #FFFFFF  #900000   #900000
-client.placeholder      #000000  #0C0C0C  #FFFFFF  #000000   #0C0C0C
+client.focused          #006600  #84c137  #0f0a05  #23ff18   #86a83e
+client.focused_inactive #083905  #0c0804  #84c137  #00a600   #083905
+client.unfocused        #0c0804  #0f0a05  #666666  #083905
+client.urgent           #b6204a  #e50000  #e5e5e5  #e50000   #e50000
+client.placeholder      #000000  #0c0804  #666666  #000000   #0c0804
 
-client.background       #FFFFFF
+client.background       #0f0a05
 
-gaps inner 10
-gaps outer 40
+gaps inner 5
+gaps outer 10
 
 set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)

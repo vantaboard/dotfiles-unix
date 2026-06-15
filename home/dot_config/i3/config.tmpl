@@ -36,7 +36,7 @@ bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev
 bindsym $mod+d exec $HOME/.local/bin/dmenu_runner
 bindsym $mod+z exec --no-startup-id morc_menu
 
-font pango:ZedMono Nerd Font 10
+font pango:FixedsysExcelsior Nerd Font Mono 10
 
 floating_modifier $mod
 
@@ -91,7 +91,7 @@ bindsym $mod+Ctrl+Left workspace prev
 
 exec_always $HOME/.local/bin/betterlockscreen --display 1 --span --nofx --position center --update $HOME/.wallpapers/pexels-timmossholder-1549629.jpg
 
-bindsym $mod+Ctrl+Shift+k exec --no-startup-id $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#ADFF3BDD --ringwrong-color=#DC9AB6DD --ring-color=#ADF7FFDD --keyhl-color=#FFFFFF --bshl-color=#918D8FDD --separator-color=#00000000 --verif-color=#FFFFFF --wrong-color=#E56CA7 --layout-color=#FFFFFF --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
+bindsym $mod+Ctrl+Shift+k exec --no-startup-id $HOME/.local/bin/betterlockscreen --lock --display 1 --span --position center --time-format '%l:%M %p' -- --insidever-color=#00000000 --insidewrong-color=#00000000 --inside-color=#00000000 --ringver-color=#23FF18DD --ringwrong-color=#B6204ADD --ring-color=#84C137DD --keyhl-color=#EEEEEE --bshl-color=#666666DD --separator-color=#00000000 --verif-color=#EEEEEE --wrong-color=#E50000 --layout-color=#84C137 --screen 1 --blur 1 --clock --indicator --verif-text="" --wrong-text="" --noinput="" --lock-text="" --lockfailed="" --pass-media-keys --pass-screen-keys --pass-volume-keys
 
 for_window [class="Vncviewer"] fullscreen enable global
 for_window [class="kooha"] floating enable border pixel 1
@@ -189,32 +189,32 @@ bar {
 	bindsym button5 nop
 
     colors {
-        background #222D31
-        statusline #F9FAF9
-        separator  #454947
+        background #0f0a05
+        statusline #84c137
+        separator  #083905
 
 #                          border   backgr.   text
-        focused_workspace  #F9FAF9  #f98304   #2C2C2C
-        active_workspace   #595b5b  #2C2C2C   #FDF6E3
-        inactive_workspace #595b5b  #222D31   #EEE8D5
-        binding_mode       #f98304  #2C2C2C   #F9FAF9
-        urgent_workspace   #f98304  #FDF6E3   #E5201D
+        focused_workspace  #84c137  #083905   #eeeeee
+        active_workspace   #666666  #0c0804   #86a83e
+        inactive_workspace #666666  #0f0a05   #666666
+        binding_mode       #23ff18  #083905   #eeeeee
+        urgent_workspace   #e50000  #b6204a   #e5e5e5
     }
 }
 
 bindsym $mod+m bar mode toggle
 
 # class                 border   bground  text     indicator child_border
-client.focused          #b36204  #f98304  #2C2C2C  #ffae42   #ffb866
-client.focused_inactive #4a2b0a  #d87404  #FFFFFF  #c46f00   #663b0a
-client.unfocused        #3a2a1a  #a55e03  #FFFFFF  #9c5300
-client.urgent           #2F343A  #900000  #FFFFFF  #900000   #900000
-client.placeholder      #000000  #0C0C0C  #FFFFFF  #000000   #0C0C0C
+client.focused          #006600  #84c137  #0f0a05  #23ff18   #86a83e
+client.focused_inactive #083905  #0c0804  #84c137  #00a600   #083905
+client.unfocused        #0c0804  #0f0a05  #666666  #083905
+client.urgent           #b6204a  #e50000  #e5e5e5  #e50000   #e50000
+client.placeholder      #000000  #0c0804  #666666  #000000   #0c0804
 
-client.background       #FFFFFF
+client.background       #0f0a05
 
-gaps inner 10
-gaps outer 40
+gaps inner 5
+gaps outer 10
 
 set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)

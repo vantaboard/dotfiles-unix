@@ -3,10 +3,10 @@ general {
         interval = 5
         markup = pango
 
-        # Theme: orange highlight, urgent red, soft amber for degraded
-        color_good     = "#f98304"
-        color_degraded = "#ffae42"
-        color_bad      = "#E5201D"
+        # Theme: Hipster Green — accent green, yellow degraded, red urgent
+        color_good     = "#84c137"
+        color_degraded = "#bebe00"
+        color_bad      = "#e50000"
 }
 
 order += "wireless _first_"
@@ -19,25 +19,25 @@ order += "tztime date"
 order += "tztime local"
 
 wireless _first_ {
-        format_up = "<span color='#f98304'>📡</span> %essid"
+        format_up = "<span color='#84c137'>📡</span> %essid"
         format_down = ""
 }
 
 ethernet _first_ {
-        format_up = "<span color='#f98304'>🖧</span> %ip"
+        format_up = "<span color='#84c137'>🖧</span> %ip"
         format_down = ""
 }
 
 cpu_usage {
-        format = "<span color='#f98304'>CPU</span> %usage"
+        format = "<span color='#84c137'>CPU</span> %usage"
 }
 
 disk "/" {
-        format = "<span color='#f98304'></span> %avail"
+        format = "<span color='#84c137'></span> %avail"
 }
 
 battery all {
-        format = " <span color='#f98304'>%status</span> %percentage"
+        format = " <span color='#84c137'>%status</span> %percentage"
         format_down = ""
         last_full_capacity = true
         integer_battery_capacity = true
@@ -45,7 +45,7 @@ battery all {
         status_chr  = "🔌"
         status_bat  = "🔋"
         status_unk  = ""
-        status_full = "🧡"
+        status_full = "💚"
 
         low_threshold = 15
         threshold_type = time
@@ -53,9 +53,9 @@ battery all {
 }
 
 memory {
-        format = "<span color='#f98304'>RAM</span> %available"
+        format = "<span color='#84c137'>RAM</span> %available"
         threshold_degraded = "1G"
-        format_degraded = "<span color='#ffae42'>RAM</span> %available"
+        format_degraded = "<span color='#bebe00'>RAM</span> %available"
 }
 
 tztime date {
@@ -64,5 +64,5 @@ tztime date {
 
 tztime local {
         # Keep time high-contrast white
-        format = "<span color='#FFFFFF'>%l:%M %p</span>"
+        format = "<span color='#eeeeee'>%l:%M %p</span>"
 }
