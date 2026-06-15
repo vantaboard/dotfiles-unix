@@ -208,6 +208,9 @@ pkg_manual:
     util-linux:
       status: ignore
       first_seen: "2026-06-14"
+    wget:
+      status: install
+      first_seen: "2026-06-14"
     xxhash:
       status: ignore
       first_seen: "2026-06-14"
