@@ -1,10 +1,10 @@
 /* i3 pixel borders are not visible on frameless Vibrancy windows; draw them in-app. */
 .monaco-workbench {
-  box-shadow: inset 0 0 0 4px #23ff18 !important;
+  box-shadow: inset 0 0 0 4px #86a83e !important;
 }
 
 body:not(:focus-within) .monaco-workbench {
-  box-shadow: inset 0 0 0 4px #666666 !important;
+  box-shadow: inset 0 0 0 4px #083905 !important;
 }
 
 body.i3-grouped .monaco-workbench,
