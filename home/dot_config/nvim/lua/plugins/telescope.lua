@@ -55,12 +55,49 @@ require("yanky").setup({
 })
 
 local actions = require("telescope.actions")
-telescope.load_extension("fzf")
+
+local function telescope_has_fzf_native()
+  local ok, _ = pcall(require, "fzf_lib")
+  return ok
+end
+
+local has_fzf_native = telescope_has_fzf_native()
+if has_fzf_native then
+  telescope.load_extension("fzf")
+end
 telescope.load_extension("harpoon")
 telescope.load_extension("dap")
 telescope.load_extension("yank_history")
 telescope.load_extension("undo")
 telescope.load_extension("textcase")
+
+local telescope_extensions = {
+    ["ui-select"] = {
+        require("telescope.themes").get_dropdown({}),
+    },
+    undo = {
+        use_delta = true,
+        use_custom_command = nil,
+        side_by_side = false,
+        diff_context_lines = vim.o.scrolloff,
+        entry_format = "state #$ID, $STAT, $TIME",
+        time_format = "",
+        mappings = {
+            i = {
+                ["<cr>"] = require("telescope-undo.actions").restore,
+            },
+        },
+    },
+}
+
+if has_fzf_native then
+    telescope_extensions.fzf = {
+        fuzzy = true,
+        override_generic_sorter = true,
+        override_file_sorter = true,
+        case_mode = "smart_case",
+    }
+end
 
 telescope.setup({
     defaults = {
@@ -93,30 +130,7 @@ telescope.setup({
             },
         },
     },
-    extensions = {
-        ["ui-select"] = {
-            require("telescope.themes").get_dropdown({}),
-        },
-        undo = {
-            use_delta = true,
-            use_custom_command = nil,
-            side_by_side = false,
-            diff_context_lines = vim.o.scrolloff,
-            entry_format = "state #$ID, $STAT, $TIME",
-            time_format = "",
-            mappings = {
-                i = {
-                    ["<cr>"] = require("telescope-undo.actions").restore,
-                },
-            },
-        },
-        fzf = {
-            fuzzy = true,
-            override_generic_sorter = true,
-            override_file_sorter = true,
-            case_mode = "smart_case",
-        },
-    },
+    extensions = telescope_extensions,
 })
 
 -- disable backups

@@ -1,3 +1,5 @@
+local is_termux = vim.fn.executable('termux-info') == 1
+
 local hooks = function(ev)
   local name, kind = ev.data.spec.name, ev.data.kind
   local path = ev.data.path
@@ -22,7 +24,7 @@ local hooks = function(ev)
   elseif name == 'peek' and vim.fn.executable('deno') == 1 then
     run_cmd({ 'deno', 'task', '--quiet', 'build:fast' })
 
-  elseif name == 'telescope-fzf-native' and vim.fn.executable('cmake') == 1 then
+  elseif name == 'telescope-fzf-native' and not is_termux and vim.fn.executable('cmake') == 1 then
     -- Using 'sh -c' to handle the '&&' chain correctly
     run_cmd({ 'sh', '-c', 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build' })
 
@@ -33,7 +35,7 @@ end
 
 vim.api.nvim_create_autocmd('PackChanged', { callback = hooks })
 
-vim.pack.add({
+local pack_plugins = {
   'https://github.com/Mathijs-Bakker/godotdev.nvim',
   'https://github.com/ray-x/go.nvim',
   -- recommended if need floating window support
@@ -222,10 +224,6 @@ vim.pack.add({
         -- version control
 'https://github.com/tpope/vim-fugitive',
 'https://github.com/pwntester/octo.nvim',
-  {
-    src = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim',
-    name = 'telescope-fzf-native',
-  },
         -- navigation
 'https://github.com/johmsalas/text-case.nvim',
 'https://github.com/s1n7ax/nvim-search-and-replace',
@@ -252,7 +250,16 @@ vim.pack.add({
         -- fun
 'https://github.com/jakewvincent/texmagic.nvim',
 'https://github.com/tpope/vim-sleuth',
-})
+}
+
+if not is_termux then
+  table.insert(pack_plugins, {
+    src = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim',
+    name = 'telescope-fzf-native',
+  })
+end
+
+vim.pack.add(pack_plugins)
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "*",
