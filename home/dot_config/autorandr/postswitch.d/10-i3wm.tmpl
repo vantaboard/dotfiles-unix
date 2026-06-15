@@ -1,9 +1,10 @@
 #!/usr/bin/bash
 
+# Sort connected outputs left-to-right by X position, then reverse so screen0 is
+# the rightmost monitor. That gives workspace 1 → right, 2 → middle, 3 → left.
 ACTIVE_MONITORS=$(
     xrandr | awk '/ connected/ && /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/ {
         name = $1
-        # Look for the geometry string (e.g., 1920x1080+1920+0)
         for (i=1; i<=NF; i++) {
             if ($i ~ /[0-9]+x[0-9]+\+[0-9]+\+[0-9]+/) {
                 split($i, parts, "+")
@@ -14,10 +15,15 @@ ACTIVE_MONITORS=$(
     }' | sort -n | awk '{print $2}'
 )
 
-# Convert to array properly
 MONITOR_ARRAY=($ACTIVE_MONITORS)
+REVERSED=()
+for (( idx=${#MONITOR_ARRAY[@]}-1; idx>=0; idx-- )); do
+    REVERSED+=("${MONITOR_ARRAY[$idx]}")
+done
+MONITOR_ARRAY=("${REVERSED[@]}")
 
 MOVE_KEYS=("b" "n" "m")
+WORKSPACE_NAMES=("web" "code" "media" "comms" "misc" "av" "other" "other")
 
 CONFIG_OUTPUT="############# Auto-generated for use with autorandr #############\n"
 
@@ -26,30 +32,38 @@ for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
     monitor=${MONITOR_ARRAY[$i]}
 
     CONFIG_OUTPUT+="set \$$SCREEN_NAME $monitor\n"
-    CONFIG_OUTPUT+="workspace \$ws$i output \$$SCREEN_NAME\n"
+done
 
-    # if the current move keys index is greater than the current monitor index, add the move key binding
-    if [ $i -lt ${#MOVE_KEYS[@]} ]; then    
+for i in {0..7}; do
+    INDEX_FROM_ONE=$((i + 1))
+    WS="\$ws$i"
+
+    CONFIG_OUTPUT+="set $WS $INDEX_FROM_ONE:${WORKSPACE_NAMES[$i]}\n"
+done
+
+for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
+    SCREEN_NAME="screen$i"
+    WS="\$ws$i"
+
+    CONFIG_OUTPUT+="workspace $WS output \$$SCREEN_NAME\n"
+
+    if [ $i -lt ${#MOVE_KEYS[@]} ]; then
         CONFIG_OUTPUT+="bindsym \$mod+shift+${MOVE_KEYS[$i]} move workspace to output \$$SCREEN_NAME\n"
     fi
 done
 
-WORKSPACE_NAMES=("web" "code" "media" "comms" "misc" "av" "other" "other")
-
 for i in {0..7}; do
     INDEX_FROM_ONE=$((i + 1))
-
     WS="\$ws$i"
 
     CONFIG_OUTPUT+="bindsym \$mod+$INDEX_FROM_ONE workspace $WS\n"
     CONFIG_OUTPUT+="bindsym \$mod+Ctrl+$INDEX_FROM_ONE move container to workspace $WS\n"
     CONFIG_OUTPUT+="bindsym \$mod+Shift+$INDEX_FROM_ONE move container to workspace $WS; workspace $WS\n"
-    CONFIG_OUTPUT+="set $WS $INDEX_FROM_ONE:${WORKSPACE_NAMES[$i]}\n"
 done
 
-# find the "############# Auto-generated for use with autorandr #############" line in the $HOME/.config/i4/config file and remove everything after it and replace it with the new config
-sed -i '/############# Auto-generated for use with autorandr #############/,$d' $HOME/.config/i3/config
-echo -e $CONFIG_OUTPUT >> $HOME/.config/i3/config
+# find the "############# Auto-generated for use with autorandr #############" line in the $HOME/.config/i3/config file and remove everything after it and replace it with the new config
+sed -i '/############# Auto-generated for use with autorandr #############/,$d' "$HOME/.config/i3/config"
+printf '%b' "$CONFIG_OUTPUT" >> "$HOME/.config/i3/config"
 
 # Explicitly find the socket if it's missing
 if [ -z "$I3SOCK" ]; then
@@ -58,4 +72,15 @@ fi
 
 # Use reload instead of restart to prevent the session from crashing
 i3-msg -s "$I3SOCK" reload
+
+# Assignments only apply at workspace creation; move existing workspaces 1–3 explicitly.
+for i in 0 1 2; do
+    if [ $i -lt ${#MONITOR_ARRAY[@]} ]; then
+        ws_num=$((i + 1))
+        ws_name="${ws_num}:${WORKSPACE_NAMES[$i]}"
+        monitor="${MONITOR_ARRAY[$i]}"
+        i3-msg -s "$I3SOCK" "[workspace=\"${ws_name}\"] move workspace to output ${monitor}" >/dev/null
+    fi
+done
+
 echo "i3wm config reloaded."
