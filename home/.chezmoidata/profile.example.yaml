@@ -93,7 +93,6 @@ profile_example:
     - jq
     - keychain
     - keyd
-    - kitty
     - libnotify-bin
     - neovim
     - network-manager

@@ -265,7 +265,7 @@ setup_catalog:
       category: desktop
       label: Kitty terminal
       default: true
-      packages: [kitty]
+      description: Installed via sw.kovidgoyal.net installer into ~/.local/kitty.app; kitty/kitten linked in ~/.local/bin
       config_paths: [dot_config/kitty]
     dunst:
       category: desktop
