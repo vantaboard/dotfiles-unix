@@ -88,7 +88,6 @@ zvm_after_init_commands+=('[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh')
 export ZSH="$HOME/.oh-my-zsh"
 
 # OMZ / plugin settings
-export ABBR_AUTOLOAD=0
 {{- if index $f "zsh_autosuggestions" }}
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#868888,bold"
 export ZSH_AUTOSUGGEST_MANUAL_REBIND=true
@@ -130,6 +129,8 @@ zstyle ':fzf-tab:*' switch-group '<' '>'
 ##### ─────────────────────────────────────────────────────────────────────────────
 
 {{- if index $f "zsh_abbr" }}
+export ABBR_AUTOLOAD=0
+export ABBR_USER_ABBREVIATIONS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/zsh-abbr/user-abbreviations"
 autoload -Uz add-zsh-hook
 _abbr_lazy_load() {
   add-zsh-hook -d precmd _abbr_lazy_load

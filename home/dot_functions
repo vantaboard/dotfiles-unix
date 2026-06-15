@@ -1,12 +1,13 @@
 #!/usr/bin/bash
 
 function compabbr() {
+    local abbr_file="${XDG_CONFIG_HOME:-$HOME/.config}/zsh-abbr/user-abbreviations"
     # Compile once (run this manually whenever you edit the abbr file)
     zmodload zsh/zcompile
-    zcompile -R ~/.config/zsh/abbreviations.zsh{.zwc,.zwc.old}
+    zcompile -R "${abbr_file}{.zwc,.zwc.old}"
 
     # .zshrc
-    [[ -r ~/.config/zsh/abbreviations.zsh.zwc ]] && source ~/.config/zsh/abbreviations.zsh.zwc || source ~/.config/zsh/abbreviations.zsh
+    [[ -r "${abbr_file}.zwc" ]] && source "${abbr_file}.zwc" || source "$abbr_file"
 }
 
 abbr() {
@@ -18,8 +19,7 @@ abbr() {
 }
 
 function reload_abbr() {
-    # Load canonical abbreviations file if present
-    ABBR_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/zsh-abbr/abbreviations.zsh"
+    ABBR_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/zsh-abbr/user-abbreviations"
     [[ -f "$ABBR_FILE" ]] && source "$ABBR_FILE"
 }
 

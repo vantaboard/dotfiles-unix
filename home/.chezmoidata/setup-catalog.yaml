@@ -179,7 +179,7 @@ setup_catalog:
       requires: [oh_my_zsh]
       zshrc_block: zsh_abbr
       install_tools: true
-      description: Installed via run_onchange_after_install-tools (v6.3.3 + zsh-job-queue submodule)
+      description: Installed via run_onchange_after_install-tools; abbreviations in ~/.config/zsh-abbr/user-abbreviations
     omz_git:
       category: zsh_stack
       label: OMZ git plugin
