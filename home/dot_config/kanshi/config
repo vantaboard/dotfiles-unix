@@ -1,5 +1,6 @@
 # Docked: three externals on NVIDIA (card2). The sway-session wrapper uses
 # card2 only when docked, so the Intel laptop panel is not exposed to Sway.
+# DP-5 is the primary display (XWayland); postswitch sets xrandr --primary.
 # Order matters — more specific docked profile must come before undocked.
 profile docked-home {
     output DP-4 enable mode 1920x1080@60Hz position 0,0
