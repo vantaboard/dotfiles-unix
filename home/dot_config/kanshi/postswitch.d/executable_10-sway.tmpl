@@ -34,8 +34,17 @@ for i in {0..7}; do
     CONFIG_OUTPUT+="set $WS $INDEX_FROM_ONE:${WORKSPACE_NAMES[$i]}\n"
 done
 
-sed -i '/############# Auto-generated for use with kanshi #############/,$d' "$HOME/.config/sway/config"
-echo -e "$CONFIG_OUTPUT" >> "$HOME/.config/sway/config"
+CONFIG_FILE="$HOME/.config/sway/config"
+NEW_BLOCK=$(printf '%b' "$CONFIG_OUTPUT")
+OLD_BLOCK=$(sed -n '/^############# Auto-generated for use with kanshi #############/,$p' "$CONFIG_FILE" 2>/dev/null || true)
+
+if [[ -n "$OLD_BLOCK" && "$NEW_BLOCK" == "$OLD_BLOCK" ]]; then
+    echo "sway monitor layout unchanged; skipping reload."
+    exit 0
+fi
+
+sed -i '/############# Auto-generated for use with kanshi #############/,$d' "$CONFIG_FILE"
+printf '%b' "$CONFIG_OUTPUT" >> "$CONFIG_FILE"
 
 if [ -n "${SWAYSOCK:-}" ]; then
     swaymsg reload
