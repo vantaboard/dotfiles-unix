@@ -1,4 +1,4 @@
-/* i3 pixel borders are not visible on frameless Vibrancy windows; draw them in-app. */
+/* Frameless Vibrancy windows have no WM borders; draw window and pane borders in-app. */
 :root {
   --cursor-window-border-active: #86a83e;
   --cursor-window-border-inactive: #083905;
@@ -20,11 +20,6 @@ body:not(:focus-within) .monaco-workbench {
   --vscode-editorGroup-border: var(--cursor-pane-border-inactive) !important;
   --vscode-panel-border: var(--cursor-pane-border-inactive) !important;
   --vscode-sash-hoverBorder: var(--cursor-pane-border-inactive) !important;
-}
-
-body.i3-grouped .monaco-workbench,
-body.i3-grouped:not(:focus-within) .monaco-workbench {
-  box-shadow: none !important;
 }
 
 /* Vibrancy Cursor theme fixes strip part borders; restore them. */
