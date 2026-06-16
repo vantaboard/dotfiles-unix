@@ -1,4 +1,4 @@
 #!/usr/bin/bash
 set -euo pipefail
 
-exec "$HOME/.local/bin/bemoji" -t
+exec "$HOME/.local/bin/bemoji" -c
