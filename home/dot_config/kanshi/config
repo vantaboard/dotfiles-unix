@@ -1,6 +1,6 @@
 # Docked: three externals on NVIDIA (card2). The sway-session wrapper uses
 # card2 only when docked, so the Intel laptop panel is not exposed to Sway.
-# DP-5 is the primary display (XWayland); postswitch sets xrandr --primary.
+# DP-5 is the primary ASUS monitor; postswitch/sway-docked-layout sets 144Hz when docked.
 # Order matters — more specific docked profile must come before undocked.
 # Physical layout (left to right): BenQ GW2485TC (DP-4), ASUS VG248 primary
 # (DP-5), ASUS VG248 (DP-6). Dock silkscreen port labels do not match these

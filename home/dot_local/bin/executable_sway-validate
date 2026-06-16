@@ -108,13 +108,8 @@ echo "Manual checks after logging into Sway from GDM:"
 echo "  - Docked 3-monitor layout and undocked eDP switch"
 echo "  - Mod+1..8 workspace routing after dock/undock"
 echo "  - Mod+d launcher, Mod+Return kitty, swaylock, suspend/resume"
-echo "  - screenshot-region (grim/slurp/swappy), copyq, sunshine, NVIDIA offload apps"
-echo
-echo "After 1-2 weeks of daily Sway use, cut over by setting in profile.yaml:"
-echo "  desktop_i3: false"
-echo "  x11_session: false"
-echo "  autorandr: false"
-echo "  picom: false"
+echo "  - screenshot-region (grim/slurp/swappy), rofi-emoji (bemoji), copyq, sunshine, NVIDIA offload apps"
+echo "  - waybar sway/language indicator and py3status modules"
 
 if [[ "$fail" -gt 0 ]]; then
     exit 1

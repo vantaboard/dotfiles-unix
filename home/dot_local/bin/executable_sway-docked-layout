@@ -13,8 +13,6 @@ if [[ "$external_active" -ge 3 ]]; then
     swaymsg output eDP-1 disable
     # Dock MST bandwidth: only one ASUS monitor can run 144Hz while docked.
     swaymsg output DP-5 mode 1920x1080@144Hz
-    xrandr --output DP-5 --primary 2>/dev/null || true
 else
     swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
-    xrandr --output eDP-1 --primary 2>/dev/null || true
 fi

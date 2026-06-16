@@ -6,6 +6,4 @@ enabled_services:
   - thermald.service
   - docker.service
   - ollama.service
-  - autorandr.service
-  - autorandr-lid-listener.service
   - displays-resume.service

@@ -20,7 +20,7 @@ apt_manual:
       status: ignore
       first_seen: "2026-06-14"
     arandr:
-      status: install
+      status: ignore
       first_seen: "2026-06-14"
     autoconf:
       status: install
@@ -95,7 +95,7 @@ apt_manual:
       status: install
       first_seen: "2026-06-14"
     dbus-x11:
-      status: install
+      status: ignore
       first_seen: "2026-06-14"
     dctrl-tools:
       status: install
@@ -149,7 +149,7 @@ apt_manual:
       status: install
       first_seen: "2026-06-14"
     flameshot:
-      status: install
+      status: ignore
       first_seen: "2026-06-14"
     flex:
       status: install
@@ -1631,7 +1631,7 @@ apt_manual:
       status: ignore
       first_seen: "2026-06-14"
     xterm:
-      status: install
+      status: ignore
       first_seen: "2026-06-14"
     xtrans-dev:
       status: install

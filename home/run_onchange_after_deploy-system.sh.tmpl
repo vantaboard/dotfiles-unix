@@ -30,8 +30,6 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/systemd/displays-resume.service.tmpl" | sha256sum }}
 # hash: {{ include "system/systemd/ollama.service" | sha256sum }}
 # hash: {{ include "system/systemd/ollama.service.d/override.conf" | sha256sum }}
-# hash: {{ include "system/udev/99-dock-hotplug.rules" | sha256sum }}
-# hash: {{ include "system/udev/hotplug_monitor.sh" | sha256sum }}
 
 deploy_file() {
   local src="$1"
@@ -66,12 +64,6 @@ has_deploy() {
   return 0
 {{- end }}
 }
-
-if has_deploy udev; then
-  deploy_file "$SOURCE/udev/99-dock-hotplug.rules" /etc/udev/rules.d/99-dock-hotplug.rules
-  deploy_file "$SOURCE/udev/hotplug_monitor.sh" /usr/local/bin/hotplug_monitor.sh 755
-  sudo udevadm control --reload-rules 2>/dev/null || true
-fi
 
 if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
   TMP_UNIT="$(mktemp)"

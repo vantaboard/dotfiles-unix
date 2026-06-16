@@ -207,37 +207,29 @@ screenkey-dev() {
     return 1
   fi
 
-  # Extract geometry for the given screen index from xrandr
-  # Format we want: WIDTHxHEIGHT+X+Y
+  if [[ "${XDG_SESSION_TYPE:-}" != "wayland" || -z "${SWAYSOCK:-}" ]]; then
+    echo "screenkey-dev requires an active Sway session"
+    return 1
+  fi
+
   local geom
   geom=$(
-    xrandr --listmonitors \
-      | awk -v s="$screen" '
-          $1 == s ":" {
-            # example line:
-            # 1: +HDMI-1 1920/509x1080/286+3008+0  HDMI-1
-            match($0, /([0-9]+)\/[0-9]+x([0-9]+)\/[0-9]+\+([0-9]+)\+([0-9]+)/, a)
-            if (a[1] && a[2]) {
-              print a[1] "x" a[2] "+" a[3] "+" a[4]
-            }
-          }
-        '
+    swaymsg -t get_outputs | jq -r --argjson idx "$screen" --argjson height "$height" '
+      [.[] | select(.active) | {width: .rect.width, x: .rect.x, y: .rect.y}]
+      | .[$idx]
+      | if . then "\(.width)x\($height)+\(.x)+\(.y)" else empty end
+    '
   )
 
   if [[ -z "$geom" ]]; then
     echo "Could not determine geometry for screen $screen"
-    xrandr --listmonitors
+    swaymsg -t get_outputs | jq '[.[] | select(.active) | {name, rect}]'
     return 1
   fi
 
-  # Replace height with our desired banner height, keep X/Y offset
-  local width x y
-  IFS='x+' read -r width _ x y <<< "$geom"
-  local final_geom="${width}x${height}+${x}+${y}"
-
   screenkey \
     --position fixed \
-    --geometry "$final_geom" \
+    --geometry "$geom" \
     --timeout 2 \
     --opacity 0.9 \
     --bg-color "#000000" \
