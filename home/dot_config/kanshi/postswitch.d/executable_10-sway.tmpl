@@ -46,6 +46,7 @@ if [ -n "${SWAYSOCK:-}" ]; then
     else
         swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
     fi
+    "$HOME/.local/bin/sway-wallpaper"
 fi
 
 echo "sway config reloaded."

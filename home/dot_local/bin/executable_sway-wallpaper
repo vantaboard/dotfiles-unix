@@ -14,5 +14,10 @@ mapfile -t outputs < <(
 count="${#outputs[@]}"
 for (( i=0; i<count; i++ )); do
     wall="${wallpapers[$i]:-${wallpapers[0]}}"
-    swaymsg "output ${outputs[$i]} bg fill $HOME/.wallpapers/$wall"
+    path="$HOME/.wallpapers/$wall"
+    if [[ ! -f "$path" ]]; then
+        echo "sway-wallpaper: missing $path" >&2
+        continue
+    fi
+    swaymsg "output ${outputs[$i]} bg $path fill"
 done
