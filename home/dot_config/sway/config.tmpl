@@ -177,7 +177,7 @@ exec --no-startup-id xfce4-power-manager
 exec --no-startup-id pamac-tray
 
 exec --no-startup-id systemctl --user disable --now waybar.service
-exec_always --no-startup-id waybar
+exec_always --no-startup-id $HOME/.local/bin/waybar-restart
 
 bindsym $mod+m exec pkill -SIGUSR2 waybar
 
@@ -246,6 +246,7 @@ for_window [app_id="chromium"] opacity 1.0
 
 gaps inner 5
 gaps outer 10
+gaps top 20
 
 set $mode_gaps Gaps: (o) outer, (i) inner
 set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)

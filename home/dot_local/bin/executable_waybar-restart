@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Restart Waybar. Sway exec_always runs on every reload (e.g. kanshi postswitch),
+# so kill any existing instance before starting a new one.
+lockfile="${XDG_RUNTIME_DIR:-/tmp}/waybar-restart.lock"
+exec 9>"$lockfile"
+flock -w 5 9 || exit 0
+
+pkill -x -w waybar 2>/dev/null || true
+nohup waybar "$@" >/dev/null 2>&1 &
+disown
