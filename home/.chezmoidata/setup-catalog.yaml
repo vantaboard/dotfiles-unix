@@ -15,8 +15,8 @@ setup_catalog:
       description: Oh My Zsh, Powerlevel10k, fzf-tab, abbreviations
       default: true
     - id: desktop
-      label: Desktop / i3 + Sway
-      description: i3, Sway, picom, kitty, autorandr, kanshi, display tooling
+      label: Desktop / Sway
+      description: Sway, kitty, kanshi, waybar, display tooling
       default: true
     - id: dev
       label: Development
@@ -233,18 +233,12 @@ setup_catalog:
       zshrc_block: gpg_keychain
 
     # --- desktop ---
-    desktop_i3:
-      category: desktop
-      label: i3 window manager
-      default: true
-      packages: [i3, i3status]
-      config_paths: [dot_config/i3, dot_config/i3status]
     desktop_sway:
       category: desktop
       label: Sway window manager
       default: true
       packages: [sway, swaylock, swayidle, swaybg, waybar, grim, slurp, wl-clipboard]
-      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/waybar, dot_config/environment.d/wayland.conf]
+      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/waybar, dot_config/environment.d/wayland.conf, dot_config/i3status]
       system_deploy: sway_session
     hyprpicker:
       category: desktop
@@ -329,12 +323,6 @@ setup_catalog:
       label: Wayland session helpers
       default: true
       config_paths: [dot_config/environment.d/wayland.conf]
-    picom:
-      category: desktop
-      label: picom compositor
-      default: true
-      packages: [picom]
-      config_paths: [dot_config/picom.conf]
     kitty:
       category: desktop
       label: Kitty terminal
@@ -347,19 +335,6 @@ setup_catalog:
       label: dunst notifications
       default: true
       packages: [dunst]
-    autorandr:
-      category: desktop
-      label: autorandr
-      default: true
-      packages: [autorandr]
-      config_paths: [dot_config/autorandr, dot_screenlayout]
-      alias_block: autorandr
-    nitrogen:
-      category: desktop
-      label: nitrogen wallpapers
-      default: true
-      packages: [nitrogen]
-      config_paths: [dot_wallpapers]
     rofi:
       category: desktop
       label: rofi launcher
@@ -368,14 +343,9 @@ setup_catalog:
     desktop_utils:
       category: desktop
       label: Desktop utilities
-      description: scrot, feh, brightness, playerctl, etc.
+      description: brightness, playerctl, network, audio
       default: true
-      packages: [scrot, feh, numlockx, xss-lock, playerctl, brightnessctl, acpi, notify-osd, libnotify-bin, xinput, x11-xserver-utils, xinit, xorg, network-manager, pulseaudio]
-    x11_session:
-      category: desktop
-      label: X11 session files
-      default: true
-      config_paths: [dot_xinitrc, dot_xsessionrc, dot_Xresources]
+      packages: [playerctl, brightnessctl, acpi, libnotify-bin, network-manager, pulseaudio]
     keyd:
       category: desktop
       label: keyd key remapping
@@ -446,12 +416,6 @@ setup_catalog:
       default: true
       packages: [grub-common, grub-efi-amd64, grub-efi-amd64-signed]
       system_deploy: grub
-    udev_dock:
-      category: system
-      label: Dock hotplug udev rules
-      default: true
-      packages: [udev]
-      system_deploy: udev
     displays_resume:
       category: system
       label: displays-resume systemd unit

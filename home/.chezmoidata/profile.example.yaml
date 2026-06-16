@@ -1,9 +1,7 @@
 profile_example:
   features:
-    autorandr: true
     bat: true
     clang: true
-    desktop_i3: true
     desktop_sway: true
     desktop_utils: true
     kanshi: true
@@ -35,7 +33,6 @@ profile_example:
     kitty: true
     mise: true
     neovim: true
-    nitrogen: true
     oh_my_zsh: true
     ollama: true
     omz_codeclimate: false
@@ -46,16 +43,12 @@ profile_example:
     omz_ssh_agent: true
     omz_virtualenv: false
     p10k: true
-    picom: true
     ripgrep: true
     rofi: true
     ssh_hardening: true
     thermald: true
     tmux: true
     trash_cli: true
-    udev_dock: true
-    vivid: true
-    x11_session: true
     wl_clipboard: true
     zoxide: true
     zsh: true
@@ -65,7 +58,6 @@ profile_example:
     zsh_edit: true
   packages:
     - acpi
-    - autorandr
     - bat
     - brightnessctl
     - clang
@@ -75,7 +67,6 @@ profile_example:
     - earlyoom
     - eza
     - fd-find
-    - feh
     - ffmpeg
     - fzf
     - gh
@@ -86,8 +77,6 @@ profile_example:
     - grub-common
     - grub-efi-amd64
     - grub-efi-amd64-signed
-    - i3
-    - i3status
     - sway
     - swaylock
     - swayidle
@@ -108,27 +97,17 @@ profile_example:
     - libxkbcommon-dev
     - neovim
     - network-manager
-    - nitrogen
-    - notify-osd
-    - numlockx
     - openssh-server
-    - picom
     - playerctl
     - pkg-config
     - pulseaudio
     - ripgrep
     - rofi
-    - scrot
     - thermald
     - tmux
     - udev
     - vivid
     - wayland-protocols
-    - x11-xserver-utils
-    - xinit
-    - xinput
-    - xorg
-    - xss-lock
     - zoxide
     - zsh
   systemd_units:
@@ -146,7 +125,6 @@ profile_example:
     - grub
     - ollama
     - ssh
-    - udev
   secrets:
     git_gpg_key: ""
   input_devices:

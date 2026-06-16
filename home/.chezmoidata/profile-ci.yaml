@@ -32,21 +32,16 @@ profile_ci:
     omz_extract: false
     omz_codeclimate: false
     gpg_signing: false
-    desktop_i3: false
     desktop_sway: false
     hyprpicker: false
     swayfx: false
     swappy: false
-    picom: false
     kitty: false
     dunst: false
-    autorandr: false
     kanshi: false
     wayland_session: false
-    nitrogen: false
     rofi: false
     desktop_utils: false
-    x11_session: false
     neovim: true
     gh_cli: false
     glab: false
@@ -57,7 +52,6 @@ profile_ci:
     flatpak: false
     ssh_hardening: false
     grub: false
-    udev_dock: false
     displays_resume: false
     ollama: false
     earlyoom: false

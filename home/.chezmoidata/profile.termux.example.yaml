@@ -34,21 +34,16 @@ profile_termux_example:
     omz_extract: true
     omz_codeclimate: false
     gpg_signing: false
-    desktop_i3: false
     desktop_sway: false
     hyprpicker: false
     swayfx: false
     swappy: false
     kanshi: false
     wayland_session: false
-    picom: false
     kitty: false
     dunst: false
-    autorandr: false
-    nitrogen: false
     rofi: false
     desktop_utils: false
-    x11_session: false
     keyd: false
     neovim: true
     gh_cli: true
@@ -60,7 +55,6 @@ profile_termux_example:
     flatpak: false
     ssh_hardening: false
     grub: false
-    udev_dock: false
     displays_resume: false
     ollama: false
     earlyoom: false
