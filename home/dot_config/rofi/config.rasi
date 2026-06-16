@@ -1,0 +1,9 @@
+configuration {
+    location: 2;
+    font:     "FixedsysExcelsior Nerd Font Mono 10";
+}
+
+window {
+    anchor: north;
+    width:  100%;
+}
