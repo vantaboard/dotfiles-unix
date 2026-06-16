@@ -177,14 +177,13 @@ setopt hist_ignoredups        # skip duplicate commands
 ##### keychain, GPG
 ##### ─────────────────────────────────────────────────────────────────────────────
 
-{{- if eq .chezmoi.os "android" }}
-# gpg-agent needs the controlling TTY on Termux to prompt for passphrases.
+{{- if index $f "gpg_signing" }}
+# gpg-agent prompts on the controlling TTY (see ~/.gnupg/gpg-agent.conf).
 if tty -s; then
   export GPG_TTY="$(tty)"
+  gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
 fi
-{{- end }}
 
-{{- if index $f "gpg_signing" }}
 # GPG (only if you actually have $GIT_GPG_KEY set)
 eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"  # ignore if unset
 source "$HOME/.keychain/$(hostname)-sh-gpg" 2>/dev/null

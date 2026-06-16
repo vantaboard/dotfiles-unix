@@ -54,3 +54,6 @@ dot_config/nvim/**
 {{- if not (index $f "fzf") }}
 dot_fzf.zsh.tmpl
 {{- end }}
+{{- if not (index $f "gpg_signing") }}
+dot_gnupg/**
+{{- end }}

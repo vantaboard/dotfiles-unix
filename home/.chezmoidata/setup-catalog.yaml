@@ -228,6 +228,8 @@ setup_catalog:
       label: GPG signing via keychain
       default: true
       requires: [keychain]
+      packages: [pinentry-tty]
+      config_paths: [dot_gnupg]
       zshrc_block: gpg_keychain
 
     # --- desktop ---
