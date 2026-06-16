@@ -7,10 +7,18 @@ declare -a wallpapers=(
     "pexels-vahapdmr-18515329.jpg"
 )
 
-mapfile -t outputs < <(
+get_active_outputs() {
     swaymsg -t get_outputs | jq -r '
         .[] | select(.active) | .rect.x as $x | "\($x) \(.name)"' | sort -n | awk '{print $2}'
-)
+}
+
+# Active outputs may not be ready yet during sway reload.
+outputs=()
+for _ in 1 2 3 4 5; do
+    mapfile -t outputs < <(get_active_outputs)
+    ((${#outputs[@]} > 0)) && break
+    sleep 0.2
+done
 
 count="${#outputs[@]}"
 for (( i=0; i<count; i++ )); do
