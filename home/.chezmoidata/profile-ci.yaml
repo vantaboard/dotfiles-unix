@@ -7,7 +7,7 @@ profile_ci:
     ripgrep: true
     fd: true
     trash_cli: true
-    xclip: true
+    wl_clipboard: true
     keychain: true
     jq: true
     tmux: false
@@ -71,7 +71,7 @@ profile_ci:
     - ripgrep
     - fd-find
     - trash-cli
-    - xclip
+    - wl-clipboard
     - vivid
     - clang
     - jq

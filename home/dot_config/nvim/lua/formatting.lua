@@ -109,7 +109,7 @@ vim.o.relativenumber = true
 vim.o.scrolloff = 8
 
 -- Sync yanks with the system clipboard when a provider is available.
--- xclip/wl-paste error with "target STRING not available" when the clipboard
+-- wl-paste errors with "target STRING not available" when the clipboard
 -- is empty; Neovim surfaces that as "clipboard error" unless paste is quiet.
 local function setup_clipboard()
     if vim.fn.has("clipboard") ~= 1 then
@@ -139,19 +139,6 @@ local function setup_clipboard()
             paste = {
                 ["+"] = "wl-paste 2>/dev/null",
                 ["*"] = "wl-paste --primary 2>/dev/null",
-            },
-            cache_enabled = 1,
-        }
-    elseif vim.fn.executable("xclip") == 1 and os.getenv("DISPLAY") then
-        vim.g.clipboard = {
-            name = "xclip",
-            copy = {
-                ["+"] = "xclip -selection clipboard",
-                ["*"] = "xclip -selection primary",
-            },
-            paste = {
-                ["+"] = "xclip -selection clipboard -o 2>/dev/null",
-                ["*"] = "xclip -selection primary -o 2>/dev/null",
             },
             cache_enabled = 1,
         }

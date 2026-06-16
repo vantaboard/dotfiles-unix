@@ -3,11 +3,13 @@
 local Job = require("plenary.job")
 
 local function clipboard_job(url)
-    local command = "xclip"
-    local args = { "-selection", "clipboard" }
+    local command, args
     if vim.fn.executable("termux-clipboard-set") == 1 then
-        command = "termux-clipboard-set"
-        args = {}
+        command, args = "termux-clipboard-set", {}
+    elseif vim.fn.executable("wl-copy") == 1 and os.getenv("WAYLAND_DISPLAY") then
+        command, args = "wl-copy", {}
+    else
+        return nil
     end
     return Job:new({
         command = command,
@@ -31,7 +33,10 @@ local function pr(clipboard)
                 print(url)
 
                 if clipboard then
-                    clipboard_job(url):start()
+                    local job = clipboard_job(url)
+                    if job then
+                        job:start()
+                    end
                 end
             end,
         })
@@ -53,7 +58,10 @@ local function pr(clipboard)
             print(url)
 
             if clipboard then
-                clipboard_job(url):start()
+                local job = clipboard_job(url)
+                if job then
+                    job:start()
+                end
             end
         end,
         on_stderr = function()
@@ -101,7 +109,10 @@ local function copy_commit()
 
             print(url)
 
-            clipboard_job(url):start()
+            local job = clipboard_job(url)
+            if job then
+                job:start()
+            end
         end,
     }):start()
 end

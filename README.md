@@ -130,7 +130,7 @@ To customize on Termux, write `home/.chezmoidata/profile.yaml` or `profile-host.
 - **Powerlevel10k:** Install a Nerd Font in the Termux app (e.g. `~/.termux/font.ttf` + `termux-reload-settings`) for prompt icons.
 - **mise:** Termux only — `pkg install mise` ([termux-packages#29075](https://github.com/termux/termux-packages/pull/29075)). Do **not** use `curl https://mise.run` on Android (produces unrunnable glibc binaries). `install-tools` removes any broken `~/.local/bin/mise` and installs via pkg only. If `pkg install mise` fails, your mirror may lag — run `termux-change-repo` or wait for sync. Set `mise: false` in profile until pkg works. Linux uses `mise.run` as usual.
 - **Ollama:** The Termux `ollama` package installs the client only — you need a running server (`ollama serve`). With `ollama: true` in your profile (or after `pkg install ollama`), `chezmoi apply` installs [termux-services](https://github.com/termux/termux-services) and enables an `ollama` runit service. If `sv up ollama` warns about `supervise/ok`, run `source $PREFIX/etc/profile.d/start-services.sh`, wait a few seconds, then `sv-enable ollama && sv up ollama` again (or restart Termux). Logs: `$PREFIX/var/log/sv/ollama/current`. Manual one-off: `ollama serve &`. Ollama is aarch64/x86_64 only (not 32-bit ARM).
-- **xclip / desktop / system:** Leave disabled in the Termux profile; no X11, systemd, or GRUB on Android.
+- **wl-clipboard / desktop / system:** Leave disabled in the Termux profile; no Wayland clipboard, systemd, or GRUB on Android.
 
 ## CI / E2E testing
 

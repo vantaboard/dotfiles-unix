@@ -8,7 +8,7 @@ profile_termux_example:
     ripgrep: true
     fd: true
     trash_cli: true
-    xclip: false
+    wl_clipboard: false
     keychain: true
     jq: true
     htop: true

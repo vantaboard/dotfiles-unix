@@ -55,7 +55,7 @@ profile_example:
     udev_dock: true
     vivid: true
     x11_session: true
-    xclip: true
+    wl_clipboard: true
     zoxide: true
     zsh: true
     zsh_abbr: true
@@ -123,7 +123,6 @@ profile_example:
     - vivid
     - wayland-protocols
     - x11-xserver-utils
-    - xclip
     - xinit
     - xinput
     - xorg

@@ -65,11 +65,11 @@ setup_catalog:
       default: true
       install_tools: true
       description: Git clone + Python venv; trash-* wrappers in ~/.local/bin
-    xclip:
+    wl_clipboard:
       category: shell_core
-      label: xclip
+      label: wl-clipboard
       default: true
-      packages: [xclip]
+      packages: [wl-clipboard]
     keychain:
       category: shell_core
       label: keychain

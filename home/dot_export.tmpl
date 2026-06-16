@@ -34,9 +34,9 @@ notify_user() {
     echo "$1"
   fi
 }
-{{- else if index $f "xclip" }}
-clip_copy() { xclip -selection clipboard; }
-clip_paste() { xclip -selection clipboard -o; }
+{{- else if index $f "wl_clipboard" }}
+clip_copy() { wl-copy; }
+clip_paste() { wl-paste 2>/dev/null; }
 notify_user() {
   if command -v notify-send >/dev/null 2>&1; then
     notify-send "$1"
