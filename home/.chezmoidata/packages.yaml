@@ -25,6 +25,7 @@ packages:
       - swaylock
       - swayidle
       - swaybg
+      - waybar
       - kanshi
       - grim
       - slurp

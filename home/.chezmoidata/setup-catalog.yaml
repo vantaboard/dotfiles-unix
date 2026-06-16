@@ -241,8 +241,8 @@ setup_catalog:
       category: desktop
       label: Sway window manager
       default: true
-      packages: [sway, swaylock, swayidle, swaybg, grim, slurp, wl-clipboard]
-      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/environment.d/wayland.conf]
+      packages: [sway, swaylock, swayidle, swaybg, waybar, grim, slurp, wl-clipboard]
+      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/waybar, dot_config/environment.d/wayland.conf]
       system_deploy: sway_session
     hyprpicker:
       category: desktop

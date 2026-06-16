@@ -91,6 +91,7 @@ profile_example:
     - swaylock
     - swayidle
     - swaybg
+    - waybar
     - kanshi
     - grim
     - slurp

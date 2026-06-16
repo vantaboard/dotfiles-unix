@@ -1,0 +1,25 @@
+{
+    "height": 22,
+    "spacing": 4,
+    "modules-left": [
+        "sway/workspaces"
+    ],
+    "modules-right": [
+        "custom/py3status",
+        "tray"
+    ],
+    "sway/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true,
+        "warp-on-scroll": false
+    },
+    "custom/py3status": {
+        "exec": "py3status",
+        "return-type": "i3bar",
+        "format": "{}"
+    },
+    "tray": {
+        "icon-size": 16,
+        "spacing": 8
+    }
+}

@@ -1,0 +1,46 @@
+* {
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    font-family: "FixedsysExcelsior Nerd Font Mono", monospace;
+    font-size: 10px;
+}
+
+window#waybar {
+    background-color: #0f0a05;
+    color: #84c137;
+}
+
+#workspaces button {
+    padding: 0 6px;
+    margin: 0 1px;
+    color: #666666;
+    background-color: #0f0a05;
+    border-bottom: 3px solid #666666;
+}
+
+#workspaces button.active {
+    color: #86a83e;
+    background-color: #0c0804;
+    border-bottom: 3px solid #666666;
+}
+
+#workspaces button.focused {
+    color: #eeeeee;
+    background-color: #083905;
+    border-bottom: 3px solid #84c137;
+}
+
+#workspaces button.urgent {
+    color: #e5e5e5;
+    background-color: #b6204a;
+    border-bottom: 3px solid #e50000;
+}
+
+#custom-py3status {
+    padding: 0 4px;
+}
+
+#tray {
+    padding: 0 4px;
+}
