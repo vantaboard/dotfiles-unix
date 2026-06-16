@@ -1,5 +1,17 @@
 include /etc/sway/config.d/*
 
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- $swayfxEnabled := false -}}
+{{- if eq (index $f "swayfx") true -}}
+{{-   $swayfxEnabled = true -}}
+{{- else if and (index $f "desktop_sway") (ne (index $f "swayfx") false) -}}
+{{-   $swayfxEnabled = true -}}
+{{- end -}}
+
 # Wayland session startup
 exec --no-startup-id dunst
 exec --no-startup-id sunshine
@@ -176,6 +188,60 @@ client.urgent           #b6204a  #e50000  #e5e5e5  #e50000   #e50000
 client.placeholder      #000000  #0c0804  #666666  #000000   #0c0804
 
 client.background       #0f0a05
+
+{{- if $swayfxEnabled }}
+# Compositor effects (SwayFX — ported from picom.conf)
+# Deep green tint lifts windows off the wallpaper
+shadows enable
+shadows_on_csd enable
+shadow_blur_radius 18
+shadow_color #083905EB
+shadow_offset -8 -8
+
+# Blur wallpaper behind semi-transparent windows (kitty sets its own opacity)
+blur enable
+blur_xray disable
+blur_passes 3
+blur_radius 6
+{{- end }}
+
+# Default opaque — only clients that set their own opacity (e.g. kitty) go translucent
+for_window [class="waybar"] opacity 1.0
+for_window [app_id="waybar"] opacity 1.0
+for_window [class="Polybar"] opacity 1.0
+for_window [class="Dunst"] opacity 1.0
+for_window [app_id="Dunst"] opacity 1.0
+for_window [class="(?i)notification"] opacity 1.0
+for_window [class="Rofi"] opacity 1.0
+for_window [app_id="Rofi"] opacity 1.0
+for_window [app_id="rofi"] opacity 1.0
+for_window [class="dmenu"] opacity 1.0
+for_window [class="copyq"] opacity 1.0
+for_window [class="Pavucontrol"] opacity 1.0
+for_window [class="Galculator"] opacity 1.0
+for_window [class="swappy"] opacity 1.0
+for_window [class="normcap"] opacity 1.0
+for_window [class="kooha"] opacity 1.0
+for_window [class="Oblogout"] opacity 1.0
+for_window [class="Xfce4-notifyd"] opacity 1.0
+for_window [class="xfce4-notifyd"] opacity 1.0
+for_window [class="vlc"] opacity 1.0
+for_window [class="mpv"] opacity 1.0
+for_window [class="Steam"] opacity 1.0
+for_window [class="steam_app"] opacity 1.0
+for_window [class="steamwebhelper"] opacity 1.0
+for_window [class="Wine"] opacity 1.0
+for_window [class="(?i)gamescope"] opacity 1.0
+for_window [class="VirtualBox"] opacity 1.0
+for_window [class="VirtualBox Machine"] opacity 1.0
+for_window [class="obs"] opacity 1.0
+for_window [class="zoom"] opacity 1.0
+for_window [class="firefox"] opacity 1.0
+for_window [app_id="firefox"] opacity 1.0
+for_window [class="Google-chrome"] opacity 1.0
+for_window [class="chromium"] opacity 1.0
+for_window [class="Chromium"] opacity 1.0
+for_window [app_id="chromium"] opacity 1.0
 
 gaps inner 5
 gaps outer 10

@@ -37,6 +37,7 @@ profile_termux_example:
     desktop_i3: false
     desktop_sway: false
     hyprpicker: false
+    swayfx: false
     swappy: false
     kanshi: false
     wayland_session: false

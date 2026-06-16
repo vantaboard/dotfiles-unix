@@ -34,4 +34,11 @@ elif [[ -e /dev/dri/card1 ]]; then
   export WLR_DRM_DEVICES=/dev/dri/card1
 fi
 
+SWAYFX_BIN="${HOME}/.local/bin/swayfx"
+
+if [[ -x "$SWAYFX_BIN" ]]; then
+  export LD_LIBRARY_PATH="${HOME}/.local/lib/x86_64-linux-gnu:${HOME}/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  exec "$SWAYFX_BIN" --unsupported-gpu "$@"
+fi
+
 exec sway --unsupported-gpu "$@"

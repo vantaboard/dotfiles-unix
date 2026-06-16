@@ -28,6 +28,7 @@ profile_example:
     htop: false
     hyprpicker: true
     swappy: true
+    swayfx: true
     jq: true
     keychain: true
     keyd: true

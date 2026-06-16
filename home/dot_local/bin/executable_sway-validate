@@ -62,7 +62,15 @@ if [[ -f "$HOME/.config/kanshi/config" ]]; then
         exit 1
     '
 fi
-check "sway config syntax" sway -C --unsupported-gpu -c "$HOME/.config/sway/config"
+check "sway config syntax" bash -c '
+    export LD_LIBRARY_PATH="$HOME/.local/lib/x86_64-linux-gnu:$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    if [[ -x "$HOME/.local/bin/swayfx" ]]; then
+        "$HOME/.local/bin/swayfx" -C --unsupported-gpu -c "$HOME/.config/sway/config"
+    else
+        sway -C --unsupported-gpu -c "$HOME/.config/sway/config"
+    fi
+'
+check "swayfx installed (blur/shadows)" test -x "$HOME/.local/bin/swayfx"
 check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
 
 if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then

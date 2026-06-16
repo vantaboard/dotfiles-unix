@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v17
+# hash: tools-v19
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -43,6 +43,15 @@ TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-r
 VIVID_VERSION="0.10.1"
 HYPRPICKER_VERSION="v0.3.0"
 HYPRPICKER_DIR="$HOME_DIR/.local/share/src/hyprpicker"
+SWAYFX_VERSION="0.5.3"
+SCENEFX_VERSION="0.4.1"
+WLROOTS_VERSION="0.19.0"
+WAYLAND_VERSION="1.23.1"
+LIBINPUT_VERSION="1.26.0"
+SWAYFX_DIR="$HOME_DIR/.local/share/src/swayfx"
+WAYLAND_DIR="$HOME_DIR/.local/share/src/wayland"
+LIBINPUT_DIR="$HOME_DIR/.local/share/src/libinput"
+LOCAL_PKG_CONFIG="$LOCAL_PREFIX/lib/x86_64-linux-gnu/pkgconfig:$LOCAL_PREFIX/lib/pkgconfig"
 SWAPPY_VERSION="v1.5.1"
 SWAPPY_DIR="$HOME_DIR/.local/share/src/swappy"
 
@@ -390,6 +399,182 @@ install_hyprpicker() {
   fi
 }
 
+install_swayfx() {
+  swayfx_usable() {
+    [[ -x "$LOCAL_BIN/swayfx" ]] && "$LOCAL_BIN/swayfx" --version 2>/dev/null | grep -qi swayfx
+  }
+
+  pkg_version_ge() {
+    local pkg="$1" min="$2"
+    local ver
+    ver="$(PKG_CONFIG_PATH="$LOCAL_PKG_CONFIG${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" \
+      pkg-config --modversion "$pkg" 2>/dev/null || true)"
+    [[ -n "$ver" ]] || return 1
+    [[ "$(printf '%s\n%s\n' "$min" "$ver" | sort -V | head -1)" == "$min" ]]
+  }
+
+  ensure_local_wayland() {
+    pkg_version_ge wayland-server 1.23.1 && return 0
+    if ! command -v git >/dev/null 2>&1 || ! command -v meson >/dev/null 2>&1; then
+      echo "WARN: need git/meson to build wayland ${WAYLAND_VERSION} for swayfx"
+      return 1
+    fi
+    if [[ ! -f "$WAYLAND_DIR/meson.build" ]]; then
+      rm -rf "$WAYLAND_DIR"
+      echo "Cloning wayland ${WAYLAND_VERSION}..."
+      git clone --depth 1 --branch "$WAYLAND_VERSION" \
+        https://gitlab.freedesktop.org/wayland/wayland.git "$WAYLAND_DIR"
+    fi
+    echo "Building wayland ${WAYLAND_VERSION} into ${LOCAL_PREFIX}..."
+    meson setup "$WAYLAND_DIR/build" "$WAYLAND_DIR" \
+      --prefix="$LOCAL_PREFIX" \
+      --buildtype=release \
+      -Ddocumentation=false \
+      --reconfigure 2>/dev/null \
+      || meson setup "$WAYLAND_DIR/build" "$WAYLAND_DIR" \
+        --prefix="$LOCAL_PREFIX" \
+        --buildtype=release \
+        -Ddocumentation=false
+    ninja -C "$WAYLAND_DIR/build"
+    ninja -C "$WAYLAND_DIR/build" install
+  }
+
+  ensure_local_libinput() {
+    pkg_version_ge libinput 1.26.0 && return 0
+    if ! command -v git >/dev/null 2>&1 || ! command -v meson >/dev/null 2>&1; then
+      echo "WARN: need git/meson to build libinput ${LIBINPUT_VERSION} for swayfx"
+      return 1
+    fi
+    if [[ ! -f "$LIBINPUT_DIR/meson.build" ]]; then
+      rm -rf "$LIBINPUT_DIR"
+      echo "Cloning libinput ${LIBINPUT_VERSION}..."
+      git clone --depth 1 --branch "$LIBINPUT_VERSION" \
+        https://gitlab.freedesktop.org/libinput/libinput.git "$LIBINPUT_DIR"
+    fi
+    echo "Building libinput ${LIBINPUT_VERSION} into ${LOCAL_PREFIX}..."
+    meson setup "$LIBINPUT_DIR/build" "$LIBINPUT_DIR" \
+      --prefix="$LOCAL_PREFIX" \
+      --buildtype=release \
+      -Ddocumentation=false \
+      -Ddebug=false \
+      -Dtests=false \
+      --reconfigure 2>/dev/null \
+      || meson setup "$LIBINPUT_DIR/build" "$LIBINPUT_DIR" \
+        --prefix="$LOCAL_PREFIX" \
+        --buildtype=release \
+        -Ddocumentation=false \
+        -Ddebug=false \
+        -Dtests=false
+    ninja -C "$LIBINPUT_DIR/build"
+    ninja -C "$LIBINPUT_DIR/build" install
+  }
+
+  if swayfx_usable; then
+    echo "swayfx already installed"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping swayfx install"
+    return 0
+  fi
+  if ! command -v meson >/dev/null 2>&1 || ! command -v ninja >/dev/null 2>&1; then
+    echo "WARN: meson/ninja not found; skipping swayfx install"
+    return 0
+  fi
+
+  local build_deps=(
+    meson ninja-build pkg-config cmake git scdoc
+    wayland-protocols libwayland-dev libpcre2-dev libjson-c-dev
+    libpango1.0-dev libcairo2-dev libgdk-pixbuf-2.0-dev
+    libdrm-dev libgbm-dev libinput-dev libseat-dev libxkbcommon-dev
+    libxcb-dri3-dev libxcb-present-dev libxcb-res0-dev
+    libxcb-render-util0-dev libxcb-ewmh-dev libxcb-icccm4-dev
+    libliftoff-dev libdisplay-info-dev liblcms2-dev libpixman-1-dev
+    libgles2-mesa-dev libudev-dev libevdev-dev libmtdev-dev libwacom-dev
+  )
+  local dep missing=()
+  if command -v dpkg >/dev/null 2>&1; then
+    for dep in "${build_deps[@]}"; do
+      if ! dpkg -s "$dep" >/dev/null 2>&1; then
+        missing+=("$dep")
+      fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      echo "Installing swayfx build dependencies: ${missing[*]}"
+      sudo apt install -y -qq --no-install-recommends "${missing[@]}"
+    fi
+  fi
+
+  mkdir -p "$LOCAL_BIN" "$LOCAL_PREFIX/lib"
+
+  ensure_local_wayland || return 0
+  ensure_local_libinput || return 0
+
+  export PKG_CONFIG_PATH="$LOCAL_PKG_CONFIG${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+  export PATH="$LOCAL_BIN:$PATH"
+
+  if [[ ! -f "$SWAYFX_DIR/meson.build" ]]; then
+    rm -rf "$SWAYFX_DIR"
+  fi
+
+  if [[ ! -d "$SWAYFX_DIR/.git" ]]; then
+    echo "Cloning swayfx ${SWAYFX_VERSION}..."
+    git clone --depth 1 --branch "$SWAYFX_VERSION" \
+      https://github.com/WillPower3309/swayfx.git "$SWAYFX_DIR"
+  else
+    git -C "$SWAYFX_DIR" fetch --depth 1 origin tag "$SWAYFX_VERSION" 2>/dev/null || true
+    git -C "$SWAYFX_DIR" checkout "$SWAYFX_VERSION" 2>/dev/null || true
+  fi
+
+  mkdir -p "$SWAYFX_DIR/subprojects"
+
+  if [[ ! -d "$SWAYFX_DIR/subprojects/scenefx/.git" ]]; then
+    echo "Cloning scenefx ${SCENEFX_VERSION}..."
+    git clone --depth 1 --branch "$SCENEFX_VERSION" \
+      https://github.com/wlrfx/scenefx.git "$SWAYFX_DIR/subprojects/scenefx"
+  else
+    git -C "$SWAYFX_DIR/subprojects/scenefx" fetch --depth 1 origin tag "$SCENEFX_VERSION" 2>/dev/null || true
+    git -C "$SWAYFX_DIR/subprojects/scenefx" checkout "$SCENEFX_VERSION" 2>/dev/null || true
+  fi
+
+  if [[ ! -d "$SWAYFX_DIR/subprojects/wlroots/.git" ]]; then
+    echo "Cloning wlroots ${WLROOTS_VERSION}..."
+    git clone --depth 1 --branch "$WLROOTS_VERSION" \
+      https://gitlab.freedesktop.org/wlroots/wlroots.git "$SWAYFX_DIR/subprojects/wlroots"
+  else
+    git -C "$SWAYFX_DIR/subprojects/wlroots" fetch --depth 1 origin tag "$WLROOTS_VERSION" 2>/dev/null || true
+    git -C "$SWAYFX_DIR/subprojects/wlroots" checkout "$WLROOTS_VERSION" 2>/dev/null || true
+  fi
+
+  echo "Building swayfx ${SWAYFX_VERSION} into ${LOCAL_PREFIX}..."
+  if [[ -d "$SWAYFX_DIR/build/meson-private" ]]; then
+    meson setup "$SWAYFX_DIR/build" "$SWAYFX_DIR" \
+      --prefix="$LOCAL_PREFIX" \
+      --buildtype=release \
+      -Dwerror=false \
+      --reconfigure
+  else
+    meson setup "$SWAYFX_DIR/build" "$SWAYFX_DIR" \
+      --prefix="$LOCAL_PREFIX" \
+      --buildtype=release \
+      -Dwerror=false
+  fi
+  ninja -C "$SWAYFX_DIR/build"
+  ninja -C "$SWAYFX_DIR/build" install
+
+  if [[ -x "$LOCAL_BIN/sway" && ! -e "$LOCAL_BIN/swayfx" ]]; then
+    mv "$LOCAL_BIN/sway" "$LOCAL_BIN/swayfx"
+  fi
+
+  if swayfx_usable; then
+    echo "swayfx ready ($LOCAL_BIN/swayfx)"
+  else
+    echo "WARN: swayfx install failed"
+    return 0
+  fi
+}
+
 install_swappy() {
   swappy_usable() {
     command -v swappy >/dev/null 2>&1 && swappy --version >/dev/null 2>&1
@@ -498,6 +683,19 @@ install_zoxide
 
 {{- if $hyprpickerEnabled }}
 install_hyprpicker
+{{- end }}
+
+{{- $swayfxEnabled := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if eq (index $f "swayfx") true -}}
+{{-     $swayfxEnabled = true -}}
+{{-   else if and (index $f "desktop_sway") (ne (index $f "swayfx") false) -}}
+{{-     $swayfxEnabled = true -}}
+{{-   end -}}
+{{- end -}}
+
+{{- if $swayfxEnabled }}
+install_swayfx
 {{- end }}
 
 {{- if and (index $f "swappy") (eq .chezmoi.os "linux") }}

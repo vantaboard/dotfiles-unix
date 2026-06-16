@@ -262,6 +262,47 @@ setup_catalog:
         - libjpeg-dev
         - gcc-14
         - g++-14
+    swayfx:
+      category: desktop
+      label: SwayFX compositor
+      description: Sway fork with blur and drop shadows; built from WillPower3309/swayfx 0.5.3 into ~/.local/bin/swayfx
+      default: true
+      requires: [desktop_sway]
+      install_tools: true
+      packages:
+        - meson
+        - ninja-build
+        - pkg-config
+        - cmake
+        - git
+        - scdoc
+        - wayland-protocols
+        - libwayland-dev
+        - libpcre2-dev
+        - libjson-c-dev
+        - libpango1.0-dev
+        - libcairo2-dev
+        - libgdk-pixbuf-2.0-dev
+        - libdrm-dev
+        - libgbm-dev
+        - libinput-dev
+        - libseat-dev
+        - libxkbcommon-dev
+        - libxcb-dri3-dev
+        - libxcb-present-dev
+        - libxcb-res0-dev
+        - libxcb-render-util0-dev
+        - libxcb-ewmh-dev
+        - libxcb-icccm4-dev
+        - libliftoff-dev
+        - libdisplay-info-dev
+        - liblcms2-dev
+        - libpixman-1-dev
+        - libgles2-mesa-dev
+        - libudev-dev
+        - libevdev-dev
+        - libmtdev-dev
+        - libwacom-dev
     swappy:
       category: desktop
       label: swappy
