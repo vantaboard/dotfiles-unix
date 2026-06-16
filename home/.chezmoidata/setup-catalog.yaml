@@ -348,6 +348,7 @@ setup_catalog:
       label: Neovim
       default: true
       packages: [neovim]
+      description: Linux uses official v0.12.3 tarball in ~/.local/opt via run_onchange_after_install-neovim; apt neovim is a fallback
       config_paths: [dot_config/nvim]
       external: .config/nvim/brighten
     gh_cli:

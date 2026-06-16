@@ -1,0 +1,91 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "neovim" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: neovim-v0.12.3
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Neovim tarball install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+NEOVIM_VERSION="0.12.3"
+LOCAL_BIN="$HOME_DIR/.local/bin"
+CACHE_DIR="$HOME_DIR/.cache/neovim-install"
+
+case "$(uname -m)" in
+  x86_64) NVIM_ARCH="x86_64" ;;
+  aarch64|arm64) NVIM_ARCH="arm64" ;;
+  *)
+    echo "WARN: unsupported architecture $(uname -m); skipping Neovim tarball install"
+    exit 0
+    ;;
+esac
+
+NVIM_ROOT="$HOME_DIR/.local/opt/nvim-linux-${NVIM_ARCH}"
+NVIM_BIN="$NVIM_ROOT/bin/nvim"
+TARBALL="nvim-linux-${NVIM_ARCH}.tar.gz"
+DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/${TARBALL}"
+
+nvim_version_ok() {
+  [[ -x "$NVIM_BIN" ]] && "$NVIM_BIN" --version 2>/dev/null | head -1 | grep -q "v${NEOVIM_VERSION}"
+}
+
+link_nvim_bins() {
+  mkdir -p "$LOCAL_BIN"
+  ln -sf "$NVIM_BIN" "$LOCAL_BIN/nvim"
+
+  if [[ -w /usr/local/bin ]] 2>/dev/null; then
+    ln -sf "$NVIM_BIN" /usr/local/bin/nvim
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo ln -sf "$NVIM_BIN" /usr/local/bin/nvim 2>/dev/null || \
+      echo "NOTE: ~/.local/bin/nvim is linked; run: sudo ln -sf $NVIM_BIN /usr/local/bin/nvim"
+  fi
+}
+
+if nvim_version_ok; then
+  echo "Neovim v${NEOVIM_VERSION} already installed at $NVIM_BIN"
+  link_nvim_bins
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping Neovim tarball install"
+  exit 0
+fi
+
+mkdir -p "$CACHE_DIR" "$HOME_DIR/.local/opt"
+TMP_DIR="$(mktemp -d "${CACHE_DIR}/extract.XXXXXX")"
+cleanup() { rm -rf "$TMP_DIR"; }
+trap cleanup EXIT
+
+echo "Installing Neovim v${NEOVIM_VERSION} (${NVIM_ARCH})..."
+curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$TARBALL"
+tar -xzf "$TMP_DIR/$TARBALL" -C "$TMP_DIR"
+rm -rf "$NVIM_ROOT"
+mv "$TMP_DIR/nvim-linux-${NVIM_ARCH}" "$NVIM_ROOT"
+
+if nvim_version_ok; then
+  link_nvim_bins
+  echo "Neovim v${NEOVIM_VERSION} installed; nvim -> $NVIM_BIN"
+else
+  echo "WARN: Neovim install failed ($NVIM_BIN missing or wrong version)"
+  exit 0
+fi
+{{- end -}}
+{{ end -}}

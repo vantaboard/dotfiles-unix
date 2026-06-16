@@ -103,7 +103,7 @@ export DISABLE_UPDATE_PROMPT="true"
 export DIRSTACKSIZE=100000000000000000
 export DISABLE_MAGIC_FUNCTIONS=true
 
-export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/:/opt/nvim-linux-x86_64/bin"
+export PATH="$PATH:{KREW_ROOT:-$HOME/.krew}/bin:$HOME/.local/bin:$HOME/.local/share/gem/ruby/3.0.0/bin:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/go/bin:$HOME/kde/usr/bin:$HOME/.istioctl/bin:/opt/depot_tools:/usr/local/go/bin:$HOME/.cargo/bin:$HOME/Code/splatmoji/"
 
 plugins=({{- if index $f "omz_codeclimate" }}codeclimate {{ end -}}{{- if index $f "omz_extract" }}extract {{ end -}}{{- if index $f "omz_python" }}python {{ end -}}{{- if index $f "omz_virtualenv" }}virtualenv {{ end -}}{{- if index $f "zsh_autosuggestions" }}zsh-autosuggestions {{ end -}}{{- if index $f "omz_ssh_agent" }}ssh-agent {{ end -}}{{- if index $f "omz_fzf" }}fzf {{ end -}}{{- if index $f "fzf_tab" }}fzf-tab {{ end -}}{{- if index $f "omz_git" }}git{{ end }})
 
