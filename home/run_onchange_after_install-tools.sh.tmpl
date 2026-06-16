@@ -692,7 +692,7 @@ install_bemoji() {
 
   if [[ ! -d "$BEMOJI_DIR/.git" ]]; then
     echo "Cloning bemoji..."
-    git clone --depth 1 git@github.com:erikvdplas/bemoji.git "$BEMOJI_DIR"
+    git clone --depth 1 git@github.com:marty-oehme/bemoji.git "$BEMOJI_DIR"
   else
     git -C "$BEMOJI_DIR" pull --ff-only 2>/dev/null || true
   fi
