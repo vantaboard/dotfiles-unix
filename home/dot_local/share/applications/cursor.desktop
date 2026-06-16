@@ -1,0 +1,23 @@
+[Desktop Entry]
+# User override of /usr/share/cursor/cursor.desktop.
+# Cursor ignores ELECTRON_OZONE_PLATFORM_HINT, so force XWayland with the
+# explicit Chromium flag. Native-Wayland Electron on NVIDIA under Sway 1.9
+# (no linux-drm-syncobj-v1 explicit sync) corrupts scanout buffers
+# session-wide. Drop --ozone-platform=x11 once running Sway >= 1.11.
+Name=Cursor
+Comment=The AI Code Editor.
+GenericName=Text Editor
+Exec=/usr/share/cursor/cursor --ozone-platform=x11 %F
+Icon=co.anysphere.cursor
+Type=Application
+StartupNotify=false
+StartupWMClass=Cursor
+Categories=TextEditor;Development;IDE;
+MimeType=application/x-cursor-workspace;
+Actions=new-empty-window;
+Keywords=cursor;
+
+[Desktop Action new-empty-window]
+Name=New Empty Window
+Exec=/usr/share/cursor/cursor --ozone-platform=x11 --new-window %F
+Icon=co.anysphere.cursor
