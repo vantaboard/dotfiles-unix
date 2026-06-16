@@ -1,3 +1,95 @@
+/* Vibrancy makes some VS Code CSS variables transparent; remap foreground uses. */
+:root {
+  --vibrancy-opaque-editor-background: #1e1e1e;
+  --vibrancy-opaque-diff-unchanged-foreground: #808080;
+}
+
 body .monaco-workbench .part.auxiliarybar>.content .embedded-aux-bar-editor-container {
   background-color: rgba(37, 37, 38, 0.3) !important;
+}
+
+.anysphere-icon-button[data-variant=background] {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.send-with-mode .anysphere-icon-button.mic-icon-showing>span {
+  color: var(--vibrancy-opaque-editor-background) !important;
+}
+
+.cursor-badge-primary,
+.cursor-badge-success {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.cursor-badge-warning {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.todo-in-progress-circle {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-create-plan-build-button {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-plan-todo-in-progress-circle {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-plan-todo-in-progress-circle .codicon {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.subagent-task-nested-subagent-action-button--view-plan {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-questionnaire-toolbar-option-letter-selected {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-questionnaire-toolbar-actions .composer-run-button {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-questionnaire-toolbar-actions .composer-run-button:not([data-disabled=true]):hover {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.composer-toolbar-todo-in-progress-circle {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.breadcrumbs-extra-actions,
+.plan-breadcrumb-controls .breadcrumbs-action-btn span {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.breadcrumbs-extra-actions .plan-build-button .codicon {
+  color: var(--vibrancy-opaque-editor-background) !important;
+}
+
+.cursor-settings-sidebar-cell-notification-badge {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.type-badge-large {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.todo-summary-in-progress-circle {
+  color: var(--vibrancy-opaque-editor-background);
+}
+
+.monaco-editor .diff-hidden-lines .center {
+  color: var(--vibrancy-opaque-diff-unchanged-foreground);
+}
+
+.notebook-text-diff-editor .cell-body.full div.diff-hidden-cells .center {
+  color: var(--vibrancy-opaque-diff-unchanged-foreground);
+}
+
+.notebook-text-diff-editor .cell-placeholder-body {
+  color: var(--vibrancy-opaque-diff-unchanged-foreground);
 }
