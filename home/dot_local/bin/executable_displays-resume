@@ -2,8 +2,9 @@
 set -euo pipefail
 
 if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
-    killall -SIGUSR1 kanshi 2>/dev/null || true
+    killall -HUP kanshi 2>/dev/null || true
     swaymsg reload 2>/dev/null || true
+    "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
     "$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
 else
     /usr/bin/sh "$HOME/.screenlayout/main-one-monitor.sh"

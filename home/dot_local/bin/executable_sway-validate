@@ -30,6 +30,7 @@ check "waybar installed" command -v waybar
 check "waybar config exists" test -f "$HOME/.config/waybar/config"
 check "waybar-py3status snapshot installed" test -x "$HOME/.local/bin/waybar-py3status-snapshot"
 check "waybar-restart installed" test -x "$HOME/.local/bin/waybar-restart"
+check "sway-docked-layout installed" test -x "$HOME/.local/bin/sway-docked-layout"
 check "sway config exists" test -f "$HOME/.config/sway/config"
 check "kanshi config exists" test -f "$HOME/.config/kanshi/config"
 check "swaylock config exists" test -f "$HOME/.config/swaylock/config"

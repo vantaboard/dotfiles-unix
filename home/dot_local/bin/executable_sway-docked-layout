@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Restore docked/undocked output positions after sway reload scrambles them.
+set -euo pipefail
+
+[[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]] || exit 0
+
+external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
+
+if [[ "$external_active" -ge 3 ]]; then
+    swaymsg output DP-4 position 0 0
+    swaymsg output DP-5 position 1920 0
+    swaymsg output DP-6 position 3840 0
+    swaymsg output eDP-1 disable
+    xrandr --output DP-5 --primary 2>/dev/null || true
+else
+    swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
+    xrandr --output eDP-1 --primary 2>/dev/null || true
+fi

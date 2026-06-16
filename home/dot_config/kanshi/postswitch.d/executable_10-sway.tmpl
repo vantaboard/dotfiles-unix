@@ -1,14 +1,26 @@
 #!/usr/bin/bash
 
-ACTIVE_MONITORS=$(
-    swaymsg -t get_outputs | jq -r '
-        .[] | select(.active) | .rect.x as $x | "\($x) \(.name)"' | sort -n | awk '{print $2}'
-)
+external_active=0
+if [ -n "${SWAYSOCK:-}" ]; then
+    external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
+fi
 
-MONITOR_ARRAY=($ACTIVE_MONITORS)
+if [[ "$external_active" -ge 3 ]]; then
+    MONITOR_ARRAY=(DP-4 DP-5 DP-6)
+    LAYOUT_OUTPUT=$'output DP-4 position 0 0\noutput DP-5 position 1920 0\noutput DP-6 position 3840 0\noutput eDP-1 disable\n'
+else
+    ACTIVE_MONITORS=$(
+        swaymsg -t get_outputs | jq -r '
+            .[] | select(.active) | .rect.x as $x | "\($x) \(.name)"' | sort -n | awk '{print $2}'
+    )
+    MONITOR_ARRAY=($ACTIVE_MONITORS)
+    LAYOUT_OUTPUT=$'output eDP-1 enable mode 1920x1080@144Hz position 0,0\n'
+fi
+
 MOVE_KEYS=("b" "n" "m")
 
 CONFIG_OUTPUT="############# Auto-generated for use with kanshi #############\n"
+CONFIG_OUTPUT+="${LAYOUT_OUTPUT}\n"
 
 for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
     SCREEN_NAME="screen$i"
@@ -39,6 +51,9 @@ NEW_BLOCK=$(printf '%b' "$CONFIG_OUTPUT")
 OLD_BLOCK=$(sed -n '/^############# Auto-generated for use with kanshi #############/,$p' "$CONFIG_FILE" 2>/dev/null || true)
 
 if [[ -n "$OLD_BLOCK" && "$NEW_BLOCK" == "$OLD_BLOCK" ]]; then
+    if [ -n "${SWAYSOCK:-}" ]; then
+        "$HOME/.local/bin/sway-docked-layout"
+    fi
     echo "sway monitor layout unchanged; skipping reload."
     exit 0
 fi
@@ -48,15 +63,7 @@ printf '%b' "$CONFIG_OUTPUT" >> "$CONFIG_FILE"
 
 if [ -n "${SWAYSOCK:-}" ]; then
     swaymsg reload
-    # reload re-enables every connected output; restore docked/undocked layout.
-    external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
-    if [[ "$external_active" -ge 3 ]]; then
-        swaymsg output eDP-1 disable
-        xrandr --output DP-5 --primary 2>/dev/null || true
-    else
-        swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
-        xrandr --output eDP-1 --primary 2>/dev/null || true
-    fi
+    "$HOME/.local/bin/sway-docked-layout"
     "$HOME/.local/bin/sway-wallpaper"
 fi
 
