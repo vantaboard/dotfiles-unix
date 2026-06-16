@@ -24,6 +24,12 @@ done
 
 if [[ "$docked" == "1" && -e /dev/dri/card2 ]]; then
   export WLR_DRM_DEVICES=/dev/dri/card2
+  # Docked scans out on NVIDIA. wlroots' GLES2 path on the proprietary driver
+  # corrupts buffers session-wide (heavy apps like Cursor trigger it), and the
+  # pixman software renderer fixes it but is too slow. The Vulkan renderer is
+  # GPU-accelerated and avoids the broken GLES2/GBM path. Undocked stays on
+  # Intel GLES2 (fast and stable).
+  export WLR_RENDERER=vulkan
 elif [[ -e /dev/dri/card1 ]]; then
   export WLR_DRM_DEVICES=/dev/dri/card1
 fi
