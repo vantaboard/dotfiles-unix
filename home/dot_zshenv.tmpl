@@ -35,7 +35,14 @@ if command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
 fi
 {{- end }}
 {{- if index $f "direnv" }}
+# Silence "direnv: loading …" and load .envrc in zshenv so Powerlevel10k instant
+# prompt (sourced at the top of ~/.zshrc) does not see console I/O from direnv's
+# precmd hook on first prompt.
+export DIRENV_LOG_FORMAT=""
 eval "$(direnv hook zsh)"
+if [[ -o interactive ]]; then
+  _direnv_hook 2>/dev/null
+fi
 
 # Non-interactive shells (Cursor agent, scripts, IDE-spawned commands) don't
 # draw a prompt and aren't always entered via `cd`, so neither direnv's
