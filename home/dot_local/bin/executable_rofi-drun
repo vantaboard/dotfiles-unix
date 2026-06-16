@@ -13,28 +13,10 @@ fi
 rofi "${rofi_args[@]}" &
 rofi_pid=$!
 
-rofi_focused() {
-  swaymsg -t get_tree | jq -e --argjson pid "$rofi_pid" \
-    '.. | select(.focused?) | select(.pid? == $pid)' >/dev/null
-}
-
-for _ in $(seq 1 40); do
-  kill -0 "$rofi_pid" 2>/dev/null || exit 0
-  if rofi_focused; then
-    break
-  fi
-  sleep 0.025
-done
-
-if ! rofi_focused; then
-  wait "$rofi_pid" 2>/dev/null || true
-  exit 0
-fi
-
 (
-  swaymsg -m '[ "window" ]' | while read -r _; do
+  swaymsg -t subscribe -m '[ "window", "workspace" ]' | while read -r event; do
     kill -0 "$rofi_pid" 2>/dev/null || exit 0
-    rofi_focused && continue
+    [[ "$(jq -er '.change // empty' <<<"$event")" == "focus" ]] || continue
     kill "$rofi_pid" 2>/dev/null || true
     exit 0
   done
