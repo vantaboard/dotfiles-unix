@@ -28,6 +28,13 @@ check "kanshi config exists" test -f "$HOME/.config/kanshi/config"
 check "swaylock config exists" test -f "$HOME/.config/swaylock/config"
 check "wayland env file exists" test -f "$HOME/.config/environment.d/wayland.conf"
 check "GDM sway session exists" test -f /usr/share/wayland-sessions/sway.desktop
+if [[ -f /etc/gdm3/custom.conf ]]; then
+    check "GDM Wayland enabled" grep -qE '^WaylandEnable=true' /etc/gdm3/custom.conf
+    check "GDM default session not forced to X11" \
+        bash -c '! grep -qE "^DefaultSession=x11" /etc/gdm3/custom.conf'
+else
+    echo "INFO: /etc/gdm3/custom.conf not found; skipping GDM Wayland checks"
+fi
 check "Intel DRM device exists" test -e /dev/dri/card1
 check "sway config syntax" sway -C --unsupported-gpu -c "$HOME/.config/sway/config"
 check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"

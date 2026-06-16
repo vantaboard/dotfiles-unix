@@ -2,4 +2,6 @@
 Name=Sway
 Comment=Sway Wayland compositor
 Exec=sway --unsupported-gpu
+TryExec=sway
 Type=Application
+DesktopNames=sway

@@ -71,6 +71,10 @@ fi
 
 if has_deploy sway_session; then
   deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop
+  if [[ -d /etc/gdm3 ]]; then
+    deploy_file "$SOURCE/gdm3/custom.conf" /etc/gdm3/custom.conf
+    echo "GDM Wayland enabled; log out (or reboot) for Sway to appear in the session menu"
+  fi
 fi
 
 if has_deploy grub && [[ -f /etc/default/grub ]] && command -v update-grub >/dev/null 2>&1; then
