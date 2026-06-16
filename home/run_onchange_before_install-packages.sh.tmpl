@@ -76,6 +76,10 @@ set -euo pipefail
 {{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
 {{- end -}}
 {{- $aptExclude := default (list) .packages.ubuntu.apt_exclude -}}
+{{- $aptExcludeMap := dict -}}
+{{- range $aptExclude -}}
+{{- $_ := set $aptExcludeMap . true -}}
+{{- end -}}
 {{- $needsKeyd := false -}}
 {{- if not (env "CHEZMOI_CI") -}}
 {{- if $p.packages -}}
@@ -116,19 +120,19 @@ fi
 sudo apt install -y -qq --no-install-recommends \
 {{- if env "CHEZMOI_CI" }}
 {{- range .packages.ubuntu.apt_ci }}
-{{- if not (has $aptExclude .) }}
+{{- if not (index $aptExcludeMap .) }}
   {{ . }} \
 {{- end }}
 {{- end }}
 {{- else if $p.packages }}
 {{- range $p.packages }}
-{{- if not (has $aptExclude .) }}
+{{- if not (index $aptExcludeMap .) }}
   {{ . }} \
 {{- end }}
 {{- end }}
 {{- else }}
 {{- range .packages.ubuntu.apt }}
-{{- if not (has $aptExclude .) }}
+{{- if not (index $aptExcludeMap .) }}
   {{ . }} \
 {{- end }}
 {{- end }}
@@ -137,7 +141,7 @@ sudo apt install -y -qq --no-install-recommends \
 {{- with index . "apt_manual" }}
 {{- with .packages }}
 {{- range $pkg, $meta := . }}
-{{- if and (eq $meta.status "install") (not (has $aptExclude $pkg)) }}
+{{- if and (eq $meta.status "install") (not (index $aptExcludeMap $pkg)) }}
   {{ $pkg }} \
 {{- end }}
 {{- end }}
