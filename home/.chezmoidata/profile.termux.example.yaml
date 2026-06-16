@@ -36,6 +36,7 @@ profile_termux_example:
     gpg_signing: false
     desktop_i3: false
     desktop_sway: false
+    hyprpicker: false
     kanshi: false
     wayland_session: false
     picom: false

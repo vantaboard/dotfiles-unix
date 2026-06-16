@@ -26,6 +26,7 @@ profile_example:
     gpg_signing: false
     grub: true
     htop: false
+    hyprpicker: true
     jq: true
     keychain: true
     keyd: true
@@ -66,6 +67,7 @@ profile_example:
     - bat
     - brightnessctl
     - clang
+    - cmake
     - direnv
     - dunst
     - earlyoom
@@ -77,6 +79,7 @@ profile_example:
     - gh
     - git
     - glab
+    - g++
     - grub-common
     - grub-efi-amd64
     - grub-efi-amd64-signed
@@ -93,7 +96,11 @@ profile_example:
     - jq
     - keychain
     - keyd
+    - libcairo2-dev
     - libnotify-bin
+    - libpango1.0-dev
+    - libwayland-dev
+    - libxkbcommon-dev
     - neovim
     - network-manager
     - nitrogen
@@ -102,6 +109,7 @@ profile_example:
     - openssh-server
     - picom
     - playerctl
+    - pkg-config
     - pulseaudio
     - ripgrep
     - rofi
@@ -110,6 +118,7 @@ profile_example:
     - tmux
     - udev
     - vivid
+    - wayland-protocols
     - x11-xserver-utils
     - xclip
     - xinit

@@ -244,6 +244,22 @@ setup_catalog:
       packages: [sway, swaylock, swayidle, swaybg, grim, slurp, wl-clipboard]
       config_paths: [dot_config/sway, dot_config/swaylock, dot_config/environment.d/wayland.conf]
       system_deploy: sway_session
+    hyprpicker:
+      category: desktop
+      label: hyprpicker
+      description: Wayland color picker; built from hyprwm sources into ~/.local/bin (requires wl-clipboard)
+      default: true
+      requires: [desktop_sway]
+      install_tools: true
+      packages:
+        - cmake
+        - pkg-config
+        - libpango1.0-dev
+        - libcairo2-dev
+        - libwayland-dev
+        - wayland-protocols
+        - libxkbcommon-dev
+        - g++
     kanshi:
       category: desktop
       label: kanshi

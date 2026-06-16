@@ -5,7 +5,7 @@ declare -a commands=(
     'virtualbox'
     'intellij-idea-community'
     'umbrello5'
-    'xcolor'
+    'hyprpicker'
     'qjackctl'
     'ardour'
     'arandr'
@@ -68,8 +68,8 @@ if [ "$selection" = 'cast' ]; then
     selection="gnome-network-displays"
 fi
 
-if [ "$selection" = 'xcolor' ]; then
-    selection="xcolor | xclip -sel clip"
+if [ "$selection" = 'hyprpicker' ]; then
+    selection="hyprpicker -a"
 fi
 
 if [ "$selection" = 'chromium' ]; then

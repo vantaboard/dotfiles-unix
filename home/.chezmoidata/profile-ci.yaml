@@ -34,6 +34,7 @@ profile_ci:
     gpg_signing: false
     desktop_i3: false
     desktop_sway: false
+    hyprpicker: false
     picom: false
     kitty: false
     dunst: false

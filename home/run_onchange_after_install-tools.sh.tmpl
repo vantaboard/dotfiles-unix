@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v13
+# hash: tools-v14
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -38,8 +38,13 @@ ZSH_ABBR_JOB_QUEUE="$ZSH_ABBR_DIR/zsh-job-queue/zsh-job-queue.zsh"
 TRASH_CLI_DIR="$HOME_DIR/trash-cli"
 TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
 LOCAL_BIN="$HOME_DIR/.local/bin"
+LOCAL_PREFIX="$HOME_DIR/.local"
 TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-rm)
 VIVID_VERSION="0.10.1"
+HYPRUTILS_VERSION="v0.13.1"
+HYPRPICKER_VERSION="v0.4.7"
+HYPRUTILS_DIR="$HOME_DIR/.local/share/src/hyprutils"
+HYPRPICKER_DIR="$HOME_DIR/.local/share/src/hyprpicker"
 
 install_mise() {
   mise_usable() {
@@ -302,6 +307,91 @@ install_zoxide() {
   cargo install zoxide
 }
 
+{{- if eq .chezmoi.os "linux" }}
+install_hyprpicker() {
+  hyprpicker_usable() {
+    command -v hyprpicker >/dev/null 2>&1 && hyprpicker --help >/dev/null 2>&1
+  }
+
+  if hyprpicker_usable || [[ -x "$LOCAL_BIN/hyprpicker" ]]; then
+    echo "hyprpicker already installed"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping hyprpicker install"
+    return 0
+  fi
+  if ! command -v cmake >/dev/null 2>&1; then
+    echo "WARN: cmake not found; skipping hyprpicker install"
+    return 0
+  fi
+
+  local build_deps=(
+    cmake pkg-config libpango1.0-dev libcairo2-dev libwayland-dev
+    wayland-protocols libxkbcommon-dev g++
+  )
+  local dep missing=()
+  if command -v dpkg >/dev/null 2>&1; then
+    for dep in "${build_deps[@]}"; do
+      if ! dpkg -s "$dep" >/dev/null 2>&1; then
+        missing+=("$dep")
+      fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      echo "Installing hyprpicker build dependencies: ${missing[*]}"
+      sudo apt install -y -qq --no-install-recommends "${missing[@]}"
+    fi
+  fi
+
+  mkdir -p "$LOCAL_BIN" "$LOCAL_PREFIX/lib/pkgconfig"
+  export PKG_CONFIG_PATH="$LOCAL_PREFIX/lib/pkgconfig:$LOCAL_PREFIX/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
+
+  if [[ ! -d "$HYPRUTILS_DIR/.git" ]]; then
+    echo "Cloning hyprutils ${HYPRUTILS_VERSION}..."
+    git clone --depth 1 --branch "$HYPRUTILS_VERSION" \
+      https://github.com/hyprwm/hyprutils "$HYPRUTILS_DIR"
+  else
+    git -C "$HYPRUTILS_DIR" fetch --depth 1 origin tag "$HYPRUTILS_VERSION" 2>/dev/null || true
+    git -C "$HYPRUTILS_DIR" checkout "$HYPRUTILS_VERSION" 2>/dev/null || true
+  fi
+
+  echo "Building hyprutils ${HYPRUTILS_VERSION}..."
+  cmake --no-warn-unused-cli \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="$LOCAL_PREFIX" \
+    -S "$HYPRUTILS_DIR" -B "$HYPRUTILS_DIR/build"
+  cmake --build "$HYPRUTILS_DIR/build" --config Release \
+    -j"$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)"
+  cmake --install "$HYPRUTILS_DIR/build"
+
+  if [[ ! -d "$HYPRPICKER_DIR/.git" ]]; then
+    echo "Cloning hyprpicker ${HYPRPICKER_VERSION}..."
+    git clone --depth 1 --branch "$HYPRPICKER_VERSION" \
+      https://github.com/hyprwm/hyprpicker "$HYPRPICKER_DIR"
+  else
+    git -C "$HYPRPICKER_DIR" fetch --depth 1 origin tag "$HYPRPICKER_VERSION" 2>/dev/null || true
+    git -C "$HYPRPICKER_DIR" checkout "$HYPRPICKER_VERSION" 2>/dev/null || true
+  fi
+
+  echo "Building hyprpicker ${HYPRPICKER_VERSION}..."
+  cmake --no-warn-unused-cli \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="$LOCAL_PREFIX" \
+    -S "$HYPRPICKER_DIR" -B "$HYPRPICKER_DIR/build"
+  cmake --build "$HYPRPICKER_DIR/build" --config Release --target hyprpicker \
+    -j"$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)"
+  cmake --install "$HYPRPICKER_DIR/build"
+
+  if hyprpicker_usable || [[ -x "$LOCAL_BIN/hyprpicker" ]]; then
+    echo "hyprpicker ready ($LOCAL_BIN/hyprpicker)"
+  else
+    echo "WARN: hyprpicker install failed"
+    return 0
+  fi
+}
+{{- end }}
+
 {{- if index $f "mise" }}
 install_mise
 export PATH="$HOME_DIR/.local/bin:${PATH:-}"
@@ -335,6 +425,10 @@ install_vivid_linux
 {{- if and (index $f "mise") (eq .chezmoi.os "linux") }}
 install_rust
 install_zoxide
+{{- end }}
+
+{{- if and (index $f "hyprpicker") (eq .chezmoi.os "linux") }}
+install_hyprpicker
 {{- end }}
 
 echo "Custom tool installation complete"
