@@ -45,9 +45,23 @@ export ZSH_DISABLE_COMPFIX=true
 export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zcompdump-${ZSH_VERSION}"
 mkdir -p -- "${ZSH_COMPDUMP:h}"
 
-# Run the real compinit once: cached (-C), skip audit (-u), custom dump (-d)
+# Extra completion dirs must be on fpath *before* compinit builds the dump
+# (e.g. cursor-clip drops completions here).
+fpath+=("$HOME/.local/share/zsh/site-functions")
+
+# Run compinit once. Trust the cached dump (-C, no audit) for a fast startup,
+# but do a full rebuild when the dump is missing or older than a day so newly
+# installed completions get picked up without needing a second compinit pass.
+# The match is captured via array assignment (not [[ … ]]) so the bare glob
+# qualifier works without requiring the extended_glob option to be set here.
 autoload -Uz compinit
-compinit -C -u -d "$ZSH_COMPDUMP"
+_zcompdump_stale=("$ZSH_COMPDUMP"(N.mh+24))
+if (( $#_zcompdump_stale )); then
+  compinit -u -d "$ZSH_COMPDUMP"
+else
+  compinit -C -u -d "$ZSH_COMPDUMP"
+fi
+unset _zcompdump_stale
 
 # Completion styles
 zstyle ':completion:*' use-cache on
@@ -184,9 +198,20 @@ if tty -s; then
   gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
 fi
 
-# GPG (only if you actually have $GIT_GPG_KEY set)
-eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"  # ignore if unset
-source "$HOME/.keychain/$(hostname)-sh-gpg" 2>/dev/null
+# GPG signing via keychain. Invoking `keychain` on every shell is slow (~400ms)
+# because it re-validates gpg-agent each time. The agent persists across shells,
+# so source the cached agent env and only run keychain when the agent isn't
+# already up (e.g. the first shell after boot). ${HOST} avoids spawning
+# hostname(1), and --no-autostart means the check itself won't launch an agent.
+if [[ -n "$GIT_GPG_KEY" ]]; then
+  _keychain_env="$HOME/.keychain/${HOST}-sh-gpg"
+  [[ -r "$_keychain_env" ]] && source "$_keychain_env"
+  if ! gpg-connect-agent --no-autostart /bye >/dev/null 2>&1; then
+    eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"
+    [[ -r "$_keychain_env" ]] && source "$_keychain_env"
+  fi
+  unset _keychain_env
+fi
 {{- end }}
 
 ##### ─────────────────────────────────────────────────────────────────────────────
@@ -273,10 +298,6 @@ bindkey -M vicmd '^U' __zox_fzf_cd_widget
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 {{- end }}
-
-# cursor-clip auto completions
-fpath+=(~/.local/share/zsh/site-functions)
-autoload -Uz compinit && compinit
 
 {{- if index $f "clang" }}
 export CC=clang
