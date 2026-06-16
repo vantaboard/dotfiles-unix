@@ -1,2 +1,0 @@
-/usr/bin/bash $HOME/.config/autorandr/postswitch.d/10-wallpaper
-/usr/bin/autorandr --change
