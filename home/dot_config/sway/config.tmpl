@@ -19,7 +19,7 @@ exec swayidle -w \
     before-sleep 'swaylock -f -c $HOME/.config/swaylock/config'
 
 # Start a hidden kitty instance for fast startup
-exec --no-startup-id kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
+exec --no-startup-id $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
 exec --no-startup-id /usr/bin/python $HOME/.local/bin/i3_startup
 
 set $mod Mod4
@@ -40,7 +40,7 @@ exec_always --no-startup-id copyq
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
-bindsym $mod+Return exec kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket
+bindsym $mod+Return exec $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket
 bindsym $mod+Shift+q kill
 bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
 bindsym $mod+d exec --no-startup-id $HOME/.local/bin/rofi-drun
