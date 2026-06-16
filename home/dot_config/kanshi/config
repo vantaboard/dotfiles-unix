@@ -4,7 +4,7 @@
 profile docked-home {
     output DP-4 enable mode 1920x1080@60Hz position 0,0
     output DP-5 enable mode 1920x1080@60Hz position 1920,0
-    output DP-6 enable mode 1920x1080@119.98Hz position 3840,0
+    output DP-6 enable mode 1920x1080@60Hz position 3840,0
     exec $HOME/.config/kanshi/postswitch.d/10-sway
 }
 
