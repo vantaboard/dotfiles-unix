@@ -150,6 +150,7 @@ apt_manual_is_excluded() {
 APT_MANUAL_BUILTIN_EXCLUDE=(
   ubuntu-minimal ubuntu-standard ubuntu-desktop ubuntu-desktop-minimal
   systemd-sysv systemd-timesyncd
+  kitty
 )
 APT_MANUAL_BUILTIN_EXCLUDE_PATTERNS=(
   '^linux-image-'

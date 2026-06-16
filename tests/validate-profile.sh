@@ -59,4 +59,13 @@ for fid in $(catalog_all_feature_ids); do
   done < <(catalog_get_requires "$fid")
 done
 
+PACKAGES_FILE="$REPO_ROOT/home/.chezmoidata/packages.yaml"
+while IFS= read -r excluded; do
+  [[ -z "$excluded" ]] && continue
+  if grep -qE "^[[:space:]]+-[[:space:]]+${excluded}[[:space:]]*$" "$PROFILE"; then
+    echo "FAIL: $PROFILE lists apt package '$excluded' but it is in packages.yaml apt_exclude (custom install only)"
+    exit 1
+  fi
+done < <(awk '/^    apt_exclude:/{f=1; next} f && /^    apt:/{exit} f && /^      - /{print $2}' "$PACKAGES_FILE")
+
 echo "OK: profile validates against catalog"

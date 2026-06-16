@@ -1,5 +1,8 @@
 packages:
   ubuntu:
+    # Never install via apt — use run_onchange_after_install-kitty.sh instead
+    apt_exclude:
+      - kitty
     apt:
       # Shell and core CLI
       - zsh

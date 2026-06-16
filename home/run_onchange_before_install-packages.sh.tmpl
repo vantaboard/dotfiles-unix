@@ -58,6 +58,7 @@ echo "Termux packages installed"
 #!/bin/bash
 set -euo pipefail
 
+# hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/setup-catalog.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/profile.example.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/apt-manual.yaml" | sha256sum }}
@@ -74,6 +75,7 @@ set -euo pipefail
 {{- if eq .chezmoi.os "android" -}}
 {{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
 {{- end -}}
+{{- $aptExclude := default (list) .packages.ubuntu.apt_exclude -}}
 {{- $needsKeyd := false -}}
 {{- if not (env "CHEZMOI_CI") -}}
 {{- if $p.packages -}}
@@ -114,22 +116,28 @@ fi
 sudo apt install -y -qq --no-install-recommends \
 {{- if env "CHEZMOI_CI" }}
 {{- range .packages.ubuntu.apt_ci }}
+{{- if not (has $aptExclude .) }}
   {{ . }} \
+{{- end }}
 {{- end }}
 {{- else if $p.packages }}
 {{- range $p.packages }}
+{{- if not (has $aptExclude .) }}
   {{ . }} \
+{{- end }}
 {{- end }}
 {{- else }}
 {{- range .packages.ubuntu.apt }}
+{{- if not (has $aptExclude .) }}
   {{ . }} \
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if not (env "CHEZMOI_CI") }}
 {{- with index . "apt_manual" }}
 {{- with .packages }}
 {{- range $pkg, $meta := . }}
-{{- if eq $meta.status "install" }}
+{{- if and (eq $meta.status "install") (not (has $aptExclude $pkg)) }}
   {{ $pkg }} \
 {{- end }}
 {{- end }}
