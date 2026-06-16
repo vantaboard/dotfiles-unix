@@ -35,6 +35,7 @@ profile_ci:
     desktop_i3: false
     desktop_sway: false
     hyprpicker: false
+    swappy: false
     picom: false
     kitty: false
     dunst: false

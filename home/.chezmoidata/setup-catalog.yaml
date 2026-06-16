@@ -260,6 +260,19 @@ setup_catalog:
         - wayland-protocols
         - libxkbcommon-dev
         - g++
+    swappy:
+      category: desktop
+      label: swappy
+      description: Wayland screenshot editor for grim/slurp; built into ~/.local/bin
+      default: true
+      requires: [desktop_sway]
+      install_tools: true
+      packages:
+        - meson
+        - ninja-build
+        - libgtk-3-dev
+        - libpango1.0-dev
+        - libcairo2-dev
     kanshi:
       category: desktop
       label: kanshi

@@ -61,7 +61,7 @@ bindsym $mod+Shift+F3 exec pcmanfm_pkexec
 bindsym $mod+F5 exec terminal -e 'mocp'
 bindsym $mod+Ctrl+Shift+s exec --no-startup-id $HOME/.local/bin/suspend
 bindsym $mod+Ctrl+Shift+h exec --no-startup-id systemctl hibernate
-bindsym $mod+Shift+s exec --no-startup-id flameshot gui
+bindsym $mod+Shift+s exec --no-startup-id $HOME/.local/bin/screenshot-region
 bindsym $mod+Shift+a exec --no-startup-id normcap
 bindsym $mod+Ctrl+Shift+n input type:keyboard xkb_next_layout
 bindsym Print exec --no-startup-id sh -c 'grim -g "$(slurp)" - | wl-copy'

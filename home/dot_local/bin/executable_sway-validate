@@ -22,6 +22,9 @@ check "sway installed" command -v sway
 check "swaylock installed" command -v swaylock
 check "kanshi installed" command -v kanshi
 check "grim installed" command -v grim
+check "slurp installed" command -v slurp
+check "swappy installed" command -v swappy
+check "screenshot-region installed" test -x "$HOME/.local/bin/screenshot-region"
 check "wl-copy installed" command -v wl-copy
 check "sway config exists" test -f "$HOME/.config/sway/config"
 check "kanshi config exists" test -f "$HOME/.config/kanshi/config"
@@ -92,7 +95,7 @@ echo "Manual checks after logging into Sway from GDM:"
 echo "  - Docked 3-monitor layout and undocked eDP switch"
 echo "  - Mod+1..8 workspace routing after dock/undock"
 echo "  - Mod+d launcher, Mod+Return kitty, swaylock, suspend/resume"
-echo "  - flameshot, copyq, sunshine, NVIDIA offload apps"
+echo "  - screenshot-region (grim/slurp/swappy), copyq, sunshine, NVIDIA offload apps"
 echo
 echo "After 1-2 weeks of daily Sway use, cut over by setting in profile.yaml:"
 echo "  desktop_i3: false"

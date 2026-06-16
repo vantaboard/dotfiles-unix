@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+if ! command -v grim >/dev/null; then
+    echo "screenshot-region: grim is required" >&2
+    exit 1
+fi
+if ! command -v slurp >/dev/null; then
+    echo "screenshot-region: slurp is required" >&2
+    exit 1
+fi
+if ! command -v swappy >/dev/null; then
+    echo "screenshot-region: swappy is required" >&2
+    exit 1
+fi
+
+geom="$(slurp)" || exit 0
+grim -g "$geom" - | swappy -f -

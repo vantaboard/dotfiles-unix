@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v14
+# hash: tools-v15
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -45,6 +45,8 @@ HYPRUTILS_VERSION="v0.13.1"
 HYPRPICKER_VERSION="v0.4.7"
 HYPRUTILS_DIR="$HOME_DIR/.local/share/src/hyprutils"
 HYPRPICKER_DIR="$HOME_DIR/.local/share/src/hyprpicker"
+SWAPPY_VERSION="v1.5.1"
+SWAPPY_DIR="$HOME_DIR/.local/share/src/swappy"
 
 install_mise() {
   mise_usable() {
@@ -390,6 +392,67 @@ install_hyprpicker() {
     return 0
   fi
 }
+
+install_swappy() {
+  swappy_usable() {
+    command -v swappy >/dev/null 2>&1 && swappy --version >/dev/null 2>&1
+  }
+
+  if swappy_usable || [[ -x "$LOCAL_BIN/swappy" ]]; then
+    echo "swappy already installed"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping swappy install"
+    return 0
+  fi
+  if ! command -v meson >/dev/null 2>&1 || ! command -v ninja >/dev/null 2>&1; then
+    echo "WARN: meson/ninja not found; skipping swappy install"
+    return 0
+  fi
+
+  local build_deps=(
+    meson ninja-build libgtk-3-dev libpango1.0-dev libcairo2-dev
+  )
+  local dep missing=()
+  if command -v dpkg >/dev/null 2>&1; then
+    for dep in "${build_deps[@]}"; do
+      if ! dpkg -s "$dep" >/dev/null 2>&1; then
+        missing+=("$dep")
+      fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      echo "Installing swappy build dependencies: ${missing[*]}"
+      sudo apt install -y -qq --no-install-recommends "${missing[@]}"
+    fi
+  fi
+
+  mkdir -p "$LOCAL_BIN"
+
+  if [[ ! -d "$SWAPPY_DIR/.git" ]]; then
+    echo "Cloning swappy ${SWAPPY_VERSION}..."
+    git clone --depth 1 --branch "$SWAPPY_VERSION" \
+      https://github.com/jtheoof/swappy "$SWAPPY_DIR"
+  else
+    git -C "$SWAPPY_DIR" fetch --depth 1 origin tag "$SWAPPY_VERSION" 2>/dev/null || true
+    git -C "$SWAPPY_DIR" checkout "$SWAPPY_VERSION" 2>/dev/null || true
+  fi
+
+  echo "Building swappy ${SWAPPY_VERSION}..."
+  meson setup "$SWAPPY_DIR/build" "$SWAPPY_DIR" \
+    --prefix="$LOCAL_PREFIX" --reconfigure 2>/dev/null \
+    || meson setup "$SWAPPY_DIR/build" "$SWAPPY_DIR" --prefix="$LOCAL_PREFIX"
+  ninja -C "$SWAPPY_DIR/build"
+  ninja -C "$SWAPPY_DIR/build" install
+
+  if swappy_usable || [[ -x "$LOCAL_BIN/swappy" ]]; then
+    echo "swappy ready ($LOCAL_BIN/swappy)"
+  else
+    echo "WARN: swappy install failed"
+    return 0
+  fi
+}
 {{- end }}
 
 {{- if index $f "mise" }}
@@ -429,6 +492,10 @@ install_zoxide
 
 {{- if and (index $f "hyprpicker") (eq .chezmoi.os "linux") }}
 install_hyprpicker
+{{- end }}
+
+{{- if and (index $f "swappy") (eq .chezmoi.os "linux") }}
+install_swappy
 {{- end }}
 
 echo "Custom tool installation complete"
