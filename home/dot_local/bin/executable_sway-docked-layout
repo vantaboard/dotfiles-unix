@@ -7,12 +7,11 @@ set -euo pipefail
 external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
 
 if [[ "$external_active" -ge 3 ]]; then
-    swaymsg output DP-4 enable dpms on position 0 0
+    swaymsg output DP-4 enable dpms on mode 1920x1080@60Hz position 0 0
     swaymsg output DP-5 enable dpms on mode 1920x1080@60Hz position 1920 0
     swaymsg output DP-6 enable dpms on mode 1920x1080@60Hz position 3840 0
     swaymsg output eDP-1 disable
-    # Dock MST bandwidth: only one ASUS monitor can run 144Hz while docked.
-    swaymsg output DP-5 mode 1920x1080@144Hz
 else
     swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
 fi
+
