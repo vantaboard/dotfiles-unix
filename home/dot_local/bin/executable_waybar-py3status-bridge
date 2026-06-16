@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Bridge py3status i3bar output to a single Waybar custom/json module."""
+
+import json
+import subprocess
+import sys
+
+
+def main() -> None:
+    proc = subprocess.Popen(
+        ["py3status"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        bufsize=1,
+    )
+    if proc.stdout is None:
+        sys.exit(1)
+
+    # i3bar header line; status updates follow as JSON arrays.
+    proc.stdout.readline()
+
+    for line in proc.stdout:
+        line = line.strip()
+        if not line or line == "[[":
+            continue
+        if line.startswith(","):
+            line = line[1:]
+        try:
+            modules = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(modules, list):
+            continue
+
+        parts = []
+        for module in modules:
+            if not isinstance(module, dict):
+                continue
+            text = module.get("full_text")
+            if text:
+                parts.append(text)
+
+        print(json.dumps({"text": " ".join(parts)}), flush=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -163,27 +163,10 @@ exec --no-startup-id nm-applet --indicator
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id pamac-tray
 
-bar {
-    swaybar_command waybar
-    position bottom
-    bindsym button4 nop
-    bindsym button5 nop
+exec --no-startup-id systemctl --user disable --now waybar.service
+exec_always --no-startup-id waybar
 
-    colors {
-        background #0f0a05
-        statusline #84c137
-        separator  #083905
-
-#                          border   backgr.   text
-        focused_workspace  #84c137  #083905   #eeeeee
-        active_workspace   #666666  #0c0804   #86a83e
-        inactive_workspace #666666  #0f0a05   #666666
-        binding_mode       #23ff18  #083905   #eeeeee
-        urgent_workspace   #e50000  #b6204a   #e5e5e5
-    }
-}
-
-bindsym $mod+m bar mode toggle
+bindsym $mod+m exec pkill -SIGUSR2 waybar
 
 # class                 border   bground  text     indicator child_border
 client.focused          #86a83e  #84c137  #0f0a05  #23ff18   #86a83e
