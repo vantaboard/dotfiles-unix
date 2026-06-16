@@ -3,8 +3,43 @@ set -euo pipefail
 
 monitor="$(swaymsg -t get_outputs -r | jq -r '.[] | select(.focused) | .name')"
 
+rofi_args=(-show drun -click-to-exit)
 if [[ -z "$monitor" ]]; then
-    exec rofi -show drun -monitor -4
+  rofi_args+=(-monitor -4)
+else
+  rofi_args+=(-monitor "$monitor")
 fi
 
-exec rofi -show drun -monitor "$monitor"
+rofi "${rofi_args[@]}" &
+rofi_pid=$!
+
+rofi_focused() {
+  swaymsg -t get_tree | jq -e --argjson pid "$rofi_pid" \
+    '.. | select(.focused?) | select(.pid? == $pid)' >/dev/null
+}
+
+for _ in $(seq 1 40); do
+  kill -0 "$rofi_pid" 2>/dev/null || exit 0
+  if rofi_focused; then
+    break
+  fi
+  sleep 0.025
+done
+
+if ! rofi_focused; then
+  wait "$rofi_pid" 2>/dev/null || true
+  exit 0
+fi
+
+(
+  swaymsg -m '[ "window" ]' | while read -r _; do
+    kill -0 "$rofi_pid" 2>/dev/null || exit 0
+    rofi_focused && continue
+    kill "$rofi_pid" 2>/dev/null || true
+    exit 0
+  done
+) &
+watcher_pid=$!
+
+wait "$rofi_pid" 2>/dev/null || true
+kill "$watcher_pid" 2>/dev/null || true

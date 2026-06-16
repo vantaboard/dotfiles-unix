@@ -4,6 +4,7 @@ configuration {
     show-icons:          false;
     display-drun:        "    run    ";
     drun-display-format: "{name}";
+    click-to-exit:       true;
 }
 
 * {
