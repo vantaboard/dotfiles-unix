@@ -140,7 +140,9 @@ local function setup_clipboard()
                 ["+"] = "wl-paste 2>/dev/null",
                 ["*"] = "wl-paste --primary 2>/dev/null",
             },
-            cache_enabled = 1,
+            -- Do not cache: with cache on, an empty read at startup sticks until Neovim
+            -- yanks to + itself, so Chrome/other-app copies never appear on paste.
+            cache_enabled = 0,
         }
     else
         return
