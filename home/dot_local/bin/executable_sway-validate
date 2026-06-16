@@ -42,6 +42,8 @@ check "NVIDIA DRM device exists" test -e /dev/dri/card2
 if [[ -f "$HOME/.config/environment.d/wayland.conf" ]]; then
     check "WLR_DRM_DEVICES includes Intel and NVIDIA" \
         grep -qE 'WLR_DRM_DEVICES=.*/dev/dri/card1.*/dev/dri/card2' "$HOME/.config/environment.d/wayland.conf"
+    check "WLR_DRM_NO_MODIFIERS enabled for NVIDIA scanout" \
+        grep -qE '^WLR_DRM_NO_MODIFIERS=1' "$HOME/.config/environment.d/wayland.conf"
 fi
 if [[ -f "$HOME/.config/kanshi/config" ]]; then
     check "kanshi config syntax" bash -c '
