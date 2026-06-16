@@ -15,9 +15,10 @@ include /etc/sway/config.d/*
 # Wayland session startup
 exec --no-startup-id dunst
 exec --no-startup-id sunshine
-exec_always --no-startup-id $HOME/.local/bin/gimmekeys
 exec --no-startup-id kanshi
 exec --no-startup-id $HOME/.local/bin/sway-wallpaper
+
+include $HOME/.config/sway/input-devices.conf
 
 input type:keyboard xkb_layout "us,es"
 input type:keyboard xkb_options "grp:alt_shift_toggle"

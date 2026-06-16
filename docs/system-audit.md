@@ -19,6 +19,7 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | Ollama base unit (clean PATH) | `home/system/systemd/ollama.service` | `/etc/systemd/system/` |
 | Ollama GPU tuning | `home/system/systemd/ollama.service.d/override.conf` | `/etc/systemd/system/ollama.service.d/` |
 | keyd key remapping | `home/system/keyd/default.conf` | `/etc/keyd/default.conf` (Debian binary: `keyd.rvaiya`) |
+| libinput pointer overrides | `home/system/libinput/local-overrides.quirks.tmpl` | `/etc/libinput/local-overrides.quirks` (from `profile.input_devices.pointers`) |
 | Sway Wayland session | `home/system/wayland-sessions/sway.desktop` | `/usr/share/wayland-sessions/sway.desktop` |
 | Sway session wrapper | `home/system/bin/sway-session` | `/usr/local/bin/sway-session` (sources `wayland.conf` before exec) |
 | GDM Wayland enable | `home/system/gdm3/custom.conf` | `/etc/gdm3/custom.conf` (with `sway_session` deploy) |
@@ -27,7 +28,7 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 
 Deploy and enable scripts:
 
-- `home/run_onchange_after_deploy-system.sh.tmpl` — udev, systemd units, GRUB, SSH, keyd
+- `home/run_onchange_after_deploy-system.sh.tmpl` — udev, systemd units, GRUB, SSH, keyd, libinput
 - `home/run_onchange_after_enable-services.sh.tmpl` — enables units from `enabled-services.yaml`
 
 ---

@@ -24,6 +24,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/wayland-sessions/sway.desktop" | sha256sum }}
 # hash: {{ include "system/grub/default" | sha256sum }}
 # hash: {{ include "system/keyd/default.conf" | sha256sum }}
+# hash: {{ include "system/libinput/local-overrides.quirks.tmpl" | sha256sum }}
 # hash: {{ include "system/ssh/sshd_config.d/99-keyonly-port.conf" | sha256sum }}
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd/displays-resume.service.tmpl" | sha256sum }}
@@ -126,6 +127,14 @@ if has_deploy keyd && {
   deploy_file "$SOURCE/keyd/default.conf" /etc/keyd/default.conf
   sudo systemctl enable keyd 2>/dev/null || true
   sudo systemctl restart keyd 2>/dev/null || true
+fi
+
+if has_deploy libinput; then
+  TMP_QUIRKS="$(mktemp)"
+  chezmoi execute-template < "$SOURCE/libinput/local-overrides.quirks.tmpl" > "$TMP_QUIRKS"
+  sudo install -d /etc/libinput
+  deploy_file "$TMP_QUIRKS" /etc/libinput/local-overrides.quirks
+  rm -f "$TMP_QUIRKS"
 fi
 
 echo "System configuration deployed"

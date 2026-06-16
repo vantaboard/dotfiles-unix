@@ -1,0 +1,12 @@
+# Per-device input settings (Wayland / Sway).
+# Pointer acceleration also mirrored in system/libinput/local-overrides.quirks
+# for X11/i3 sessions.
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $inputDevices := index $p "input_devices" | default dict -}}
+{{- $pointers := index $inputDevices "pointers" | default list -}}
+{{- range $pointers }}
+input "{{ .match }}" pointer_accel {{ .pointer_accel }}
+{{- end }}

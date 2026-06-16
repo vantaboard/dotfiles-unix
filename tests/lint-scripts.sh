@@ -57,7 +57,6 @@ echo "OK: ${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
 
 for script in \
   "${HOME_DIR}/dot_local/bin/executable_deploy-dotfiles" \
-  "${HOME_DIR}/dot_local/bin/executable_gimmekeys" \
   "${HOME_DIR}/dot_local/bin/executable_cursor-clip" \
   "${HOME_DIR}/system/udev/hotplug_monitor.sh"; do
   [[ -f "$script" ]] || continue

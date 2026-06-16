@@ -141,6 +141,7 @@ profile_example:
   system_deploy:
     - keyd
     - displays_resume
+    - libinput
     - sway_session
     - grub
     - ollama
@@ -148,3 +149,9 @@ profile_example:
     - udev
   secrets:
     git_gpg_key: ""
+  input_devices:
+    pointers:
+      - match: "Razer Razer DeathAdder V2"
+        pointer_accel: -0.8
+      - match: "MOSART Semi. 2.4G Wireless Mouse"
+        pointer_accel: -0.5
