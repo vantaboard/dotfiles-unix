@@ -7,10 +7,15 @@ configuration {
 }
 
 * {
-    bg-normal:   rgba(15, 10, 5, 100%);
-    fg-normal:   rgba(132, 193, 55, 100%);
-    bg-selected: rgba(8, 57, 5, 100%);
-    fg-selected: rgba(35, 255, 24, 100%);
+    bg-normal:                   rgba(15, 10, 5, 100%);
+    fg-normal:                   rgba(132, 193, 55, 100%);
+    fg-selected:                 rgba(35, 255, 24, 100%);
+    normal-background:           transparent;
+    alternate-normal-background: transparent;
+    selected-normal-background:  transparent;
+    normal-foreground:           @fg-normal;
+    alternate-normal-foreground: @fg-normal;
+    selected-normal-foreground:  @fg-selected;
 }
 
 window {
@@ -57,7 +62,7 @@ element {
 }
 
 element selected {
-    background-color: @bg-selected;
+    background-color: transparent;
     text-color:       @fg-selected;
 }
 
