@@ -11,8 +11,7 @@ if [[ "$external_active" -ge 3 ]]; then
     swaymsg output DP-5 enable dpms on mode 1920x1080@60Hz position 1920 0
     swaymsg output DP-6 enable dpms on mode 1920x1080@60Hz position 3840 0
     swaymsg output eDP-1 disable
-    # Apply 144Hz one output at a time; kanshi/sway reload cannot commit both atomically.
-    swaymsg output DP-5 mode 1920x1080@144Hz
+    # Dock MST bandwidth: only one ASUS monitor can run 144Hz while docked.
     swaymsg output DP-6 mode 1920x1080@144Hz
     xrandr --output DP-5 --primary 2>/dev/null || true
 else

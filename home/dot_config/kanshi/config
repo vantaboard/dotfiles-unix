@@ -5,8 +5,8 @@
 # Physical layout (left to right): BenQ GW2485TC (DP-4), ASUS VG248 primary
 # (DP-5), ASUS VG248 (DP-6). Dock silkscreen port labels do not match these
 # Linux output names.
-# ASUS VG248 monitors (DP-5, DP-6) run at 144Hz via postswitch/sway-docked-layout;
-# kanshi cannot apply 144Hz here (atomic commit fails through the dock MST link).
+# ASUS VG248 on DP-6 runs at 144Hz via postswitch/sway-docked-layout. DP-5 stays
+# at 60Hz: the dock MST link cannot drive both ASUS monitors at 144Hz together.
 profile docked-home {
     output DP-4 enable mode 1920x1080@60Hz position 0,0
     output DP-5 enable mode 1920x1080@60Hz position 1920,0
