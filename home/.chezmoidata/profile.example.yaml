@@ -79,8 +79,9 @@ profile_example:
     - fzf
     - gh
     - git
+    - gcc-14
+    - g++-14
     - glab
-    - g++
     - grub-common
     - grub-efi-amd64
     - grub-efi-amd64-signed
@@ -98,6 +99,7 @@ profile_example:
     - keychain
     - keyd
     - libcairo2-dev
+    - libjpeg-dev
     - libnotify-bin
     - libpango1.0-dev
     - libwayland-dev

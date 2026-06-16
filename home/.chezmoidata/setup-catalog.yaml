@@ -247,7 +247,7 @@ setup_catalog:
     hyprpicker:
       category: desktop
       label: hyprpicker
-      description: Wayland color picker; built from hyprwm sources into ~/.local/bin (requires wl-clipboard)
+      description: Wayland color picker; built from hyprwm/hyprpicker v0.3.0 into ~/.local/bin (gcc-14 on Ubuntu 24.04)
       default: true
       requires: [desktop_sway]
       install_tools: true
@@ -259,7 +259,9 @@ setup_catalog:
         - libwayland-dev
         - wayland-protocols
         - libxkbcommon-dev
-        - g++
+        - libjpeg-dev
+        - gcc-14
+        - g++-14
     swappy:
       category: desktop
       label: swappy

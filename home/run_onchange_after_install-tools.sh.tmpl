@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v15
+# hash: tools-v17
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -41,9 +41,7 @@ LOCAL_BIN="$HOME_DIR/.local/bin"
 LOCAL_PREFIX="$HOME_DIR/.local"
 TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-rm)
 VIVID_VERSION="0.10.1"
-HYPRUTILS_VERSION="v0.13.1"
-HYPRPICKER_VERSION="v0.4.7"
-HYPRUTILS_DIR="$HOME_DIR/.local/share/src/hyprutils"
+HYPRPICKER_VERSION="v0.3.0"
 HYPRPICKER_DIR="$HOME_DIR/.local/share/src/hyprpicker"
 SWAPPY_VERSION="v1.5.1"
 SWAPPY_DIR="$HOME_DIR/.local/share/src/swappy"
@@ -329,10 +327,19 @@ install_hyprpicker() {
     return 0
   fi
 
+  local cxx_compiler=c++
+  if command -v g++-14 >/dev/null 2>&1; then
+    cxx_compiler=g++-14
+  fi
+
   local build_deps=(
     cmake pkg-config libpango1.0-dev libcairo2-dev libwayland-dev
-    wayland-protocols libxkbcommon-dev g++
+    wayland-protocols libxkbcommon-dev libjpeg-dev "g++"
   )
+  if [[ "$cxx_compiler" == "g++-14" ]]; then
+    build_deps+=(gcc-14 g++-14)
+  fi
+
   local dep missing=()
   if command -v dpkg >/dev/null 2>&1; then
     for dep in "${build_deps[@]}"; do
@@ -346,26 +353,11 @@ install_hyprpicker() {
     fi
   fi
 
-  mkdir -p "$LOCAL_BIN" "$LOCAL_PREFIX/lib/pkgconfig"
-  export PKG_CONFIG_PATH="$LOCAL_PREFIX/lib/pkgconfig:$LOCAL_PREFIX/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
-
-  if [[ ! -d "$HYPRUTILS_DIR/.git" ]]; then
-    echo "Cloning hyprutils ${HYPRUTILS_VERSION}..."
-    git clone --depth 1 --branch "$HYPRUTILS_VERSION" \
-      https://github.com/hyprwm/hyprutils "$HYPRUTILS_DIR"
-  else
-    git -C "$HYPRUTILS_DIR" fetch --depth 1 origin tag "$HYPRUTILS_VERSION" 2>/dev/null || true
-    git -C "$HYPRUTILS_DIR" checkout "$HYPRUTILS_VERSION" 2>/dev/null || true
+  if [[ "$cxx_compiler" == "g++-14" ]] && command -v g++-14 >/dev/null 2>&1; then
+    export CC=gcc-14 CXX=g++-14
   fi
 
-  echo "Building hyprutils ${HYPRUTILS_VERSION}..."
-  cmake --no-warn-unused-cli \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX="$LOCAL_PREFIX" \
-    -S "$HYPRUTILS_DIR" -B "$HYPRUTILS_DIR/build"
-  cmake --build "$HYPRUTILS_DIR/build" --config Release \
-    -j"$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)"
-  cmake --install "$HYPRUTILS_DIR/build"
+  mkdir -p "$LOCAL_BIN"
 
   if [[ ! -d "$HYPRPICKER_DIR/.git" ]]; then
     echo "Cloning hyprpicker ${HYPRPICKER_VERSION}..."
@@ -376,14 +368,19 @@ install_hyprpicker() {
     git -C "$HYPRPICKER_DIR" checkout "$HYPRPICKER_VERSION" 2>/dev/null || true
   fi
 
-  echo "Building hyprpicker ${HYPRPICKER_VERSION}..."
+  echo "Building hyprpicker ${HYPRPICKER_VERSION} with ${CXX:-$cxx_compiler}..."
   cmake --no-warn-unused-cli \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX="$LOCAL_PREFIX" \
+    -DCMAKE_C_COMPILER="${CC:-cc}" \
+    -DCMAKE_CXX_COMPILER="${CXX:-$cxx_compiler}" \
     -S "$HYPRPICKER_DIR" -B "$HYPRPICKER_DIR/build"
   cmake --build "$HYPRPICKER_DIR/build" --config Release --target hyprpicker \
     -j"$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)"
-  cmake --install "$HYPRPICKER_DIR/build"
+
+  if ! cmake --install "$HYPRPICKER_DIR/build" 2>/dev/null; then
+    install -m 755 "$HYPRPICKER_DIR/build/hyprpicker" "$LOCAL_BIN/hyprpicker"
+  fi
 
   if hyprpicker_usable || [[ -x "$LOCAL_BIN/hyprpicker" ]]; then
     echo "hyprpicker ready ($LOCAL_BIN/hyprpicker)"
@@ -490,7 +487,16 @@ install_rust
 install_zoxide
 {{- end }}
 
-{{- if and (index $f "hyprpicker") (eq .chezmoi.os "linux") }}
+{{- $hyprpickerEnabled := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if eq (index $f "hyprpicker") true -}}
+{{-     $hyprpickerEnabled = true -}}
+{{-   else if and (index $f "desktop_sway") (ne (index $f "hyprpicker") false) -}}
+{{-     $hyprpickerEnabled = true -}}
+{{-   end -}}
+{{- end -}}
+
+{{- if $hyprpickerEnabled }}
 install_hyprpicker
 {{- end }}
 
