@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+# GDM does not reliably pass multi-value environment.d variables (colons get
+# truncated). Load Wayland session env here before exec'ing sway.
+env_file="${XDG_CONFIG_HOME:-$HOME/.config}/environment.d/wayland.conf"
+if [[ -f "$env_file" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$env_file"
+  set +a
+fi
+
+exec sway --unsupported-gpu "$@"

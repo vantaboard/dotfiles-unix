@@ -28,6 +28,8 @@ check "kanshi config exists" test -f "$HOME/.config/kanshi/config"
 check "swaylock config exists" test -f "$HOME/.config/swaylock/config"
 check "wayland env file exists" test -f "$HOME/.config/environment.d/wayland.conf"
 check "GDM sway session exists" test -f /usr/share/wayland-sessions/sway.desktop
+check "sway-session wrapper installed" test -x /usr/local/bin/sway-session
+check "GDM sway desktop uses session wrapper" grep -qF 'Exec=/usr/local/bin/sway-session' /usr/share/wayland-sessions/sway.desktop
 if [[ -f /etc/gdm3/custom.conf ]]; then
     check "GDM Wayland enabled" grep -qE '^WaylandEnable=true' /etc/gdm3/custom.conf
     check "GDM default session not forced to X11" \
@@ -59,6 +61,10 @@ check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
 
 if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
     check "active session is wayland" test "$XDG_SESSION_TYPE" = "wayland"
+    check "WLR_DRM_DEVICES includes NVIDIA card" bash -c '
+        val="$(tr "\0" "\n" < "/proc/$(pgrep -x sway | head -1)/environ" | sed -n "s/^WLR_DRM_DEVICES=//p")"
+        [[ "$val" == *card2* ]]
+    '
     check "sway IPC responds" swaymsg -t get_version
     check "kanshi running" pgrep -x kanshi
     active_outputs="$(swaymsg -t get_outputs | jq '[.[] | select(.active)] | length')"

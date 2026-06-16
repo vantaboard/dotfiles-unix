@@ -20,6 +20,7 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | Ollama GPU tuning | `home/system/systemd/ollama.service.d/override.conf` | `/etc/systemd/system/ollama.service.d/` |
 | keyd key remapping | `home/system/keyd/default.conf` | `/etc/keyd/default.conf` (Debian binary: `keyd.rvaiya`) |
 | Sway Wayland session | `home/system/wayland-sessions/sway.desktop` | `/usr/share/wayland-sessions/sway.desktop` |
+| Sway session wrapper | `home/system/bin/sway-session` | `/usr/local/bin/sway-session` (sources `wayland.conf` before exec) |
 | GDM Wayland enable | `home/system/gdm3/custom.conf` | `/etc/gdm3/custom.conf` (with `sway_session` deploy) |
 | Enabled services list | `home/.chezmoidata/enabled-services.yaml` | `systemctl enable` via script |
 | Autorandr profiles | `home/dot_config/autorandr/docked-home/`, `undocked/` | `~/.config/autorandr/` |

@@ -70,6 +70,7 @@ if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
 fi
 
 if has_deploy sway_session; then
+  deploy_file "$SOURCE/bin/sway-session" /usr/local/bin/sway-session 755
   deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop
   if [[ -d /etc/gdm3 ]]; then
     deploy_file "$SOURCE/gdm3/custom.conf" /etc/gdm3/custom.conf
