@@ -22,7 +22,11 @@ include $HOME/.config/sway/input-devices.conf
 
 input type:keyboard xkb_layout "us,es"
 input type:keyboard xkb_options "grp:alt_shift_toggle"
+{{- if $swayfxEnabled }}
+# Like i3 unclutter: hide the cursor after idle ms but keep pointer/hover active.
+# Vanilla sway clears focus on hide; swayfx is patched in install-tools.
 seat * hide_cursor 500
+{{- end }}
 seat * xcursor_theme Adwaita 24
 
 exec swayidle -w \

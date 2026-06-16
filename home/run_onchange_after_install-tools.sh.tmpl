@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v20
+# hash: tools-v21
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -400,6 +400,8 @@ install_hyprpicker() {
 }
 
 install_swayfx() {
+  SWAYFX_HIDE_CURSOR_PATCH="$HOME_DIR/.local/share/patches/swayfx-hide-cursor-keep-active.patch"
+
   swayfx_lib_path() {
     printf '%s' "$LOCAL_PREFIX/lib/x86_64-linux-gnu:$LOCAL_PREFIX/lib"
   }
@@ -408,6 +410,28 @@ install_swayfx() {
     [[ -x "$LOCAL_BIN/swayfx" ]] || return 1
     LD_LIBRARY_PATH="$(swayfx_lib_path)${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
       "$LOCAL_BIN/swayfx" --version 2>/dev/null | grep -qi swayfx
+  }
+
+  swayfx_hide_cursor_patched() {
+    [[ -f "$SWAYFX_DIR/sway/input/cursor.c" ]] || return 1
+    ! grep -q 'wlr_seat_pointer_notify_clear_focus(cursor->seat->wlr_seat)' \
+      "$SWAYFX_DIR/sway/input/cursor.c"
+  }
+
+  apply_swayfx_hide_cursor_patch() {
+    if swayfx_hide_cursor_patched; then
+      return 0
+    fi
+    if [[ ! -f "$SWAYFX_HIDE_CURSOR_PATCH" ]]; then
+      echo "WARN: missing $SWAYFX_HIDE_CURSOR_PATCH; hide_cursor will drop hover state"
+      return 1
+    fi
+    echo "Applying swayfx hide-cursor keep-active patch..."
+    if ! patch -d "$SWAYFX_DIR" -p1 -N --forward < "$SWAYFX_HIDE_CURSOR_PATCH"; then
+      echo "WARN: failed to apply hide-cursor patch"
+      return 1
+    fi
+    rm -rf "$SWAYFX_DIR/build"
   }
 
   pkg_version_ge() {
@@ -475,11 +499,6 @@ install_swayfx() {
     ninja -C "$LIBINPUT_DIR/build" install
   }
 
-  if swayfx_usable; then
-    echo "swayfx already installed"
-    return 0
-  fi
-
   if ! command -v git >/dev/null 2>&1; then
     echo "WARN: git not found; skipping swayfx install"
     return 0
@@ -531,6 +550,13 @@ install_swayfx() {
   else
     git -C "$SWAYFX_DIR" fetch --depth 1 origin tag "$SWAYFX_VERSION" 2>/dev/null || true
     git -C "$SWAYFX_DIR" checkout "$SWAYFX_VERSION" 2>/dev/null || true
+  fi
+
+  apply_swayfx_hide_cursor_patch || true
+
+  if swayfx_usable && swayfx_hide_cursor_patched; then
+    echo "swayfx already installed (hide-cursor keep-active)"
+    return 0
   fi
 
   mkdir -p "$SWAYFX_DIR/subprojects"
