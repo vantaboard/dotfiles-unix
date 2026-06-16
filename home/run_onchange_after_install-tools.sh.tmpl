@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v19
+# hash: tools-v20
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -400,8 +400,14 @@ install_hyprpicker() {
 }
 
 install_swayfx() {
+  swayfx_lib_path() {
+    printf '%s' "$LOCAL_PREFIX/lib/x86_64-linux-gnu:$LOCAL_PREFIX/lib"
+  }
+
   swayfx_usable() {
-    [[ -x "$LOCAL_BIN/swayfx" ]] && "$LOCAL_BIN/swayfx" --version 2>/dev/null | grep -qi swayfx
+    [[ -x "$LOCAL_BIN/swayfx" ]] || return 1
+    LD_LIBRARY_PATH="$(swayfx_lib_path)${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+      "$LOCAL_BIN/swayfx" --version 2>/dev/null | grep -qi swayfx
   }
 
   pkg_version_ge() {
@@ -549,12 +555,16 @@ install_swayfx() {
 
   echo "Building swayfx ${SWAYFX_VERSION} into ${LOCAL_PREFIX}..."
   if [[ -d "$SWAYFX_DIR/build/meson-private" ]]; then
-    meson setup "$SWAYFX_DIR/build" "$SWAYFX_DIR" \
+    if ! meson setup "$SWAYFX_DIR/build" "$SWAYFX_DIR" \
       --prefix="$LOCAL_PREFIX" \
       --buildtype=release \
       -Dwerror=false \
-      --reconfigure
-  else
+      --reconfigure 2>/dev/null; then
+      echo "Reconfigure failed; wiping build dir and starting fresh..."
+      rm -rf "$SWAYFX_DIR/build"
+    fi
+  fi
+  if [[ ! -d "$SWAYFX_DIR/build/meson-private" ]]; then
     meson setup "$SWAYFX_DIR/build" "$SWAYFX_DIR" \
       --prefix="$LOCAL_PREFIX" \
       --buildtype=release \
@@ -563,8 +573,9 @@ install_swayfx() {
   ninja -C "$SWAYFX_DIR/build"
   ninja -C "$SWAYFX_DIR/build" install
 
-  if [[ -x "$LOCAL_BIN/sway" && ! -e "$LOCAL_BIN/swayfx" ]]; then
-    mv "$LOCAL_BIN/sway" "$LOCAL_BIN/swayfx"
+  if [[ -x "$LOCAL_BIN/sway" ]]; then
+    install -m 755 "$LOCAL_BIN/sway" "$LOCAL_BIN/swayfx"
+    rm -f "$LOCAL_BIN/sway"
   fi
 
   if swayfx_usable; then
