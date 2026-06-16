@@ -10,6 +10,7 @@ exec --no-startup-id $HOME/.local/bin/sway-wallpaper
 input type:keyboard xkb_layout "us,es"
 input type:keyboard xkb_options "grp:alt_shift_toggle"
 seat * hide_cursor 500
+seat * xcursor_theme Adwaita 24
 
 exec swayidle -w \
     timeout 600 'swaymsg dpms off' \
