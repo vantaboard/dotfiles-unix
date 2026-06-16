@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Cast
+Comment=Stream display to a wireless monitor
+Exec=gnome-network-displays
+TryExec=gnome-network-displays
+Icon=video-display
+Terminal=false
+Categories=Network;Utility;

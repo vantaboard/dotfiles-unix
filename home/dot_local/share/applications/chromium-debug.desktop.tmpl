@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Chromium Debug
+Comment=Chromium with remote debugging enabled
+Exec=chromium --remote-debugging-port=9222 --user-data-dir={{ .chezmoi.homeDir }}/.config/chromium-remote
+TryExec=chromium
+Icon=chromium
+Terminal=false
+StartupNotify=true
+Categories=Network;WebBrowser;Development;

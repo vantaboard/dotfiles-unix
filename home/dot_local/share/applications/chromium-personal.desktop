@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Chromium Personal
+Comment=Google Chrome with Personal profile
+Exec=/usr/bin/google-chrome-stable --profile-directory=Personal
+TryExec=/usr/bin/google-chrome-stable
+Icon=google-chrome
+Terminal=false
+StartupNotify=true
+Categories=Network;WebBrowser;
