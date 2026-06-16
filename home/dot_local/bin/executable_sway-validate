@@ -36,6 +36,24 @@ else
     echo "INFO: /etc/gdm3/custom.conf not found; skipping GDM Wayland checks"
 fi
 check "Intel DRM device exists" test -e /dev/dri/card1
+check "NVIDIA DRM device exists" test -e /dev/dri/card2
+if [[ -f "$HOME/.config/environment.d/wayland.conf" ]]; then
+    check "WLR_DRM_DEVICES includes Intel and NVIDIA" \
+        grep -qE 'WLR_DRM_DEVICES=.*/dev/dri/card1.*/dev/dri/card2' "$HOME/.config/environment.d/wayland.conf"
+fi
+if [[ -f "$HOME/.config/kanshi/config" ]]; then
+    check "kanshi config syntax" bash -c '
+        timeout 0.5 kanshi -c "$HOME/.config/kanshi/config" &
+        pid=$!
+        sleep 0.2
+        if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null
+            wait "$pid" 2>/dev/null
+            exit 0
+        fi
+        exit 1
+    '
+fi
 check "sway config syntax" sway -C --unsupported-gpu -c "$HOME/.config/sway/config"
 check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
 
