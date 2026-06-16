@@ -7,7 +7,7 @@ fi
 
 if [[ "$external_active" -ge 3 ]]; then
     MONITOR_ARRAY=(DP-4 DP-5 DP-6)
-    LAYOUT_OUTPUT=$'output DP-4 position 0 0\noutput DP-5 enable mode 1920x1080@144Hz position 1920 0\noutput DP-6 enable mode 1920x1080@144Hz position 3840 0\noutput eDP-1 disable\n'
+    LAYOUT_OUTPUT=$'output DP-4 position 0 0\noutput DP-5 position 1920 0\noutput DP-6 position 3840 0\noutput eDP-1 disable\n'
 else
     ACTIVE_MONITORS=$(
         swaymsg -t get_outputs | jq -r '
