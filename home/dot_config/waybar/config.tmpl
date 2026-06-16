@@ -16,10 +16,10 @@
         "warp-on-scroll": false
     },
     "custom/py3status": {
-        "exec": "$HOME/.local/bin/waybar-py3status-bridge",
-        "return-type": "json",
-        "format": "{text}",
-        "escape": true
+        "interval": 5,
+        "format": "{}",
+        "escape": true,
+        "exec": "{{ .chezmoi.homeDir }}/.local/bin/waybar-py3status-snapshot"
     },
     "tray": {
         "icon-size": 16,
