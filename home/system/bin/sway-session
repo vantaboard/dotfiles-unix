@@ -11,4 +11,21 @@ if [[ -f "$env_file" ]]; then
   set +a
 fi
 
+# Avoid wlroots' Intel-render/NVIDIA-scanout path when docked. The external
+# displays are wired to card2; the laptop panel is wired to card1.
+docked=0
+for status in /sys/class/drm/card2-DP-*/status; do
+  [[ -e "$status" ]] || continue
+  if [[ "$(cat "$status")" == "connected" ]]; then
+    docked=1
+    break
+  fi
+done
+
+if [[ "$docked" == "1" && -e /dev/dri/card2 ]]; then
+  export WLR_DRM_DEVICES=/dev/dri/card2
+elif [[ -e /dev/dri/card1 ]]; then
+  export WLR_DRM_DEVICES=/dev/dri/card1
+fi
+
 exec sway --unsupported-gpu "$@"

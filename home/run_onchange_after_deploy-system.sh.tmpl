@@ -19,6 +19,18 @@ set -euo pipefail
 SOURCE="{{ .chezmoi.sourceDir }}/system"
 
 # hash: {{ $deploy | toYaml | sha256sum }}
+# hash: {{ include "system/bin/sway-session" | sha256sum }}
+# hash: {{ include "system/gdm3/custom.conf" | sha256sum }}
+# hash: {{ include "system/wayland-sessions/sway.desktop" | sha256sum }}
+# hash: {{ include "system/grub/default" | sha256sum }}
+# hash: {{ include "system/keyd/default.conf" | sha256sum }}
+# hash: {{ include "system/ssh/sshd_config.d/99-keyonly-port.conf" | sha256sum }}
+# hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
+# hash: {{ include "system/systemd/displays-resume.service.tmpl" | sha256sum }}
+# hash: {{ include "system/systemd/ollama.service" | sha256sum }}
+# hash: {{ include "system/systemd/ollama.service.d/override.conf" | sha256sum }}
+# hash: {{ include "system/udev/99-dock-hotplug.rules" | sha256sum }}
+# hash: {{ include "system/udev/hotplug_monitor.sh" | sha256sum }}
 
 deploy_file() {
   local src="$1"

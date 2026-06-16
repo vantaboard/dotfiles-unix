@@ -39,12 +39,10 @@ else
 fi
 check "Intel DRM device exists" test -e /dev/dri/card1
 check "NVIDIA DRM device exists" test -e /dev/dri/card2
-if [[ -f "$HOME/.config/environment.d/wayland.conf" ]]; then
-    check "WLR_DRM_DEVICES includes Intel and NVIDIA" \
-        grep -qE 'WLR_DRM_DEVICES=.*/dev/dri/card1.*/dev/dri/card2' "$HOME/.config/environment.d/wayland.conf"
-    check "WLR_DRM_NO_MODIFIERS enabled for NVIDIA scanout" \
-        grep -qE '^WLR_DRM_NO_MODIFIERS=1' "$HOME/.config/environment.d/wayland.conf"
-fi
+check "sway-session selects NVIDIA when docked" \
+    grep -qF 'export WLR_DRM_DEVICES=/dev/dri/card2' /usr/local/bin/sway-session
+check "sway-session selects Intel when undocked" \
+    grep -qF 'export WLR_DRM_DEVICES=/dev/dri/card1' /usr/local/bin/sway-session
 if [[ -f "$HOME/.config/kanshi/config" ]]; then
     check "kanshi config syntax" bash -c '
         timeout 0.5 kanshi -c "$HOME/.config/kanshi/config" &
@@ -63,9 +61,21 @@ check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
 
 if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
     check "active session is wayland" test "$XDG_SESSION_TYPE" = "wayland"
-    check "WLR_DRM_DEVICES includes NVIDIA card" bash -c '
+    check "WLR_DRM_DEVICES matches dock state" bash -c '
         val="$(tr "\0" "\n" < "/proc/$(pgrep -x sway | head -1)/environ" | sed -n "s/^WLR_DRM_DEVICES=//p")"
-        [[ "$val" == *card2* ]]
+        docked=0
+        for status in /sys/class/drm/card2-DP-*/status; do
+            [[ -e "$status" ]] || continue
+            if [[ "$(cat "$status")" == "connected" ]]; then
+                docked=1
+                break
+            fi
+        done
+        if [[ "$docked" == "1" ]]; then
+            [[ "$val" == "/dev/dri/card2" ]]
+        else
+            [[ "$val" == "/dev/dri/card1" ]]
+        fi
     '
     check "sway IPC responds" swaymsg -t get_version
     check "kanshi running" pgrep -x kanshi
