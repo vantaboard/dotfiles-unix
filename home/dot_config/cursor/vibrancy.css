@@ -12,6 +12,14 @@ body .monaco-workbench .part.auxiliarybar>.content .embedded-aux-bar-editor-cont
   color: var(--vibrancy-opaque-editor-background);
 }
 
+.anysphere-icon-button[data-variant=background]>span {
+  color: var(--vibrancy-opaque-editor-background) !important;
+}
+
+.anysphere-icon-button[data-variant=background][data-mode=agent]>span {
+  color: var(--vibrancy-opaque-editor-background) !important;
+}
+
 .send-with-mode .anysphere-icon-button.mic-icon-showing>span {
   color: var(--vibrancy-opaque-editor-background) !important;
 }
