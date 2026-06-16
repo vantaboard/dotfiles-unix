@@ -103,6 +103,9 @@ profile_example:
     - pulseaudio
     - ripgrep
     - rofi
+    - bemenu
+    - libbemenu-wayland
+    - j4-dmenu-desktop
     - thermald
     - tmux
     - udev

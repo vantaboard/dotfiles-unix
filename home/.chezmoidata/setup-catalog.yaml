@@ -337,12 +337,11 @@ setup_catalog:
       packages: [dunst]
     rofi:
       category: desktop
-      label: rofi + fuzzel launchers
+      label: rofi + bemenu launchers
       default: true
-      packages: [rofi]
-      install_tools: true
-      config_paths: [dot_config/rofi, dot_config/fuzzel]
-      description: fuzzel ($mod+d drun) is built from source into ~/.local/bin (Ubuntu's is too old for anchor); rofi handles $mod+z run mode
+      packages: [rofi, bemenu, libbemenu-wayland, j4-dmenu-desktop]
+      config_paths: [dot_config/rofi]
+      description: bemenu ($mod+d drun via j4-dmenu-desktop) is a horizontal full-width top bar; rofi handles $mod+z run mode
     desktop_utils:
       category: desktop
       label: Desktop utilities

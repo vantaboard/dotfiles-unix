@@ -30,6 +30,9 @@ packages:
       - wl-clipboard
       - dunst
       - rofi
+      - bemenu
+      - libbemenu-wayland
+      - j4-dmenu-desktop
       - playerctl
       - brightnessctl
       - acpi
