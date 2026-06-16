@@ -109,9 +109,8 @@ vim.o.relativenumber = true
 vim.o.scrolloff = 8
 
 -- Sync yanks with the system clipboard when a provider is available.
--- wl-paste prints "target STRING not available" when the clipboard is empty.
--- Paste commands must run via sh -c: Neovim splits string providers into argv,
--- so "wl-paste 2>/dev/null" would pass 2>/dev/null as a literal argument.
+-- String paste providers are split on spaces by Neovim, so never embed shell
+-- redirects in g:clipboard.paste; use Lua functions or argv lists instead.
 local function setup_clipboard()
     if vim.fn.has("clipboard") ~= 1 then
         return
@@ -130,16 +129,18 @@ local function setup_clipboard()
             },
             cache_enabled = 1,
         }
-    elseif vim.fn.executable("wl-copy") == 1 and os.getenv("WAYLAND_DISPLAY") then
+    elseif vim.fn.executable("wl-copy") == 1
+        and vim.fn.executable("wl-paste") == 1
+        and os.getenv("WAYLAND_DISPLAY") then
         vim.g.clipboard = {
             name = "wl-clipboard",
             copy = {
-                ["+"] = "wl-copy",
-                ["*"] = "wl-copy --primary",
+                ["+"] = { "wl-copy", "--type", "text/plain" },
+                ["*"] = { "wl-copy", "--primary", "--type", "text/plain" },
             },
             paste = {
-                ["+"] = { "sh", "-c", "wl-paste 2>/dev/null || true" },
-                ["*"] = { "sh", "-c", "wl-paste --primary 2>/dev/null || true" },
+                ["+"] = { "wl-paste", "--no-newline" },
+                ["*"] = { "wl-paste", "--no-newline", "--primary" },
             },
             -- Do not cache: with cache on, an empty read at startup sticks until Neovim
             -- yanks to + itself, so Chrome/other-app copies never appear on paste.
