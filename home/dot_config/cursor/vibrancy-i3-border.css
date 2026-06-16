@@ -1,11 +1,13 @@
 /* i3 pixel borders are not visible on frameless Vibrancy windows; draw them in-app. */
 :root {
-  --cursor-pane-border-active: #86a83e;
-  --cursor-pane-border-inactive: #083905;
+  --cursor-window-border-active: #86a83e;
+  --cursor-window-border-inactive: #083905;
+  --cursor-pane-border-active: rgba(134, 168, 62, 0.22);
+  --cursor-pane-border-inactive: rgba(134, 168, 62, 0.1);
 }
 
 .monaco-workbench {
-  box-shadow: inset 0 0 0 4px var(--cursor-pane-border-active) !important;
+  box-shadow: inset 0 0 0 4px var(--cursor-window-border-active) !important;
   --vscode-sideBar-border: var(--cursor-pane-border-active) !important;
   --vscode-editorGroup-border: var(--cursor-pane-border-active) !important;
   --vscode-panel-border: var(--cursor-pane-border-active) !important;
@@ -13,7 +15,7 @@
 }
 
 body:not(:focus-within) .monaco-workbench {
-  box-shadow: inset 0 0 0 4px var(--cursor-pane-border-inactive) !important;
+  box-shadow: inset 0 0 0 4px var(--cursor-window-border-inactive) !important;
   --vscode-sideBar-border: var(--cursor-pane-border-inactive) !important;
   --vscode-editorGroup-border: var(--cursor-pane-border-inactive) !important;
   --vscode-panel-border: var(--cursor-pane-border-inactive) !important;
@@ -35,7 +37,12 @@ body.i3-grouped:not(:focus-within) .monaco-workbench {
   border-right: none !important;
 }
 
-/* Sash dividers (chat, editor splits, panel) only paint on hover by default. */
+/* Sash dividers only paint on hover by default; keep them subtle at rest. */
 .monaco-sash::before {
   background: var(--vscode-sash-hoverBorder) !important;
+}
+
+.monaco-sash.hover::before,
+.monaco-sash.active::before {
+  background: rgba(134, 168, 62, 0.45) !important;
 }
