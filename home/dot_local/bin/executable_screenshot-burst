@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+interval="${1:-1}"
+outdir="${2:-$HOME/Pictures/screenshot-burst/$(date +%Y%m%d-%H%M%S)}"
+
+if ! command -v grim >/dev/null; then
+    echo "screenshot-burst: grim is required" >&2
+    exit 1
+fi
+
+mkdir -p "$outdir"
+echo "Saving screenshots to $outdir every ${interval}s (Ctrl+C to stop)"
+
+i=1
+trap 'echo; echo "Stopped after $((i - 1)) screenshot(s)."; exit 0' INT
+
+while true; do
+    file=$(printf '%s/%04d.png' "$outdir" "$i")
+    grim "$file"
+    printf '\r%d screenshot(s) saved (latest: %s)' "$i" "$(basename "$file")"
+    i=$((i + 1))
+    sleep "$interval"
+done
