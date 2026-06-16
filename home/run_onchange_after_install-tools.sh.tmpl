@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v23
+# hash: tools-v24
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -55,8 +55,6 @@ LOCAL_PKG_CONFIG="$LOCAL_PREFIX/lib/x86_64-linux-gnu/pkgconfig:$LOCAL_PREFIX/lib
 SWAPPY_VERSION="v1.5.1"
 SWAPPY_DIR="$HOME_DIR/.local/share/src/swappy"
 BEMOJI_DIR="$HOME_DIR/.local/share/src/bemoji"
-FUZZEL_VERSION="1.12.0"
-FUZZEL_DIR="$HOME_DIR/.local/share/src/fuzzel"
 
 install_mise() {
   mise_usable() {
@@ -675,73 +673,6 @@ install_swappy() {
     return 0
   fi
 }
-
-install_fuzzel() {
-  # Ubuntu's fuzzel (1.9.x) predates the `anchor` option, so build a newer
-  # release into ~/.local/bin. Pinned to 1.12.0: 1.13+ needs pixman >=0.46,
-  # newer than Ubuntu 24.04 ships (0.42).
-  fuzzel_has_anchor() {
-    [[ -x "$LOCAL_BIN/fuzzel" ]] && "$LOCAL_BIN/fuzzel" --version 2>/dev/null \
-      | grep -qE "fuzzel version: (1\.(1[2-9]|[2-9][0-9])|[2-9])"
-  }
-
-  if fuzzel_has_anchor; then
-    echo "fuzzel (anchor-capable) already installed"
-    return 0
-  fi
-
-  if ! command -v git >/dev/null 2>&1; then
-    echo "WARN: git not found; skipping fuzzel install"
-    return 0
-  fi
-  if ! command -v meson >/dev/null 2>&1 || ! command -v ninja >/dev/null 2>&1; then
-    echo "WARN: meson/ninja not found; skipping fuzzel install"
-    return 0
-  fi
-
-  local build_deps=(
-    meson ninja-build pkg-config scdoc libwayland-dev wayland-protocols
-    libxkbcommon-dev libpixman-1-dev libfcft-dev libtllist-dev
-    libcairo2-dev libpng-dev
-  )
-  local dep missing=()
-  if command -v dpkg >/dev/null 2>&1; then
-    for dep in "${build_deps[@]}"; do
-      if ! dpkg -s "$dep" >/dev/null 2>&1; then
-        missing+=("$dep")
-      fi
-    done
-    if [[ ${#missing[@]} -gt 0 ]]; then
-      echo "Installing fuzzel build dependencies: ${missing[*]}"
-      sudo apt install -y -qq --no-install-recommends "${missing[@]}"
-    fi
-  fi
-
-  mkdir -p "$LOCAL_BIN"
-
-  if [[ ! -d "$FUZZEL_DIR/.git" ]]; then
-    echo "Cloning fuzzel ${FUZZEL_VERSION}..."
-    git clone --depth 1 --branch "$FUZZEL_VERSION" \
-      https://codeberg.org/dnkl/fuzzel.git "$FUZZEL_DIR"
-  else
-    git -C "$FUZZEL_DIR" fetch --depth 1 origin tag "$FUZZEL_VERSION" 2>/dev/null || true
-    git -C "$FUZZEL_DIR" checkout "$FUZZEL_VERSION" 2>/dev/null || true
-  fi
-
-  echo "Building fuzzel ${FUZZEL_VERSION}..."
-  rm -rf "$FUZZEL_DIR/build"
-  meson setup "$FUZZEL_DIR/build" "$FUZZEL_DIR" \
-    --prefix="$LOCAL_PREFIX" -Dbuildtype=release
-  ninja -C "$FUZZEL_DIR/build"
-  ninja -C "$FUZZEL_DIR/build" install
-
-  if fuzzel_has_anchor; then
-    echo "fuzzel ready ($LOCAL_BIN/fuzzel)"
-  else
-    echo "WARN: fuzzel install failed"
-    return 0
-  fi
-}
 install_bemoji() {
   bemoji_usable() {
     command -v bemoji >/dev/null 2>&1
@@ -840,10 +771,6 @@ install_swayfx
 
 {{- if and (index $f "swappy") (eq .chezmoi.os "linux") }}
 install_swappy
-{{- end }}
-
-{{- if and (index $f "rofi") (eq .chezmoi.os "linux") }}
-install_fuzzel
 {{- end }}
 
 {{- if and (index $f "desktop_sway") (eq .chezmoi.os "linux") }}

@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+# Wayland-native horizontal full-width top-bar launcher: j4-dmenu-desktop feeds
+# desktop entries to bemenu. bemenu does not exit on focus loss, so a Sway focus
+# watcher dismisses it when another window is focused. Caveat: clicking the
+# window that was already focused emits no Sway focus event, so it won't dismiss.
+
+export BEMENU_BACKEND=wayland
+
+bemenu_cmd="bemenu -i -p 'run' \
+  --fn 'FixedsysExcelsior Nerd Font Mono 10' \
+  --tb '#0f0a05' --tf '#84c137' \
+  --fb '#0f0a05' --ff '#84c137' \
+  --nb '#0f0a05' --nf '#84c137' \
+  --hb '#0f0a05' --hf '#23ff18' \
+  --sb '#0f0a05' --sf '#23ff18' \
+  --ab '#0f0a05' --af '#84c137'"
+
+j4-dmenu-desktop --dmenu="$bemenu_cmd" --term="$HOME/.local/bin/kitty" --no-generic &
+launcher_pid=$!
+
+(
+  swaymsg -t subscribe -m '[ "window", "workspace" ]' | while read -r event; do
+    pgrep -x bemenu >/dev/null 2>&1 || exit 0
+    [[ "$(jq -er '.change // empty' <<<"$event")" == "focus" ]] || continue
+    pkill -x bemenu 2>/dev/null || true
+    exit 0
+  done
+) &
+watcher_pid=$!
+
+wait "$launcher_pid" 2>/dev/null || true
+kill "$watcher_pid" 2>/dev/null || true
