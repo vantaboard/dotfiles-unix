@@ -1,9 +1,67 @@
 configuration {
-    location: 2;
-    font:     "FixedsysExcelsior Nerd Font Mono 10";
+    location:            2;
+    font:                "FixedsysExcelsior Nerd Font Mono 10";
+    show-icons:          false;
+    display-drun:        "    run    ";
+    drun-display-format: "{name}";
+}
+
+* {
+    bg-normal:   rgba(15, 10, 5, 100%);
+    fg-normal:   rgba(132, 193, 55, 100%);
+    bg-selected: rgba(8, 57, 5, 100%);
+    fg-selected: rgba(35, 255, 24, 100%);
 }
 
 window {
-    anchor: north;
-    width:  100%;
+    anchor:           north;
+    width:            100%;
+    padding:          0;
+    border:           0;
+    background-color: @bg-normal;
+    children:         [ horibox ];
+}
+
+horibox {
+    orientation: horizontal;
+    children:    [ prompt, entry, listview ];
+}
+
+prompt {
+    background-color: @bg-normal;
+    text-color:       @fg-normal;
+    padding:          0 0 0 4px;
+}
+
+entry {
+    background-color: @bg-normal;
+    text-color:       @fg-normal;
+    expand:           false;
+    width:            10em;
+    padding:          0 4px;
+}
+
+listview {
+    layout:           horizontal;
+    spacing:          5px;
+    lines:            100;
+    background-color: @bg-normal;
+    border:           0;
+    scrollbar:        false;
+}
+
+element {
+    padding:          0 2px;
+    background-color: transparent;
+    text-color:       @fg-normal;
+}
+
+element selected {
+    background-color: @bg-selected;
+    text-color:       @fg-selected;
+}
+
+element-text, element-icon {
+    background-color: inherit;
+    text-color:       inherit;
 }
