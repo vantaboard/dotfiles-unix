@@ -39,6 +39,13 @@ echo -e "$CONFIG_OUTPUT" >> "$HOME/.config/sway/config"
 
 if [ -n "${SWAYSOCK:-}" ]; then
     swaymsg reload
+    # reload re-enables every connected output; restore docked/undocked layout.
+    external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
+    if [[ "$external_active" -ge 3 ]]; then
+        swaymsg output eDP-1 disable
+    else
+        swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
+    fi
 fi
 
 echo "sway config reloaded."
