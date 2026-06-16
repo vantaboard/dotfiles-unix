@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Pick Color
+Comment=Pick a color from the screen and copy it to the clipboard
+Exec=hyprpicker -q -a
+TryExec=hyprpicker
+Icon=color-picker
+Terminal=false
+Categories=Utility;Graphics;
