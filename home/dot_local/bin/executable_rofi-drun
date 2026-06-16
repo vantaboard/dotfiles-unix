@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+monitor="$(swaymsg -t get_outputs -r | jq -r '.[] | select(.focused) | .name')"
+
+if [[ -z "$monitor" ]]; then
+    exec rofi -show drun -monitor -4
+fi
+
+exec rofi -show drun -monitor "$monitor"
