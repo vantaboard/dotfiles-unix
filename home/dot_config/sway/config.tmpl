@@ -30,7 +30,7 @@ seat * hide_cursor 500
 seat * xcursor_theme Adwaita 24
 
 exec swayidle -w \
-    timeout 600 'swaymsg dpms off' \
+    timeout 600 'swaymsg "output * dpms off"' \
     timeout 1200 'swaylock -f -c $HOME/.config/swaylock/config' \
     timeout 1800 'systemctl suspend' \
     before-sleep 'swaylock -f -c $HOME/.config/swaylock/config'
