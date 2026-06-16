@@ -61,7 +61,7 @@ bindsym $mod+Return exec $HOME/.local/bin/kitty --single-instance --class "scrat
 bindsym $mod+Shift+q kill
 bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
 bindsym $mod+d exec --no-startup-id $HOME/.local/bin/rofi-drun
-bindsym $mod+z exec --no-startup-id morc_menu
+bindsym $mod+z exec --no-startup-id rofi -show run
 
 font pango:FixedsysExcelsior Nerd Font Mono 10
 
@@ -83,7 +83,7 @@ bindsym $mod+Shift+a exec --no-startup-id normcap
 bindsym $mod+Ctrl+Shift+n input type:keyboard xkb_next_layout
 bindsym Print exec --no-startup-id sh -c 'grim -g "$(slurp)" - | wl-copy'
 bindsym $mod+Ctrl+x exec --no-startup-id swaymsg kill
-bindsym $mod+Shift+e exec --no-startup-id $HOME/Code/splatmoji/splatmoji copy
+bindsym $mod+Shift+e exec --no-startup-id $HOME/.local/bin/rofi-emoji
 
 bindsym $mod+h focus left
 bindsym $mod+j focus down

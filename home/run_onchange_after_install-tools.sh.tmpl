@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v21
+# hash: tools-v22
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -54,6 +54,7 @@ LIBINPUT_DIR="$HOME_DIR/.local/share/src/libinput"
 LOCAL_PKG_CONFIG="$LOCAL_PREFIX/lib/x86_64-linux-gnu/pkgconfig:$LOCAL_PREFIX/lib/pkgconfig"
 SWAPPY_VERSION="v1.5.1"
 SWAPPY_DIR="$HOME_DIR/.local/share/src/swappy"
+BEMOJI_DIR="$HOME_DIR/.local/share/src/bemoji"
 
 install_mise() {
   mise_usable() {
@@ -672,6 +673,39 @@ install_swappy() {
     return 0
   fi
 }
+install_bemoji() {
+  bemoji_usable() {
+    command -v bemoji >/dev/null 2>&1
+  }
+
+  if bemoji_usable || [[ -x "$LOCAL_BIN/bemoji" ]]; then
+    echo "bemoji already installed"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping bemoji install"
+    return 0
+  fi
+
+  mkdir -p "$LOCAL_BIN"
+
+  if [[ ! -d "$BEMOJI_DIR/.git" ]]; then
+    echo "Cloning bemoji..."
+    git clone --depth 1 https://github.com/erikvdplas/bemoji "$BEMOJI_DIR"
+  else
+    git -C "$BEMOJI_DIR" pull --ff-only 2>/dev/null || true
+  fi
+
+  install -m 755 "$BEMOJI_DIR/bemoji" "$LOCAL_BIN/bemoji"
+
+  if bemoji_usable || [[ -x "$LOCAL_BIN/bemoji" ]]; then
+    echo "bemoji ready ($LOCAL_BIN/bemoji)"
+  else
+    echo "WARN: bemoji install failed"
+    return 0
+  fi
+}
 {{- end }}
 
 {{- if index $f "mise" }}
@@ -737,6 +771,10 @@ install_swayfx
 
 {{- if and (index $f "swappy") (eq .chezmoi.os "linux") }}
 install_swappy
+{{- end }}
+
+{{- if and (index $f "desktop_sway") (eq .chezmoi.os "linux") }}
+install_bemoji
 {{- end }}
 
 echo "Custom tool installation complete"
