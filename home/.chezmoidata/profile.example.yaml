@@ -103,6 +103,7 @@ profile_example:
     - pulseaudio
     - ripgrep
     - rofi
+    - fuzzel
     - thermald
     - tmux
     - udev

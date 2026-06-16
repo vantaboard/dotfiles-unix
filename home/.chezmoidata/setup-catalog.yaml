@@ -337,9 +337,11 @@ setup_catalog:
       packages: [dunst]
     rofi:
       category: desktop
-      label: rofi launcher
+      label: rofi + fuzzel launchers
       default: true
-      packages: [rofi]
+      packages: [rofi, fuzzel]
+      config_paths: [dot_config/rofi, dot_config/fuzzel]
+      description: fuzzel is the Wayland-native drun launcher ($mod+d); rofi handles $mod+z run mode
     desktop_utils:
       category: desktop
       label: Desktop utilities
