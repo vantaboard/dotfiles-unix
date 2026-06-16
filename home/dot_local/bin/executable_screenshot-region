@@ -1,18 +1,24 @@
 #!/usr/bin/bash
 set -euo pipefail
 
-if ! command -v grim >/dev/null; then
+export PATH="$HOME/.local/bin:/usr/bin:/bin${PATH:+:$PATH}"
+
+grim_bin="$(command -v grim || true)"
+slurp_bin="$(command -v slurp || true)"
+swappy_bin="${HOME:?}/.local/bin/swappy"
+
+if [[ -z "$grim_bin" ]]; then
     echo "screenshot-region: grim is required" >&2
     exit 1
 fi
-if ! command -v slurp >/dev/null; then
+if [[ -z "$slurp_bin" ]]; then
     echo "screenshot-region: slurp is required" >&2
     exit 1
 fi
-if ! command -v swappy >/dev/null; then
-    echo "screenshot-region: swappy is required" >&2
+if [[ ! -x "$swappy_bin" ]]; then
+    echo "screenshot-region: swappy is required ($swappy_bin)" >&2
     exit 1
 fi
 
-geom="$(slurp)" || exit 0
-grim -g "$geom" - | swappy -f -
+geom="$("$slurp_bin")" || exit 0
+"$grim_bin" -g "$geom" - | "$swappy_bin" -f -
