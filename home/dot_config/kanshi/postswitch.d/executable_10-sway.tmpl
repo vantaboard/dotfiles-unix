@@ -56,10 +56,16 @@ NEW_BLOCK=$(printf '%b' "$CONFIG_OUTPUT")
 OLD_BLOCK=$(sed -n '/^############# Auto-generated for use with kanshi #############/,$p' "$CONFIG_FILE" 2>/dev/null || true)
 
 if [[ -n "$OLD_BLOCK" && "$NEW_BLOCK" == "$OLD_BLOCK" ]]; then
+    # The config text is unchanged (e.g. a normal reboot into the same layout),
+    # so a reload is unnecessary. But at boot the externals often come up after
+    # sway already ran its exec_always wallpaper/bar against an early output
+    # state, so re-apply them now that kanshi has positioned the monitors.
     if [ -n "${SWAYSOCK:-}" ]; then
         "$HOME/.local/bin/sway-docked-layout"
+        "$HOME/.local/bin/sway-wallpaper"
+        "$HOME/.local/bin/waybar-restart"
     fi
-    echo "sway monitor layout unchanged; skipping reload."
+    echo "sway monitor layout unchanged; refreshed wallpaper and bar."
     exit 0
 fi
 
@@ -70,6 +76,7 @@ if [ -n "${SWAYSOCK:-}" ]; then
     swaymsg reload
     "$HOME/.local/bin/sway-docked-layout"
     "$HOME/.local/bin/sway-wallpaper"
+    "$HOME/.local/bin/waybar-restart"
 fi
 
 echo "sway config reloaded."
