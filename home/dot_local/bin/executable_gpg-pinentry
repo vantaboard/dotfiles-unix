@@ -1,0 +1,9 @@
+#!/bin/sh
+# Pick a pinentry that matches the environment (TTY vs GUI).
+if [ -t 0 ] && [ -n "${GPG_TTY:-}" ]; then
+  exec /usr/bin/pinentry-curses "$@"
+fi
+if [ -n "${WAYLAND_DISPLAY:-}" ] || [ -n "${DISPLAY:-}" ]; then
+  exec /usr/bin/pinentry-gnome3 "$@"
+fi
+exec /usr/bin/pinentry-curses "$@"

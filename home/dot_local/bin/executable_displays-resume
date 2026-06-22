@@ -1,6 +1,33 @@
 #!/usr/bin/bash
+# Re-apply the sway display layout after resume from suspend/hibernate.
+#
+# Started by displays-resume.service, a system unit ordered after the sleep
+# targets. systemd hands it a minimal environment, so rediscover the desktop
+# session env (HOME, XDG_RUNTIME_DIR, SWAYSOCK) that swaymsg/kanshi need before
+# doing anything. Every step is best-effort: a stale socket or absent session
+# must not leave the unit in a failed state.
 set -euo pipefail
 
+: "${HOME:=$(getent passwd "$(id -un)" | cut -d: -f6)}"
+export HOME
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+# sway-docked-layout refuses to run unless this looks like a Wayland session.
+export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
+
+# Locate the live sway IPC socket if the unit env did not carry it.
+if [[ -z "${SWAYSOCK:-}" || ! -S "${SWAYSOCK:-}" ]]; then
+    SWAYSOCK="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -name 'sway-ipc.*.sock' -type s 2>/dev/null | head -n1)"
+    export SWAYSOCK
+fi
+
+# No live sway session (e.g. resumed at the login greeter) — nothing to do.
+[[ -S "${SWAYSOCK:-}" ]] || exit 0
+
+# After resume the outputs are frequently left powered off (swayidle may have
+# run "output * dpms off" before sleep) or stuck black on the NVIDIA/MST link.
+# Power them back on, re-evaluate the kanshi profile, and force a fresh modeset
+# on each output — the same recovery a physical dock replug would trigger.
+swaymsg "output * dpms on" 2>/dev/null || true
 killall -HUP kanshi 2>/dev/null || true
 swaymsg reload 2>/dev/null || true
 "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
