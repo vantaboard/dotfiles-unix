@@ -18,23 +18,29 @@ else
 fi
 
 MOVE_KEYS=("b" "n" "m")
+WORKSPACE_NAMES=("web" "code" "media" "comms" "misc" "av" "other" "other")
 
 CONFIG_OUTPUT="############# Auto-generated for use with kanshi #############\n"
 CONFIG_OUTPUT+="${LAYOUT_OUTPUT}\n"
 
+# Sway substitutes variables at parse time in source order, so every `set` must
+# come before the first line that references it. A `workspace $ws0 ...` emitted
+# before `set $ws0 ...` would be created with the literal name "$ws0".
 for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
-    SCREEN_NAME="screen$i"
-    monitor=${MONITOR_ARRAY[$i]}
-
-    CONFIG_OUTPUT+="set \$$SCREEN_NAME $monitor\n"
-    CONFIG_OUTPUT+="workspace \$ws$i output \$$SCREEN_NAME\n"
-
-    if [ $i -lt ${#MOVE_KEYS[@]} ]; then
-        CONFIG_OUTPUT+="bindsym \$mod+shift+${MOVE_KEYS[$i]} move workspace to output \$$SCREEN_NAME\n"
-    fi
+    CONFIG_OUTPUT+="set \$screen$i ${MONITOR_ARRAY[$i]}\n"
 done
 
-WORKSPACE_NAMES=("web" "code" "media" "comms" "misc" "av" "other" "other")
+for i in {0..7}; do
+    CONFIG_OUTPUT+="set \$ws$i $((i + 1)):${WORKSPACE_NAMES[$i]}\n"
+done
+
+for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
+    CONFIG_OUTPUT+="workspace \$ws$i output \$screen$i\n"
+
+    if [ $i -lt ${#MOVE_KEYS[@]} ]; then
+        CONFIG_OUTPUT+="bindsym \$mod+shift+${MOVE_KEYS[$i]} move workspace to output \$screen$i\n"
+    fi
+done
 
 for i in {0..7}; do
     INDEX_FROM_ONE=$((i + 1))
@@ -43,7 +49,6 @@ for i in {0..7}; do
     CONFIG_OUTPUT+="bindsym \$mod+$INDEX_FROM_ONE workspace $WS\n"
     CONFIG_OUTPUT+="bindsym \$mod+Ctrl+$INDEX_FROM_ONE move container to workspace $WS\n"
     CONFIG_OUTPUT+="bindsym \$mod+Shift+$INDEX_FROM_ONE move container to workspace $WS; workspace $WS\n"
-    CONFIG_OUTPUT+="set $WS $INDEX_FROM_ONE:${WORKSPACE_NAMES[$i]}\n"
 done
 
 CONFIG_FILE="$HOME/.config/sway/config"
