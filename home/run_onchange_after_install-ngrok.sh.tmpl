@@ -1,0 +1,49 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "ngrok" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: ngrok-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping ngrok install"
+  exit 0
+fi
+
+if command -v ngrok >/dev/null 2>&1; then
+  echo "ngrok already installed: $(ngrok --version)"
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping ngrok install"
+  exit 0
+fi
+
+echo "Setting up ngrok apt repository..."
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+
+echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
+  | sudo tee /etc/apt/sources.list.d/ngrok.list >/dev/null
+
+export DEBIAN_FRONTEND=noninteractive
+sudo apt update -qq
+sudo apt install -y -qq ngrok
+
+echo "ngrok installed: $(ngrok --version)"
+{{- end -}}
+{{ end -}}

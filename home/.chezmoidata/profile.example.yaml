@@ -33,6 +33,7 @@ profile_example:
     kitty: true
     mise: true
     neovim: true
+    ngrok: true
     oh_my_zsh: true
     ollama: true
     omz_codeclimate: false

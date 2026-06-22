@@ -1466,7 +1466,8 @@ apt_manual:
       status: install
       first_seen: "2026-06-14"
     ngrok:
-      status: install
+      # Installed via run_onchange_after_install-ngrok.sh (sets up apt repo).
+      status: ignore
       first_seen: "2026-06-14"
     nvidia-driver-595-open:
       status: install
