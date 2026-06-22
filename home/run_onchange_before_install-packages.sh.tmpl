@@ -137,14 +137,40 @@ sudo apt install -y -qq --no-install-recommends \
 {{- end }}
 {{- end }}
 {{- end }}
+
+echo "core apt packages installed"
 {{- if not (env "CHEZMOI_CI") }}
 {{- with index . "apt_manual" }}
 {{- with .packages }}
+
+# Manually-tracked packages (see scripts/apt-manual-sync). Some originate from
+# third-party repos (Docker, Cursor, ngrok, Proton VPN, Huion, ...) that are not
+# configured on every host (e.g. WSL). Filter to packages apt can actually
+# resolve and install them best-effort so a missing repo never aborts the apply.
+manual_pkgs=(
 {{- range $pkg, $meta := . }}
 {{- if and (eq $meta.status "install") (not (index $aptExcludeMap $pkg)) }}
-  {{ $pkg }} \
+  {{ $pkg }}
 {{- end }}
 {{- end }}
+)
+available_pkgs=()
+unavailable_pkgs=()
+for pkg in "${manual_pkgs[@]}"; do
+  candidate="$(apt-cache policy "$pkg" 2>/dev/null | awk -F': ' '/Candidate:/ {print $2}')" || candidate=""
+  if [[ -n "$candidate" && "$candidate" != "(none)" ]]; then
+    available_pkgs+=("$pkg")
+  else
+    unavailable_pkgs+=("$pkg")
+  fi
+done
+if ((${#unavailable_pkgs[@]})); then
+  echo "Skipping ${#unavailable_pkgs[@]} manual package(s) with no install candidate (third-party repo not configured?): ${unavailable_pkgs[*]}"
+fi
+if ((${#available_pkgs[@]})); then
+  sudo apt install -y -qq --no-install-recommends "${available_pkgs[@]}" \
+    || echo "WARN: one or more manual packages failed to install"
+fi
 {{- end }}
 {{- end }}
 {{- end }}
