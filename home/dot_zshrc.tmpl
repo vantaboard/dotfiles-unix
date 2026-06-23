@@ -200,17 +200,22 @@ fi
 
 # GPG signing via keychain. Invoking `keychain` on every shell is slow (~400ms)
 # because it re-validates gpg-agent each time. The agent persists across shells,
-# so source the cached agent env and only run keychain when the agent isn't
-# already up (e.g. the first shell after boot). ${HOST} avoids spawning
-# hostname(1), and --no-autostart means the check itself won't launch an agent.
+# so source the cached agent env and only run keychain when the signing key
+# isn't ready (agent down, or passphrase not cached). ${HOST} avoids spawning
+# hostname(1), and --no-autostart means the agent check won't launch an agent.
 if [[ -n "$GIT_GPG_KEY" ]]; then
   _keychain_env="$HOME/.keychain/${HOST}-sh-gpg"
   [[ -r "$_keychain_env" ]] && source "$_keychain_env"
-  if ! gpg-connect-agent --no-autostart /bye >/dev/null 2>&1; then
+  _gpg_key_ready=0
+  if gpg-connect-agent --no-autostart /bye >/dev/null 2>&1 &&
+     gpg --batch --pinentry-mode error -u "$GIT_GPG_KEY" -o /dev/null --sign /dev/null 2>/dev/null; then
+    _gpg_key_ready=1
+  fi
+  if (( ! _gpg_key_ready )); then
     eval "$(keychain --quiet --eval --agents gpg "$GIT_GPG_KEY" 2>/dev/null)"
     [[ -r "$_keychain_env" ]] && source "$_keychain_env"
   fi
-  unset _keychain_env
+  unset _keychain_env _gpg_key_ready
 fi
 {{- end }}
 
