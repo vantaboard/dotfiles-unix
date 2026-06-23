@@ -28,6 +28,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/ssh/sshd_config.d/99-keyonly-port.conf" | sha256sum }}
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd/displays-resume.service.tmpl" | sha256sum }}
+# hash: {{ include "system/systemd/logind.conf.d/ignore-lid-switch.conf" | sha256sum }}
 # hash: {{ include "system/systemd/ollama.service" | sha256sum }}
 # hash: {{ include "system/systemd/ollama.service.d/override.conf" | sha256sum }}
 
@@ -77,6 +78,9 @@ fi
 if has_deploy sway_session; then
   deploy_file "$SOURCE/bin/sway-session" /usr/local/bin/sway-session 755
   deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop
+  deploy_dir_file "$SOURCE/systemd/logind.conf.d/ignore-lid-switch.conf" \
+    /etc/systemd/logind.conf.d/ignore-lid-switch.conf
+  sudo systemctl reload systemd-logind 2>/dev/null || true
   if [[ -d /etc/gdm3 ]]; then
     deploy_file "$SOURCE/gdm3/custom.conf" /etc/gdm3/custom.conf
     echo "GDM Wayland enabled; log out (or reboot) for Sway to appear in the session menu"
