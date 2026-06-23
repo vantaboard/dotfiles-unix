@@ -37,10 +37,7 @@ seat * xcursor_theme Adwaita 24
 
 exec swayidle -w \
     timeout 600 'swaymsg "output * dpms off"' \
-    timeout 1200 'swaylock -f -c $HOME/.config/swaylock/config' \
-    timeout 1800 'systemctl suspend' \
-    before-sleep 'swaylock -f -c $HOME/.config/swaylock/config' \
-    resume '$HOME/.local/bin/displays-resume'
+    timeout 1200 'swaylock -f -c $HOME/.config/swaylock/config'
 
 # Start a hidden kitty instance for fast startup
 exec --no-startup-id $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
