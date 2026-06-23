@@ -1,34 +1,119 @@
 #!/usr/bin/bash
 # Re-apply the sway display layout after resume from suspend/hibernate.
 #
-# Started by displays-resume.service, a system unit ordered after the sleep
-# targets. systemd hands it a minimal environment, so rediscover the desktop
-# session env (HOME, XDG_RUNTIME_DIR, SWAYSOCK) that swaymsg/kanshi need before
-# doing anything. Every step is best-effort: a stale socket or absent session
-# must not leave the unit in a failed state.
+# On wake the NVIDIA dock MST link often needs many seconds before DP outputs
+# expose valid modes. Running sway reload immediately (as the old version did)
+# left wlroots in a broken GBM state — black screens until the dock is replugged.
+# Wait for DRM + sway to be ready, then force a fresh modeset.
 set -euo pipefail
 
 : "${HOME:=$(getent passwd "$(id -un)" | cut -d: -f6)}"
 export HOME
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-# sway-docked-layout refuses to run unless this looks like a Wayland session.
 export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
 
-# Locate the live sway IPC socket if the unit env did not carry it.
+lockfile="${XDG_RUNTIME_DIR}/displays-resume.lock"
+exec 9>"$lockfile"
+flock -n 9 || exit 0
+
+find_swaysock() {
+    find "$XDG_RUNTIME_DIR" -maxdepth 1 -name 'sway-ipc.*.sock' -type s 2>/dev/null | head -n1
+}
+
 if [[ -z "${SWAYSOCK:-}" || ! -S "${SWAYSOCK:-}" ]]; then
-    SWAYSOCK="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -name 'sway-ipc.*.sock' -type s 2>/dev/null | head -n1)"
+    SWAYSOCK="$(find_swaysock)"
     export SWAYSOCK
 fi
 
-# No live sway session (e.g. resumed at the login greeter) — nothing to do.
-[[ -S "${SWAYSOCK:-}" ]] || exit 0
+wait_for_swaysock() {
+    local attempt
+    for attempt in $(seq 1 30); do
+        [[ -S "${SWAYSOCK:-}" ]] && return 0
+        SWAYSOCK="$(find_swaysock)"
+        export SWAYSOCK
+        sleep 1
+    done
+    return 1
+}
 
-# After resume the outputs are frequently left powered off (swayidle may have
-# run "output * dpms off" before sleep) or stuck black on the NVIDIA/MST link.
-# Power them back on, re-evaluate the kanshi profile, and force a fresh modeset
-# on each output — the same recovery a physical dock replug would trigger.
-swaymsg "output * dpms on" 2>/dev/null || true
-killall -HUP kanshi 2>/dev/null || true
-swaymsg reload 2>/dev/null || true
-"$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
-"$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
+docked_drm_ports_connected() {
+    local count=0
+    local port
+    for port in /sys/class/drm/card2-DP-*/status; do
+        [[ -e "$port" ]] || continue
+        [[ "$(cat "$port" 2>/dev/null)" == "connected" ]] && ((count++)) || true
+    done
+    echo "$count"
+}
+
+is_docked() {
+    [[ "$(docked_drm_ports_connected)" -ge 1 ]]
+}
+
+wait_for_drm() {
+    local attempt count
+    for attempt in $(seq 1 90); do
+        if is_docked; then
+            count="$(docked_drm_ports_connected)"
+            [[ "$count" -ge 3 ]] && return 0
+        else
+            [[ -e /sys/class/drm/card1-eDP-1/status ]] \
+                && [[ "$(cat /sys/class/drm/card1-eDP-1/status 2>/dev/null)" == "connected" ]] \
+                && return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+sway_dp_outputs_ready() {
+    local required="${1:-1}"
+    local ready
+    ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
+        [.[] | select(.name | test("^DP-")) | select(.active)
+         | select(.current_mode.width // 0 > 0)] | length' 2>/dev/null || echo 0)"
+    [[ "$ready" -ge "$required" ]]
+}
+
+wait_for_sway_outputs() {
+    local required="${1:-1}" attempt
+    for attempt in $(seq 1 60); do
+        sway_dp_outputs_ready "$required" && return 0
+        sleep 1
+    done
+    return 0
+}
+
+apply_recovery() {
+    swaymsg "output * dpms on" 2>/dev/null || true
+
+    if is_docked; then
+        local out
+        for out in DP-4 DP-5 DP-6; do
+            swaymsg "output $out disable" 2>/dev/null || true
+        done
+        # Let the MST hub settle after disable, mirroring a physical replug gap.
+        sleep 2
+    fi
+
+    killall -HUP kanshi 2>/dev/null || true
+    sleep 2
+
+    "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
+    "$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
+    "$HOME/.local/bin/waybar-restart" 2>/dev/null || true
+}
+
+wait_for_swaysock || exit 0
+
+wait_for_drm || true
+# Extra beat after DRM reports connected — modes still lag on NVIDIA MST.
+sleep 3
+
+if is_docked; then
+    wait_for_sway_outputs 3
+else
+    wait_for_sway_outputs 1
+fi
+
+apply_recovery

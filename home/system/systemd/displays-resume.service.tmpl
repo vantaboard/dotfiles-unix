@@ -1,15 +1,16 @@
 [Unit]
 Description=Re-apply sway display layout after resume
-# Order after the sleep targets so this runs on resume, not at suspend entry.
-# (systemd-suspend.service performs the actual sleep before these targets are
-# reached, so units ordered After= them start once the machine wakes.)
-After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+DefaultDependencies=no
+# ExecStop on this unit runs when leaving sleep (i.e. on wake).
+Before=sleep.target
+After=nvidia-resume.service
 
 [Service]
 Type=oneshot
-# Run as the desktop user so swaymsg/kanshi can reach the live sway session.
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop={{ .chezmoi.homeDir }}/.local/bin/displays-resume
 User={{ .chezmoi.username }}
-ExecStart={{ .chezmoi.homeDir }}/.local/bin/displays-resume
 
 [Install]
-WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+WantedBy=sleep.target
