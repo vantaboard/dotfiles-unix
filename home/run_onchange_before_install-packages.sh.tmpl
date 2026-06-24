@@ -175,5 +175,13 @@ fi
 {{- end }}
 {{- end }}
 
+{{- if and (not (env "CHEZMOI_CI")) (index $p.features "desktop_sway") }}
+# autorandr (xrandr/X11) conflicts with kanshi on sway Wayland sessions.
+if dpkg-query -W -f='${Status}' autorandr 2>/dev/null | grep -q 'install ok installed'; then
+  echo "Removing autorandr (conflicts with kanshi on sway Wayland)"
+  sudo apt-get remove -y --purge autorandr
+fi
+{{- end }}
+
 echo "apt packages installed"
 {{ end -}}

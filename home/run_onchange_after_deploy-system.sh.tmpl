@@ -73,10 +73,12 @@ if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
   rm -f "$TMP_UNIT"
   sudo systemctl daemon-reload 2>/dev/null || true
   sudo systemctl enable displays-resume.service 2>/dev/null || true
-  # autorandr drives xrandr on DRM hotplug; it fights kanshi on sway Wayland and
-  # left the session unrecoverable after dock replug (see displays-resume.log).
+  # autorandr (xrandr/X11) fights kanshi on sway Wayland and broke dock replug recovery.
+  sudo systemctl unmask autorandr.service 2>/dev/null || true
   sudo systemctl disable --now autorandr-lid-listener.service 2>/dev/null || true
-  sudo systemctl mask autorandr.service 2>/dev/null || true
+  if dpkg-query -W -f='${Status}' autorandr 2>/dev/null | grep -q 'install ok installed'; then
+    sudo apt-get remove -y --purge autorandr
+  fi
 fi
 
 if has_deploy sway_session; then

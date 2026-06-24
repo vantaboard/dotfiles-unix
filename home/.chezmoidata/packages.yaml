@@ -3,6 +3,8 @@ packages:
     # Never install via apt — use run_onchange_after_install-kitty.sh instead
     apt_exclude:
       - kitty
+      # xrandr hotplug tool; conflicts with kanshi on sway Wayland (never install).
+      - autorandr
     apt:
       # Shell and core CLI
       - zsh
