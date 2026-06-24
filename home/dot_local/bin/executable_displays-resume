@@ -1,20 +1,32 @@
 #!/usr/bin/bash
 # Re-apply the sway display layout after resume from suspend/hibernate.
 #
-# On wake the NVIDIA dock MST link often needs many seconds before DP outputs
-# expose valid modes. Running sway reload immediately (as the old version did)
-# left wlroots in a broken GBM state — black screens until the dock is replugged.
-# Wait for DRM + sway to be ready, then force a fresh modeset.
+# NVIDIA MST dock outputs often need many seconds after wake before modes are
+# valid. Do not disable outputs or sway reload here — that left wlroots in a
+# broken GBM state and blocked recovery even when the dock was replugged.
+#
+# When started from systemd ExecStop, re-exec in the background immediately so
+# sleep.target is not blocked while we wait for DRM.
 set -euo pipefail
 
 : "${HOME:=$(getent passwd "$(id -un)" | cut -d: -f6)}"
 export HOME
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
+LOG="${XDG_RUNTIME_DIR}/displays-resume.log"
+
+if [[ "${1:-}" != "--foreground" ]]; then
+    nohup "$0" --foreground >>"$LOG" 2>&1 &
+    disown
+    exit 0
+fi
+
+exec >>"$LOG" 2>&1
+echo "=== displays-resume $(date -Is) pid=$$ ==="
 
 lockfile="${XDG_RUNTIME_DIR}/displays-resume.lock"
 exec 9>"$lockfile"
-flock -n 9 || exit 0
+flock -n 9 || { echo "already running"; exit 0; }
 
 find_swaysock() {
     find "$XDG_RUNTIME_DIR" -maxdepth 1 -name 'sway-ipc.*.sock' -type s 2>/dev/null | head -n1
@@ -27,7 +39,7 @@ fi
 
 wait_for_swaysock() {
     local attempt
-    for attempt in $(seq 1 30); do
+    for attempt in $(seq 1 60); do
         [[ -S "${SWAYSOCK:-}" ]] && return 0
         SWAYSOCK="$(find_swaysock)"
         export SWAYSOCK
@@ -37,8 +49,7 @@ wait_for_swaysock() {
 }
 
 docked_drm_ports_connected() {
-    local count=0
-    local port
+    local count=0 port
     for port in /sys/class/drm/card2-DP-*/status; do
         [[ -e "$port" ]] || continue
         [[ "$(cat "$port" 2>/dev/null)" == "connected" ]] && ((count++)) || true
@@ -52,7 +63,7 @@ is_docked() {
 
 wait_for_drm() {
     local attempt count
-    for attempt in $(seq 1 90); do
+    for attempt in $(seq 1 120); do
         if is_docked; then
             count="$(docked_drm_ports_connected)"
             [[ "$count" -ge 3 ]] && return 0
@@ -66,54 +77,49 @@ wait_for_drm() {
     return 1
 }
 
-sway_dp_outputs_ready() {
+sway_outputs_healthy() {
     local required="${1:-1}"
     local ready
-    ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
-        [.[] | select(.name | test("^DP-")) | select(.active)
-         | select(.current_mode.width // 0 > 0)] | length' 2>/dev/null || echo 0)"
+    if is_docked; then
+        ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
+            [.[] | select(.name | test("^DP-")) | select(.active)
+             | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0)"
+    else
+        ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
+            [.[] | select(.name == "eDP-1") | select(.active)
+             | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0)"
+        required=1
+    fi
     [[ "$ready" -ge "$required" ]]
 }
 
-wait_for_sway_outputs() {
-    local required="${1:-1}" attempt
-    for attempt in $(seq 1 60); do
-        sway_dp_outputs_ready "$required" && return 0
-        sleep 1
-    done
-    return 0
-}
-
 apply_recovery() {
+    echo "apply_recovery (docked=$(is_docked && echo yes || echo no))"
     swaymsg "output * dpms on" 2>/dev/null || true
-
-    if is_docked; then
-        local out
-        for out in DP-4 DP-5 DP-6; do
-            swaymsg "output $out disable" 2>/dev/null || true
-        done
-        # Let the MST hub settle after disable, mirroring a physical replug gap.
-        sleep 2
-    fi
-
     killall -HUP kanshi 2>/dev/null || true
-    sleep 2
-
+    sleep 3
     "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
     "$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
     "$HOME/.local/bin/waybar-restart" 2>/dev/null || true
 }
 
-wait_for_swaysock || exit 0
+wait_for_swaysock || { echo "no sway socket"; exit 0; }
+wait_for_drm || echo "drm wait timed out; proceeding anyway"
+sleep 5
 
-wait_for_drm || true
-# Extra beat after DRM reports connected — modes still lag on NVIDIA MST.
-sleep 3
+required=1
+is_docked && required=3
 
-if is_docked; then
-    wait_for_sway_outputs 3
-else
-    wait_for_sway_outputs 1
-fi
+for round in $(seq 1 6); do
+    echo "recovery round $round/$required outputs required"
+    apply_recovery
+    sleep 5
+    if sway_outputs_healthy "$required"; then
+        echo "outputs healthy after round $round"
+        exit 0
+    fi
+    sleep 10
+done
 
-apply_recovery
+echo "outputs still unhealthy after all rounds"
+exit 0
