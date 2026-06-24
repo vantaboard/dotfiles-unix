@@ -25,6 +25,7 @@ check "grim installed" command -v grim
 check "slurp installed" command -v slurp
 check "swappy installed" command -v swappy
 check "screenshot-region installed" test -x "$HOME/.local/bin/screenshot-region"
+check "suspend installed" test -x "$HOME/.local/bin/suspend"
 check "wl-copy installed" command -v wl-copy
 check "waybar installed" command -v waybar
 check "waybar config exists" test -f "$HOME/.config/waybar/config"

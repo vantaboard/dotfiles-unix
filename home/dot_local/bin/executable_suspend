@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+swaylock -f -c "$HOME/.config/swaylock/config"
+exec systemctl suspend
