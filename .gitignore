@@ -10,3 +10,6 @@
 # User-specific setup profiles (written by scripts/dotfiles-setup)
 home/.chezmoidata/profile.yaml
 home/.chezmoidata/profile-host.yaml
+
+__pycache__/
+*.pyc
