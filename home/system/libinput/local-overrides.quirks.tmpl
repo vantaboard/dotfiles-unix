@@ -1,4 +1,4 @@
-# Pointer acceleration overrides (X11/i3 via libinput; Sway uses input-devices.conf).
+# Pointer acceleration overrides (libinput; Sway per-device settings in input-devices.conf).
 {{- $p := .profile_example -}}
 {{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}

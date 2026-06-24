@@ -2,13 +2,14 @@
 """Return one py3status status snapshot for Waybar."""
 
 import json
+import os
 import subprocess
 import sys
 
 
 def main() -> None:
     proc = subprocess.Popen(
-        ["py3status"],
+        ["py3status", "-c", f"{os.environ['HOME']}/.config/py3status/config"],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,

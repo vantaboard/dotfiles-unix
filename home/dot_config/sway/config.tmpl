@@ -29,7 +29,7 @@ include $HOME/.config/sway/input-devices.conf
 input type:keyboard xkb_layout "us,es"
 input type:keyboard xkb_options "grp:alt_shift_toggle"
 {{- if $swayfxEnabled }}
-# Like i3 unclutter: hide the cursor after idle ms but keep pointer/hover active.
+# Hide the cursor after idle ms but keep pointer/hover active.
 # Vanilla sway clears focus on hide; swayfx is patched in install-tools.
 seat * hide_cursor 500
 {{- end }}
@@ -41,7 +41,6 @@ exec swayidle -w \
 
 # Start a hidden kitty instance for fast startup
 exec --no-startup-id $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
-exec --no-startup-id /usr/bin/python $HOME/.local/bin/i3_startup
 
 set $mod Mod4
 
@@ -130,7 +129,6 @@ for_window [title="File Transfer*"] floating enable
 for_window [class="fpakman"] floating enable
 for_window [class="Galculator"] floating enable border pixel 1
 for_window [class="GParted"] floating enable border normal
-for_window [title="i3_help"] floating enable sticky enable border normal
 for_window [class="Lightdm-settings"] floating enable
 for_window [class="Manjaro-hello"] floating enable
 for_window [class="Manjaro Settings Manager"] floating enable border normal

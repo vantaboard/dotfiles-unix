@@ -1,6 +1,5 @@
 # Per-device input settings (Wayland / Sway).
-# Pointer acceleration also mirrored in system/libinput/local-overrides.quirks
-# for X11/i3 sessions.
+# Pointer acceleration also mirrored in system/libinput/local-overrides.quirks.
 {{- $p := .profile_example -}}
 {{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}

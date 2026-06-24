@@ -28,6 +28,7 @@ packages:
       - grim
       - slurp
       - wl-clipboard
+      - py3status
       - dunst
       - rofi
       - bemenu

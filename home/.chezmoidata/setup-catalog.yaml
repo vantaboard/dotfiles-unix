@@ -237,8 +237,8 @@ setup_catalog:
       category: desktop
       label: Sway window manager
       default: true
-      packages: [sway, swaylock, swayidle, swaybg, waybar, grim, slurp, wl-clipboard]
-      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/waybar, dot_config/environment.d/wayland.conf, dot_config/i3status]
+      packages: [sway, swaylock, swayidle, swaybg, waybar, grim, slurp, wl-clipboard, py3status]
+      config_paths: [dot_config/sway, dot_config/swaylock, dot_config/waybar, dot_config/environment.d/wayland.conf, dot_config/py3status]
       system_deploy: sway_session
     hyprpicker:
       category: desktop

@@ -87,6 +87,7 @@ profile_example:
     - grim
     - slurp
     - wl-clipboard
+    - py3status
     - jq
     - keychain
     - keyd
