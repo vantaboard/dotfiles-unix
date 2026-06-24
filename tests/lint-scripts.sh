@@ -18,7 +18,7 @@ done
 echo "OK: dot_local/bin executable_ naming"
 
 shopt -s globstar nullglob
-for script in "${HOME_DIR}"/run_*.sh.tmpl "${HOME_DIR}"/dot_local/bin/* "${HOME_DIR}"/dot_screenlayout/*.sh "${HOME_DIR}"/system/udev/*.sh; do
+for script in "${HOME_DIR}"/run_*.sh.tmpl "${HOME_DIR}"/dot_local/bin/*; do
   [[ -f "$script" ]] || continue
   # Skip large vendored scripts and binary-ish files
   case "$(basename "$script")" in
@@ -57,8 +57,7 @@ echo "OK: ${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
 
 for script in \
   "${HOME_DIR}/dot_local/bin/executable_deploy-dotfiles" \
-  "${HOME_DIR}/dot_local/bin/executable_cursor-clip" \
-  "${HOME_DIR}/system/udev/hotplug_monitor.sh"; do
+  "${HOME_DIR}/dot_local/bin/executable_cursor-clip"; do
   [[ -f "$script" ]] || continue
   bash -n "$script"
   echo "OK: $script"

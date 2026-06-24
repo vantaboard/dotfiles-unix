@@ -11,8 +11,6 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | Item | Location in repo | Deployed to |
 |------|------------------|-------------|
 | displays-resume.service | `home/system/systemd/displays-resume.service.tmpl` | `/etc/systemd/system/` |
-| Dock hotplug udev rule | `home/system/udev/99-dock-hotplug.rules` | `/etc/udev/rules.d/` |
-| hotplug_monitor.sh | `home/system/udev/hotplug_monitor.sh` | `/usr/local/bin/` |
 | GRUB defaults | `home/system/grub/default` | `/etc/default/grub` |
 | SSH pubkey-only config | `home/system/ssh/sshd_config.d/99-keyonly-port.conf` | `/etc/ssh/sshd_config.d/` |
 | SSH socket port override | `home/system/ssh/ssh.socket.d/port.conf` | `/etc/systemd/system/ssh.socket.d/` |
@@ -24,11 +22,11 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | Sway session wrapper | `home/system/bin/sway-session` | `/usr/local/bin/sway-session` (sources `wayland.conf` before exec) |
 | GDM Wayland enable | `home/system/gdm3/custom.conf` | `/etc/gdm3/custom.conf` (with `sway_session` deploy) |
 | Enabled services list | `home/.chezmoidata/enabled-services.yaml` | `systemctl enable` via script |
-| Autorandr profiles | `home/dot_config/autorandr/docked-home/`, `undocked/` | `~/.config/autorandr/` |
+| Kanshi profiles | `home/dot_config/kanshi/` | `~/.config/kanshi/` |
 
 Deploy and enable scripts:
 
-- `home/run_onchange_after_deploy-system.sh.tmpl` — udev, systemd units, GRUB, SSH, keyd, libinput
+- `home/run_onchange_after_deploy-system.sh.tmpl` — systemd units, GRUB, SSH, keyd, libinput
 - `home/run_onchange_after_enable-services.sh.tmpl` — enables units from `enabled-services.yaml`
 
 ---
@@ -44,8 +42,6 @@ These units are enabled automatically on `chezmoi apply` (when the unit file exi
 | `thermald.service` | Thermal management |
 | `docker.service` | Docker daemon |
 | `ollama.service` | Local LLM server |
-| `autorandr-lid-listener.service` | Laptop lid display switching |
-| `autorandr.service` | Display profile management |
 | `displays-resume.service` | Resume monitors after suspend |
 
 ---
@@ -76,14 +72,7 @@ VPN and credential-bearing configuration is documented in [vpn-setup.md](vpn-set
 
 ## Machine-specific display config
 
-| File | Status |
-|------|--------|
-| `~/.screenlayout/main.sh` | Tracked; hardware-specific `xrandr` geometry |
-| `~/.screenlayout/main-one-monitor.sh` | Tracked; hardware-specific `xrandr` geometry |
-| `~/.config/autorandr/docked-home/` | **Now tracked** |
-| `~/.config/autorandr/undocked/` | **Now tracked** |
-
-Screenlayout scripts remain hardware-specific. Adjust coordinates when setting up on different monitor hardware.
+Display layout is managed by **kanshi** (`~/.config/kanshi/config`) and the sway postswitch script (`~/.config/kanshi/postswitch.d/10-sway`). Adjust output names and positions when setting up on different monitor hardware.
 
 ---
 
@@ -106,5 +95,5 @@ Screenlayout scripts remain hardware-specific. Adjust coordinates when setting u
 - [x] enabled-services.yaml (VPN units excluded)
 - [x] WireGuard — **not tracked** (manual setup doc)
 - [x] OpenVPN / Proton VPN — **not tracked** (manual setup doc)
-- [x] autorandr display profiles
+- [x] kanshi + sway display layout
 - [x] nvim .luarc.json cleanup
