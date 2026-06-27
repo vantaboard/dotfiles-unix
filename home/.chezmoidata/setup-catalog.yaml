@@ -351,7 +351,7 @@ setup_catalog:
     dropbox:
       category: desktop
       label: Dropbox
-      description: Official .deb from linux.dropbox.com; libappindicator3-1 for tray icon; headless via dropbox start -i
+      description: Official .deb from linux.dropbox.com; libappindicator3-1 for tray icon; autostart via systemd user unit
       default: false
       packages: [libappindicator3-1]
     keyd:

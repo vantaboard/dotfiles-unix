@@ -41,6 +41,9 @@ exec swayidle -w \
     timeout 1800 'systemctl suspend' \
     before-sleep 'swaylock -f -c $HOME/.config/swaylock/config'
 exec --no-startup-id systemctl --user enable --now displays-resume.service
+{{- if index $f "dropbox" }}
+exec --no-startup-id systemctl --user enable --now dropbox.service
+{{- end }}
 
 # Start a hidden kitty instance for fast startup
 exec --no-startup-id $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden

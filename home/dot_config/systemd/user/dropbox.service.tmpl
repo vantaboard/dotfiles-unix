@@ -1,0 +1,12 @@
+[Unit]
+Description=Dropbox sync daemon
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/dropbox start
+ExecStop=/usr/bin/dropbox stop
+
+[Install]
+WantedBy=graphical-session.target

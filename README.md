@@ -70,7 +70,7 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_onchange_after_install-tools` | mise (Termux `pkg` on Android, `mise.run` on Linux), fzf-tab (OMZ plugin), zsh-abbr (v6.3.3), trash-cli (git + venv), vivid (`.deb` on Linux / `pkg` on Termux); Linux also rust/zoxide via cargo when mise enabled |
 | After dotfiles | `run_onchange_after_install-neovim` | Neovim [v0.12.3 release tarball](https://github.com/neovim/neovim/releases/tag/v0.12.3) → `~/.local/opt/nvim-linux-*` with `nvim` in `~/.local/bin` (when `neovim` enabled; Linux only) |
 | After dotfiles | `run_onchange_after_install-diff-so-fancy` | diff-so-fancy [v1.4.10 release](https://github.com/so-fancy/diff-so-fancy/releases) binary → `~/.local/bin` (when `diff_so_fancy` enabled) |
-| After dotfiles | `run_onchange_after_install-dropbox` | Latest official [Dropbox .deb](https://linux.dropbox.com/packages/ubuntu/) + `libappindicator3-1` for tray icon (when `dropbox` enabled; link account via `dropbox start` or headless `dropbox start -i`) |
+| After dotfiles | `run_onchange_after_install-dropbox` | Latest official [Dropbox .deb](https://linux.dropbox.com/packages/ubuntu/) + `libappindicator3-1` for tray icon; enables `dropbox.service` user unit for autostart (when `dropbox` enabled) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |
 
