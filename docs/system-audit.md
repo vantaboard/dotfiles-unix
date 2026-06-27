@@ -10,7 +10,7 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 
 | Item | Location in repo | Deployed to |
 |------|------------------|-------------|
-| displays-resume.service | `home/system/systemd/displays-resume.service.tmpl` | `/etc/systemd/system/` |
+| displays-resume sleep hook | `home/system/systemd-sleep/displays-resume.tmpl` | `/usr/lib/systemd/system-sleep/displays-resume` |
 | GRUB defaults | `home/system/grub/default` | `/etc/default/grub` |
 | SSH pubkey-only config | `home/system/ssh/sshd_config.d/99-keyonly-port.conf` | `/etc/ssh/sshd_config.d/` |
 | SSH socket port override | `home/system/ssh/ssh.socket.d/port.conf` | `/etc/systemd/system/ssh.socket.d/` |
@@ -42,7 +42,7 @@ These units are enabled automatically on `chezmoi apply` (when the unit file exi
 | `thermald.service` | Thermal management |
 | `docker.service` | Docker daemon |
 | `ollama.service` | Local LLM server |
-| `displays-resume.service` | Resume monitors after suspend |
+| `displays-resume` (systemd-sleep) | Re-apply sway layout after suspend/hibernate |
 
 ---
 

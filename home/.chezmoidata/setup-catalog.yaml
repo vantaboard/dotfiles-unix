@@ -426,10 +426,9 @@ setup_catalog:
       system_deploy: grub
     displays_resume:
       category: system
-      label: displays-resume systemd unit
+      label: displays-resume sleep hook
       default: true
       system_deploy: displays_resume
-      systemd_unit: displays-resume.service
     ollama:
       category: system
       label: Ollama LLM service

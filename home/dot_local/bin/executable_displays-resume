@@ -5,15 +5,18 @@
 # valid. Do not disable outputs or sway reload here — that left wlroots in a
 # broken GBM state and blocked recovery even when the dock was replugged.
 #
-# When started from systemd ExecStop, re-exec in the background immediately so
-# sleep.target is not blocked while we wait for DRM.
+# Invoked from /usr/lib/systemd/system-sleep/displays-resume on post wake.
+# Re-exec in the background so the sleep hook returns immediately while we
+# wait for DRM to settle.
 set -euo pipefail
 
 : "${HOME:=$(getent passwd "$(id -un)" | cut -d: -f6)}"
 export HOME
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
-LOG="${XDG_RUNTIME_DIR}/displays-resume.log"
+LOG_DIR="${HOME}/.local/state"
+LOG="${LOG_DIR}/displays-resume.log"
+mkdir -p "$LOG_DIR"
 
 if [[ "${1:-}" != "--foreground" ]]; then
     nohup "$0" --foreground >>"$LOG" 2>&1 &
@@ -39,7 +42,7 @@ fi
 
 wait_for_swaysock() {
     local attempt
-    for attempt in $(seq 1 60); do
+    for attempt in $(seq 1 90); do
         [[ -S "${SWAYSOCK:-}" ]] && return 0
         SWAYSOCK="$(find_swaysock)"
         export SWAYSOCK
@@ -103,15 +106,15 @@ apply_recovery() {
     "$HOME/.local/bin/waybar-restart" 2>/dev/null || true
 }
 
-wait_for_swaysock || { echo "no sway socket"; exit 0; }
+wait_for_swaysock || { echo "no sway socket; user may be at login screen"; exit 0; }
 wait_for_drm || echo "drm wait timed out; proceeding anyway"
 sleep 5
 
 required=1
 is_docked && required=3
 
-for round in $(seq 1 6); do
-    echo "recovery round $round/$required outputs required"
+for round in $(seq 1 8); do
+    echo "recovery round $round (need $required healthy outputs)"
     apply_recovery
     sleep 5
     if sway_outputs_healthy "$required"; then
@@ -121,5 +124,6 @@ for round in $(seq 1 6); do
     sleep 10
 done
 
-echo "outputs still unhealthy after all rounds"
+echo "outputs still unhealthy; restarting sway so GDM can start a fresh session"
+swaymsg exit 2>/dev/null || true
 exit 0

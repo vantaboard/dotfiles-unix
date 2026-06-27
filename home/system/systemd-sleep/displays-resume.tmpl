@@ -1,0 +1,18 @@
+#!/bin/bash
+# Re-apply sway display layout after the system wakes from sleep.
+# systemd-sleep invokes: displays-resume <pre|post> <suspend|hibernate|...>
+set -euo pipefail
+
+USER_NAME="{{ .chezmoi.username }}"
+HOME_DIR="{{ .chezmoi.homeDir }}"
+
+case "${1}/${2}" in
+  post/*)
+    uid="$(id -u "$USER_NAME")"
+    runuser -u "$USER_NAME" -- \
+      env "XDG_RUNTIME_DIR=/run/user/${uid}" "HOME=${HOME_DIR}" \
+      "${HOME_DIR}/.local/bin/displays-resume"
+    ;;
+esac
+
+exit 0

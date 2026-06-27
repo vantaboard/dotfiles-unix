@@ -118,7 +118,6 @@ profile_example:
     - zsh
   systemd_units:
     - keyd.service
-    - displays-resume.service
     - docker.service
     - earlyoom.service
     - ollama.service

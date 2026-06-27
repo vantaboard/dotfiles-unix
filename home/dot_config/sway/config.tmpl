@@ -39,7 +39,6 @@ exec swayidle -w \
     timeout 600 'swaymsg "output * dpms off"' \
     timeout 1200 'swaylock -f -c $HOME/.config/swaylock/config' \
     before-sleep 'swaylock -f -c $HOME/.config/swaylock/config'
-exec --no-startup-id systemctl --user enable --now displays-resume.service
 {{- if index $f "dropbox" }}
 exec --no-startup-id systemctl --user enable --now dropbox.service
 {{- end }}
