@@ -10,6 +10,7 @@ profile_example:
     direnv: true
     displays_resume: true
     docker: true
+    dropbox: true
     dunst: true
     earlyoom: true
     eza: true

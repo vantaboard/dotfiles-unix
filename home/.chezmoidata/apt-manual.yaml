@@ -130,6 +130,10 @@ apt_manual:
     docker-compose-plugin:
       status: install
       first_seen: "2026-06-14"
+    dropbox:
+      # Installed via run_onchange_after_install-dropbox.sh (official .deb).
+      status: ignore
+      first_seen: "2026-06-27"
     dpkg-dev:
       status: install
       first_seen: "2026-06-14"

@@ -348,6 +348,12 @@ setup_catalog:
       description: brightness, playerctl, network, audio
       default: true
       packages: [playerctl, brightnessctl, acpi, libnotify-bin, network-manager, pulseaudio]
+    dropbox:
+      category: desktop
+      label: Dropbox
+      description: Official .deb from linux.dropbox.com; libappindicator3-1 for tray icon; headless via dropbox start -i
+      default: false
+      packages: [libappindicator3-1]
     keyd:
       category: desktop
       label: keyd key remapping
