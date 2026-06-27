@@ -5,8 +5,8 @@ After=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/dropbox start
-ExecStop=/usr/bin/dropbox stop
+ExecStart=/usr/bin/python3 /usr/bin/dropbox start
+ExecStop=/usr/bin/python3 /usr/bin/dropbox stop
 
 [Install]
 WantedBy=graphical-session.target

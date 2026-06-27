@@ -351,9 +351,9 @@ setup_catalog:
     dropbox:
       category: desktop
       label: Dropbox
-      description: Official .deb from linux.dropbox.com; libappindicator3-1 for tray icon; autostart via systemd user unit
+      description: Official .deb from linux.dropbox.com; libappindicator3-1, python3-gi/gpg for CLI; autostart via systemd user unit
       default: false
-      packages: [libappindicator3-1]
+      packages: [libappindicator3-1, python3-gi, python3-gpg]
     keyd:
       category: desktop
       label: keyd key remapping

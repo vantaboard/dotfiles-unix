@@ -16,12 +16,27 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: dropbox-v2
+# hash: dropbox-v3
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping dropbox install"
   exit 0
 fi
+
+ensure_dropbox_deps() {
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt install -y -qq --no-install-recommends libappindicator3-1 python3-gi python3-gpg
+}
+
+fix_dropbox_python() {
+  # Dropbox uses #!/usr/bin/env python3; mise/other shims can shadow apt's python3-gi.
+  if [[ -f /usr/bin/dropbox ]]; then
+    sudo sed -i '1s|^#!/usr/bin/env python3$|#!/usr/bin/python3|' /usr/bin/dropbox
+  fi
+}
+
+ensure_dropbox_deps
+fix_dropbox_python
 
 ensure_dropbox_autostart() {
   if ! command -v dropbox >/dev/null 2>&1; then
