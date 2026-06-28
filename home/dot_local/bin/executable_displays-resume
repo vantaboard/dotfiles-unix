@@ -9,7 +9,7 @@
 # Invoked from /usr/lib/systemd/system-sleep/displays-resume on post wake.
 # Re-exec in the background so the sleep hook returns immediately while we
 # wait for DRM to settle.
-set -euo pipefail
+set -uo pipefail
 
 : "${HOME:=$(getent passwd "$(id -un)" | cut -d: -f6)}"
 export HOME
@@ -43,16 +43,8 @@ if [[ -z "${SWAYSOCK:-}" || ! -S "${SWAYSOCK:-}" ]]; then
     export SWAYSOCK
 fi
 
-wait_for_swaysock() {
-    local attempt
-    for attempt in $(seq 1 90); do
-        [[ -S "${SWAYSOCK:-}" ]] && { log "sway socket ready"; return 0; }
-        SWAYSOCK="$(find_swaysock)"
-        export SWAYSOCK
-        (( attempt % 15 == 0 )) && log "waiting for sway socket (${attempt}s)"
-        sleep 1
-    done
-    return 1
+swaymsg_cmd() {
+    timeout 8 swaymsg "$@" 2>/dev/null
 }
 
 docked_drm_ports_connected() {
@@ -66,6 +58,28 @@ docked_drm_ports_connected() {
 
 is_docked() {
     [[ "$(docked_drm_ports_connected)" -ge 1 ]]
+}
+
+nvidia_modeset_errors_recent() {
+    journalctl -k --since "5 sec ago" --no-pager 2>/dev/null \
+        | grep -c 'nvidia-modeset: ERROR' 2>/dev/null || echo 0
+}
+
+gbm_errors_recent() {
+    journalctl -b --since "10 sec ago" --no-pager 2>/dev/null \
+        | grep -c 'gbm_bo_create failed' 2>/dev/null || echo 0
+}
+
+wait_for_swaysock() {
+    local attempt
+    for attempt in $(seq 1 90); do
+        [[ -S "${SWAYSOCK:-}" ]] && { log "sway socket ready"; return 0; }
+        SWAYSOCK="$(find_swaysock)"
+        export SWAYSOCK
+        (( attempt % 15 == 0 )) && log "waiting for sway socket (${attempt}s)"
+        sleep 1
+    done
+    return 1
 }
 
 wait_for_drm() {
@@ -86,35 +100,62 @@ wait_for_drm() {
     return 1
 }
 
+wait_for_gpu_ready() {
+    local attempt quiet=0 errors
+    for attempt in $(seq 1 90); do
+        if is_docked; then
+            errors="$(nvidia_modeset_errors_recent)"
+            if [[ "$errors" -eq 0 ]]; then
+                ((quiet++)) || true
+                [[ "$quiet" -ge 5 ]] && { log "nvidia GPU quiet for ${quiet}s"; return 0; }
+            else
+                quiet=0
+            fi
+            (( attempt % 10 == 0 )) && log "waiting for nvidia GPU (${attempt}s, ${errors} errors/5s)"
+        else
+            return 0
+        fi
+        sleep 1
+    done
+    log "nvidia GPU wait timed out; proceeding"
+    return 1
+}
+
 sway_dp_active_count() {
-    swaymsg -t get_outputs 2>/dev/null | jq -r '
-        [.[] | select(.name | test("^DP-")) | select(.active)
-         | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0
+    swaymsg_cmd -t get_outputs \
+        | jq -r '[.[] | select(.name | test("^DP-")) | select(.active)
+                  | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' \
+        2>/dev/null || echo 0
 }
 
 sway_outputs_healthy() {
     local required="${1:-1}"
-    local ready drm_count
+    local ready drm_count gbm_errors
+    gbm_errors="$(gbm_errors_recent)"
     if is_docked; then
         ready="$(sway_dp_active_count)"
         drm_count="$(docked_drm_ports_connected)"
-        [[ "$ready" -ge "$required" && "$drm_count" -ge 3 ]]
+        [[ "$ready" -ge "$required" && "$drm_count" -ge 3 && "$gbm_errors" -eq 0 ]]
     else
-        ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
-            [.[] | select(.name == "eDP-1") | select(.active)
-             | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0)"
-        [[ "$ready" -ge 1 ]]
+        ready="$(swaymsg_cmd -t get_outputs \
+            | jq -r '[.[] | select(.name == "eDP-1") | select(.active)
+                      | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' \
+            2>/dev/null || echo 0)"
+        [[ "$ready" -ge 1 && "$gbm_errors" -eq 0 ]]
     fi
 }
 
 wait_for_kanshi_outputs() {
-    local required="${1:-3}" attempt
+    local required="${1:-3}" attempt count
     for attempt in $(seq 1 45); do
         if sway_outputs_healthy "$required"; then
             log "kanshi restored ${required} outputs (${attempt}s)"
             return 0
         fi
-        (( attempt % 10 == 0 )) && log "waiting for kanshi outputs ($(sway_dp_active_count)/${required}, ${attempt}s)"
+        if (( attempt % 10 == 0 )); then
+            count="$(sway_dp_active_count)"
+            log "waiting for kanshi outputs (${count}/${required}, ${attempt}s, gbm_errors=$(gbm_errors_recent))"
+        fi
         sleep 1
     done
     return 1
@@ -126,10 +167,10 @@ simulate_dock_replug() {
     pkill -x kanshi 2>/dev/null || true
     sleep 1
     for out in DP-4 DP-5 DP-6; do
-        swaymsg "output $out disable" 2>/dev/null || true
+        swaymsg_cmd "output $out disable" || true
     done
     sleep 5
-    swaymsg exec --no-startup-id kanshi 2>/dev/null || true
+    swaymsg_cmd exec --no-startup-id kanshi || true
     wait_for_kanshi_outputs 3 || log "kanshi outputs slow after replug simulation"
 }
 
@@ -137,14 +178,14 @@ apply_recovery() {
     local docked=no
     is_docked && docked=yes
     log "apply_recovery (docked=${docked})"
-    swaymsg "output * dpms on" 2>/dev/null || true
+    swaymsg_cmd "output * dpms on" || true
 
     if is_docked; then
         simulate_dock_replug
     else
         pkill -x kanshi 2>/dev/null || true
         sleep 1
-        swaymsg exec --no-startup-id kanshi 2>/dev/null || true
+        swaymsg_cmd exec --no-startup-id kanshi || true
         wait_for_kanshi_outputs 1 || true
     fi
 
@@ -158,16 +199,20 @@ apply_recovery() {
 
 wait_for_swaysock || { log "no sway socket; user may be at login screen"; exit 0; }
 wait_for_drm || log "drm wait timed out; proceeding anyway"
-log "post-DRM settle pause"
+wait_for_gpu_ready || true
+log "post-GPU settle pause"
 sleep 5
 
 required=1
-is_docked && required=3
+if is_docked; then required=3; fi
 
 for round in $(seq 1 5); do
-    log "recovery round ${round} (need ${required} healthy outputs, have $(sway_dp_active_count))"
+    log "recovery round ${round} (need ${required} healthy outputs)"
     apply_recovery
     sleep 5
+    count="$(sway_dp_active_count)"
+    gbm="$(gbm_errors_recent)"
+    log "round ${round} result: ${count}/${required} outputs, gbm_errors=${gbm}"
     if sway_outputs_healthy "$required"; then
         log "outputs healthy after round ${round}"
         exit 0
@@ -177,5 +222,5 @@ for round in $(seq 1 5); do
 done
 
 log "outputs still unhealthy; restarting sway so GDM can start a fresh session"
-swaymsg exit 2>/dev/null || true
+swaymsg_cmd exit || true
 exit 0
