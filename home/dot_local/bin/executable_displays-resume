@@ -62,12 +62,12 @@ is_docked() {
 
 nvidia_modeset_errors_recent() {
     journalctl -k --since "5 sec ago" --no-pager 2>/dev/null \
-        | grep -c 'nvidia-modeset: ERROR' 2>/dev/null || echo 0
+        | awk '/nvidia-modeset: ERROR/ { count++ } END { print count + 0 }'
 }
 
 gbm_errors_recent() {
     journalctl -b --since "10 sec ago" --no-pager 2>/dev/null \
-        | grep -c 'gbm_bo_create failed' 2>/dev/null || echo 0
+        | awk '/gbm_bo_create failed/ { count++ } END { print count + 0 }'
 }
 
 wait_for_swaysock() {
