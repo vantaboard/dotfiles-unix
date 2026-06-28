@@ -2,8 +2,9 @@
 # Re-apply the sway display layout after resume from suspend/hibernate.
 #
 # NVIDIA MST dock outputs often need many seconds after wake before modes are
-# valid. Do not disable outputs or sway reload here — that left wlroots in a
-# broken GBM state and blocked recovery even when the dock was replugged.
+# valid. A physical dock replug triggers DRM hotplug, kanshi re-matches the
+# docked-home profile, and postswitch runs — HUP alone does not. After DRM is
+# ready we simulate that: stop kanshi, cycle dock outputs, restart kanshi.
 #
 # Invoked from /usr/lib/systemd/system-sleep/displays-resume on post wake.
 # Re-exec in the background so the sleep hook returns immediately while we
@@ -25,11 +26,13 @@ if [[ "${1:-}" != "--foreground" ]]; then
 fi
 
 exec >>"$LOG" 2>&1
-echo "=== displays-resume $(date -Is) pid=$$ ==="
+log() { echo "$(date -Is) $*"; }
+
+log "=== displays-resume pid=$$ ==="
 
 lockfile="${XDG_RUNTIME_DIR}/displays-resume.lock"
 exec 9>"$lockfile"
-flock -n 9 || { echo "already running"; exit 0; }
+flock -n 9 || { log "already running"; exit 0; }
 
 find_swaysock() {
     find "$XDG_RUNTIME_DIR" -maxdepth 1 -name 'sway-ipc.*.sock' -type s 2>/dev/null | head -n1
@@ -43,9 +46,10 @@ fi
 wait_for_swaysock() {
     local attempt
     for attempt in $(seq 1 90); do
-        [[ -S "${SWAYSOCK:-}" ]] && return 0
+        [[ -S "${SWAYSOCK:-}" ]] && { log "sway socket ready"; return 0; }
         SWAYSOCK="$(find_swaysock)"
         export SWAYSOCK
+        (( attempt % 15 == 0 )) && log "waiting for sway socket (${attempt}s)"
         sleep 1
     done
     return 1
@@ -69,61 +73,109 @@ wait_for_drm() {
     for attempt in $(seq 1 120); do
         if is_docked; then
             count="$(docked_drm_ports_connected)"
-            [[ "$count" -ge 3 ]] && return 0
+            [[ "$count" -ge 3 ]] && { log "DRM ready: ${count} DP ports connected"; return 0; }
+            (( attempt % 15 == 0 )) && log "waiting for DRM (${count}/3 DP connected, ${attempt}s)"
         else
             [[ -e /sys/class/drm/card1-eDP-1/status ]] \
                 && [[ "$(cat /sys/class/drm/card1-eDP-1/status 2>/dev/null)" == "connected" ]] \
-                && return 0
+                && { log "DRM ready: laptop panel connected"; return 0; }
+            (( attempt % 15 == 0 )) && log "waiting for laptop panel DRM (${attempt}s)"
         fi
         sleep 1
     done
     return 1
 }
 
+sway_dp_active_count() {
+    swaymsg -t get_outputs 2>/dev/null | jq -r '
+        [.[] | select(.name | test("^DP-")) | select(.active)
+         | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0
+}
+
 sway_outputs_healthy() {
     local required="${1:-1}"
-    local ready
+    local ready drm_count
     if is_docked; then
-        ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
-            [.[] | select(.name | test("^DP-")) | select(.active)
-             | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0)"
+        ready="$(sway_dp_active_count)"
+        drm_count="$(docked_drm_ports_connected)"
+        [[ "$ready" -ge "$required" && "$drm_count" -ge 3 ]]
     else
         ready="$(swaymsg -t get_outputs 2>/dev/null | jq -r '
             [.[] | select(.name == "eDP-1") | select(.active)
              | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' 2>/dev/null || echo 0)"
-        required=1
+        [[ "$ready" -ge 1 ]]
     fi
-    [[ "$ready" -ge "$required" ]]
+}
+
+wait_for_kanshi_outputs() {
+    local required="${1:-3}" attempt
+    for attempt in $(seq 1 45); do
+        if sway_outputs_healthy "$required"; then
+            log "kanshi restored ${required} outputs (${attempt}s)"
+            return 0
+        fi
+        (( attempt % 10 == 0 )) && log "waiting for kanshi outputs ($(sway_dp_active_count)/${required}, ${attempt}s)"
+        sleep 1
+    done
+    return 1
+}
+
+simulate_dock_replug() {
+    local out
+    log "simulating dock replug (stop kanshi, cycle DP outputs, restart kanshi)"
+    pkill -x kanshi 2>/dev/null || true
+    sleep 1
+    for out in DP-4 DP-5 DP-6; do
+        swaymsg "output $out disable" 2>/dev/null || true
+    done
+    sleep 5
+    swaymsg exec --no-startup-id kanshi 2>/dev/null || true
+    wait_for_kanshi_outputs 3 || log "kanshi outputs slow after replug simulation"
 }
 
 apply_recovery() {
-    echo "apply_recovery (docked=$(is_docked && echo yes || echo no))"
+    local docked=no
+    is_docked && docked=yes
+    log "apply_recovery (docked=${docked})"
     swaymsg "output * dpms on" 2>/dev/null || true
-    killall -HUP kanshi 2>/dev/null || true
-    sleep 3
+
+    if is_docked; then
+        simulate_dock_replug
+    else
+        pkill -x kanshi 2>/dev/null || true
+        sleep 1
+        swaymsg exec --no-startup-id kanshi 2>/dev/null || true
+        wait_for_kanshi_outputs 1 || true
+    fi
+
+    if [[ -x "$HOME/.config/kanshi/postswitch.d/10-sway" ]]; then
+        SWAYSOCK="${SWAYSOCK:-}" "$HOME/.config/kanshi/postswitch.d/10-sway" 2>/dev/null || true
+    fi
     "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
     "$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
     "$HOME/.local/bin/waybar-restart" 2>/dev/null || true
 }
 
-wait_for_swaysock || { echo "no sway socket; user may be at login screen"; exit 0; }
-wait_for_drm || echo "drm wait timed out; proceeding anyway"
+wait_for_swaysock || { log "no sway socket; user may be at login screen"; exit 0; }
+wait_for_drm || log "drm wait timed out; proceeding anyway"
+log "post-DRM settle pause"
 sleep 5
 
 required=1
 is_docked && required=3
 
-for round in $(seq 1 8); do
-    echo "recovery round $round (need $required healthy outputs)"
+for round in $(seq 1 5); do
+    log "recovery round ${round} (need ${required} healthy outputs, have $(sway_dp_active_count))"
     apply_recovery
     sleep 5
     if sway_outputs_healthy "$required"; then
-        echo "outputs healthy after round $round"
+        log "outputs healthy after round ${round}"
         exit 0
     fi
+    log "outputs still unhealthy after round ${round}; retrying"
     sleep 10
 done
 
-echo "outputs still unhealthy; restarting sway so GDM can start a fresh session"
+log "outputs still unhealthy; restarting sway so GDM can start a fresh session"
 swaymsg exit 2>/dev/null || true
 exit 0
