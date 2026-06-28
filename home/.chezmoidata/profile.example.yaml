@@ -15,6 +15,7 @@ profile_example:
     earlyoom: true
     eza: true
     fd: true
+    fastfetch: true
     ffmpeg: true
     flatpak: false
     fzf: true
@@ -69,6 +70,7 @@ profile_example:
     - earlyoom
     - eza
     - fd-find
+    - fastfetch
     - ffmpeg
     - fzf
     - gh

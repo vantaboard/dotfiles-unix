@@ -18,6 +18,7 @@ packages:
       - clang
       - jq
       - htop
+      - fastfetch
       - tmux
       - direnv
       # Desktop (Sway/Wayland; installed on real machines; harmless in CI)

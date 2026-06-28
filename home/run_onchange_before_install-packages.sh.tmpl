@@ -81,14 +81,17 @@ set -euo pipefail
 {{- $_ := set $aptExcludeMap . true -}}
 {{- end -}}
 {{- $needsKeyd := false -}}
+{{- $needsFastfetch := false -}}
 {{- if not (env "CHEZMOI_CI") -}}
 {{- if $p.packages -}}
 {{- range $p.packages -}}
 {{- if eq . "keyd" -}}{{- $needsKeyd = true -}}{{- end -}}
+{{- if eq . "fastfetch" -}}{{- $needsFastfetch = true -}}{{- end -}}
 {{- end -}}
 {{- else -}}
 {{- range .packages.ubuntu.apt -}}
 {{- if eq . "keyd" -}}{{- $needsKeyd = true -}}{{- end -}}
+{{- if eq . "fastfetch" -}}{{- $needsFastfetch = true -}}{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end }}
@@ -114,6 +117,18 @@ if ! apt show keyd >/dev/null 2>&1; then
     sudo apt update -qq
   else
     echo "WARN: keyd not available and add-apt-repository not found"
+  fi
+fi
+{{- end }}
+{{- if $needsFastfetch }}
+
+if ! apt show fastfetch >/dev/null 2>&1; then
+  if command -v add-apt-repository >/dev/null 2>&1; then
+    echo "fastfetch not in default repos; adding ppa:zhangsongcui3371/fastfetch"
+    sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+    sudo apt update -qq
+  else
+    echo "WARN: fastfetch not available and add-apt-repository not found"
   fi
 fi
 {{- end }}

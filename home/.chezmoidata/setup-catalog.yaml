@@ -85,6 +85,11 @@ setup_catalog:
       label: htop
       default: true
       packages: [htop]
+    fastfetch:
+      category: shell_core
+      label: fastfetch
+      default: true
+      packages: [fastfetch]
     tmux:
       category: shell_core
       label: tmux
