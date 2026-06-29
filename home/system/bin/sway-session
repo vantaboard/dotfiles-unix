@@ -14,13 +14,32 @@ fi
 # Avoid wlroots' Intel-render/NVIDIA-scanout path when docked. The external
 # displays are wired to card2; the laptop panel is wired to card1.
 docked=0
-for status in /sys/class/drm/card2-DP-*/status; do
-  [[ -e "$status" ]] || continue
-  if [[ "$(cat "$status")" == "connected" ]]; then
-    docked=1
-    break
+
+dock_dp_connected() {
+  local status
+  for status in /sys/class/drm/card2-DP-*/status; do
+    [[ -e "$status" ]] || continue
+    if [[ "$(cat "$status")" == "connected" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# NVIDIA nvidia-drm and MST dock outputs often appear several seconds after
+# GDM starts the session. A single sysfs read at login picks card1 too early.
+if dock_dp_connected; then
+  docked=1
+elif [[ -e /dev/dri/card2 || -d /sys/module/nvidia ]]; then
+  read -r uptime _ </proc/uptime
+  if awk "BEGIN { exit !($uptime < 120) }"; then
+    for _ in $(seq 1 30); do
+      [[ -e /dev/dri/card2 ]] || sleep 1
+      dock_dp_connected && { docked=1; break; }
+      sleep 1
+    done
   fi
-done
+fi
 
 if [[ "$docked" == "1" && -e /dev/dri/card2 ]]; then
   export WLR_DRM_DEVICES=/dev/dri/card2
