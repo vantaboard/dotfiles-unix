@@ -177,7 +177,7 @@ setup_catalog:
       requires: [fzf, oh_my_zsh]
       zshrc_block: fzf_tab
       install_tools: true
-      description: Installed into OMZ custom/plugins via run_onchange_after_install-tools
+      description: Installed into OMZ custom/plugins via run_onchange_after_install-tools; must load last in OMZ plugins=()
     zsh_abbr:
       category: zsh_stack
       label: zsh-abbr
@@ -198,7 +198,7 @@ setup_catalog:
       default: false
       requires: [oh_my_zsh, fzf]
       omz_plugin: fzf
-      description: Optional; redundant when using git-installed fzf (~/.fzf) via the fzf feature
+      description: Optional; redundant/conflicts with fzf-tab when using git-installed fzf (~/.fzf)
     omz_ssh_agent:
       category: zsh_stack
       label: OMZ ssh-agent plugin
