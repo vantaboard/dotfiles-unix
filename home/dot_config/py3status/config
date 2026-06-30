@@ -11,7 +11,7 @@ general {
 
 order += "wireless _first_"
 order += "ethernet _first_"
-order += "cpu_usage"
+order += "sysdata cpu"
 order += "disk /"
 order += "battery all"
 order += "memory"
@@ -28,12 +28,13 @@ ethernet _first_ {
         format_down = ""
 }
 
-cpu_usage {
-        format = "<span color='#84c137'>CPU</span> %usage"
+sysdata cpu {
+        format = "<span color='#84c137'>CPU</span> {cpu_used_percent:.0f}%"
+        cache_timeout = 5
 }
 
 disk "/" {
-        format = "<span color='#84c137'></span> %avail"
+        format = "<span color='#84c137'>💾</span> %avail"
 }
 
 battery all {
