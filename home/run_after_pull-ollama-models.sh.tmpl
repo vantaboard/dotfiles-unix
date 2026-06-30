@@ -1,0 +1,264 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "ollama" -}}
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+{{ else -}}
+#!/bin/bash
+{{ end -}}
+set -euo pipefail
+
+# hash: ollama-models-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Ollama model pull"
+  exit 0
+fi
+
+if ! command -v ollama >/dev/null 2>&1; then
+  echo "ollama not installed; skipping model pull"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+CACHE_DIR="$HOME_DIR/.cache/chezmoi"
+STAMP_FILE="$CACHE_DIR/ollama-models.stamp"
+REFRESH_DAYS="${CHEZMOI_OLLAMA_MODELS_REFRESH_DAYS:-7}"
+OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+
+gpu_vram_mb() {
+  local mb
+  if mb="$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1)"; then
+    [[ -n "$mb" && "$mb" =~ ^[0-9]+$ ]] || return 1
+    printf '%s' "$mb"
+    return 0
+  fi
+  if [[ -r /sys/class/drm/card0/device/mem_info_vram_total ]]; then
+    local bytes
+    bytes="$(cat /sys/class/drm/card0/device/mem_info_vram_total 2>/dev/null)" || return 1
+    printf '%s' "$((bytes / 1024 / 1024))"
+    return 0
+  fi
+  return 1
+}
+
+system_ram_mb() {
+  awk '/^MemTotal:/ { printf "%d", int($2 / 1024) }' /proc/meminfo
+}
+
+selection_capacity_gb() {
+  local vram_mb ram_mb vram_gb ram_gb
+  vram_mb="$(gpu_vram_mb 2>/dev/null || echo 0)"
+  ram_mb="$(system_ram_mb)"
+  vram_gb=$(( (vram_mb + 512) / 1024 ))
+  ram_gb=$(( (ram_mb + 512) / 1024 ))
+  if (( vram_gb >= 6 )); then
+    echo $(( vram_gb + 2 ))
+  elif (( vram_gb > 0 )); then
+    echo $(( vram_gb + ram_gb / 4 ))
+  else
+    echo $(( ram_gb / 2 ))
+  fi
+}
+
+tag_min_vram_gb() {
+  case "$1" in
+    *480b*|*235b*) echo 80 ;;
+    *32b*|*31b*|*30b*|*26b*|*27b*) echo 24 ;;
+    *16b*) echo 16 ;;
+    *14b*|*12b*) echo 12 ;;
+    *e4b*) echo 10 ;;
+    *7b*|*8b*) echo 8 ;;
+    *3b*|*4b*|*e2b*) echo 4 ;;
+    *1.7b*|*1.5b*|*1b*|*0.6b*|*0.5b*|*270m*) echo 2 ;;
+    *) echo 8 ;;
+  esac
+}
+
+tag_size_rank() {
+  case "$1" in
+    *480b*) echo 480 ;;
+    *235b*) echo 235 ;;
+    *32b*) echo 32 ;;
+    *31b*) echo 31 ;;
+    *30b*) echo 30 ;;
+    *27b*) echo 27 ;;
+    *26b*) echo 26 ;;
+    *16b*) echo 16 ;;
+    *14b*) echo 14 ;;
+    *12b*) echo 12 ;;
+    *e4b*) echo 11 ;;
+    *8b*) echo 8 ;;
+    *7b*) echo 7 ;;
+    *4b*) echo 4 ;;
+    *e2b*) echo 3 ;;
+    *3b*) echo 3 ;;
+    *1.7b*) echo 2 ;;
+    *1.5b*) echo 2 ;;
+    *1b*) echo 1 ;;
+    *0.6b*) echo 1 ;;
+    *0.5b*) echo 1 ;;
+    *270m*) echo 1 ;;
+    *) echo 5 ;;
+  esac
+}
+
+fetch_library_tags() {
+  local lib=$1
+  curl -fsSL --max-time 30 "https://ollama.com/library/${lib}" \
+    | grep -oE "${lib}:[^\"<> \`]+" \
+    | sed 's/`$//' \
+    | sort -u \
+    | grep -Ev '(-mlx|-cloud|:cloud$|-it-qat|:latest$)' || true
+}
+
+select_model_for_family() {
+  local family=$1 capacity_gb=$2
+  shift 2
+  local libs=("$@")
+  local all=() lib tag min_vram rank fit_rank=-1 fit_tag="" smallest_rank=999 smallest_tag=""
+
+  for lib in "${libs[@]}"; do
+    while IFS= read -r tag; do
+      [[ -n "$tag" ]] || continue
+      all+=("$tag")
+    done < <(fetch_library_tags "$lib")
+  done
+
+  if ((${#all[@]} == 0)); then
+    case "$family" in
+      gemma)
+        if (( capacity_gb >= 10 )); then echo "gemma4:e4b"
+        elif (( capacity_gb >= 4 )); then echo "gemma4:e2b"
+        else echo "gemma3:4b"; fi
+        ;;
+      qwen)
+        if (( capacity_gb >= 24 )); then echo "qwen3-coder:30b"
+        elif (( capacity_gb >= 10 )); then echo "qwen3:8b"
+        elif (( capacity_gb >= 6 )); then echo "qwen2.5-coder:7b"
+        else echo "qwen3:4b"; fi
+        ;;
+    esac
+    return 0
+  fi
+
+  for tag in "${all[@]}"; do
+    min_vram="$(tag_min_vram_gb "$tag")"
+    rank="$(tag_size_rank "$tag")"
+    if (( rank < smallest_rank )); then
+      smallest_rank=$rank
+      smallest_tag=$tag
+    fi
+    if (( min_vram <= capacity_gb && rank > fit_rank )); then
+      fit_rank=$rank
+      fit_tag=$tag
+    fi
+  done
+
+  if [[ -n "$fit_tag" ]]; then
+    printf '%s' "$fit_tag"
+  else
+    printf '%s' "$smallest_tag"
+  fi
+}
+
+ensure_ollama_ready() {
+  if curl -fsS "${OLLAMA_HOST}/api/tags" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if command -v systemctl >/dev/null 2>&1; then
+    sudo systemctl start ollama.service 2>/dev/null || true
+  elif command -v sv >/dev/null 2>&1; then
+    sv up ollama 2>/dev/null || true
+  fi
+
+  local i
+  for i in $(seq 1 30); do
+    if curl -fsS "${OLLAMA_HOST}/api/tags" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "WARN: Ollama API not reachable at ${OLLAMA_HOST}; skipping model pull"
+  return 1
+}
+
+should_refresh() {
+  local fingerprint=$1
+  if [[ "${CHEZMOI_OLLAMA_MODELS_REFRESH:-}" == "1" ]]; then
+    return 0
+  fi
+  if [[ ! -f "$STAMP_FILE" ]]; then
+    return 0
+  fi
+  if ! grep -qxF "$fingerprint" "$STAMP_FILE"; then
+    return 0
+  fi
+  if find "$STAMP_FILE" -mtime "+${REFRESH_DAYS}" 2>/dev/null | grep -q .; then
+    return 0
+  fi
+  echo "Ollama models up to date (refresh in <= ${REFRESH_DAYS} days or CHEZMOI_OLLAMA_MODELS_REFRESH=1)"
+  return 1
+}
+
+write_stamp() {
+  local fingerprint=$1
+  mkdir -p "$CACHE_DIR"
+  printf '%s\n' "$fingerprint" > "$STAMP_FILE"
+}
+
+CAPACITY_GB="$(selection_capacity_gb)"
+VRAM_MB="$(gpu_vram_mb 2>/dev/null || echo 0)"
+RAM_MB="$(system_ram_mb)"
+GEMMA_MODEL="$(select_model_for_family gemma "$CAPACITY_GB" gemma4 gemma3)"
+QWEN_MODEL="$(select_model_for_family qwen "$CAPACITY_GB" qwen3-coder qwen3 qwen2.5-coder)"
+FINGERPRINT="v1:${VRAM_MB}:${RAM_MB}:${CAPACITY_GB}:${GEMMA_MODEL}:${QWEN_MODEL}"
+
+echo "Ollama hardware: ${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM, ~${CAPACITY_GB}GB selection budget"
+echo "Selected models: ${GEMMA_MODEL}, ${QWEN_MODEL}"
+
+if ! should_refresh "$FINGERPRINT"; then
+  exit 0
+fi
+
+if ! ensure_ollama_ready; then
+  exit 0
+fi
+
+pull_model() {
+  local model=$1
+  echo "Pulling ${model}..."
+  if ollama pull "$model"; then
+    echo "OK: ${model}"
+  else
+    echo "WARN: failed to pull ${model}"
+    return 1
+  fi
+}
+
+FAILED=0
+pull_model "$GEMMA_MODEL" || FAILED=1
+pull_model "$QWEN_MODEL" || FAILED=1
+
+if (( FAILED == 0 )); then
+  write_stamp "$FINGERPRINT"
+  echo "Ollama model pull complete"
+else
+  echo "WARN: one or more Ollama model pulls failed; stamp not updated"
+fi
+{{- end -}}
+{{ end -}}

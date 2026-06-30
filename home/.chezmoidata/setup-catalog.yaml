@@ -445,6 +445,7 @@ setup_catalog:
       category: system
       label: Ollama LLM service
       default: true
+      description: systemd unit + auto-pull of latest hardware-matched Gemma and Qwen models on chezmoi apply
       system_deploy: ollama
       systemd_unit: ollama.service
     earlyoom:
