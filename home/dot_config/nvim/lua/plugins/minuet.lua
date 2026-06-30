@@ -1,3 +1,5 @@
+local ollama_models = require("ollama_models")
+
 local function is_termux()
   return os.getenv("TERMUX_VERSION") ~= nil
 end
@@ -21,9 +23,9 @@ require("minuet").setup({
   provider = "openai_compatible",
   provider_options = {
     openai_compatible = {
-      model = "qwen2.5-coder:7b",
+      model = ollama_models.get_coder(),
       end_point = "http://localhost:11434/v1/chat/completions",
-      api_key = "TERM",
+      api_key_name = "TERM",
       name = "Ollama",
       stream = true,
       optional = {

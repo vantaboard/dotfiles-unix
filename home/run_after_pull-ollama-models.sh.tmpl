@@ -35,6 +35,7 @@ fi
 HOME_DIR="{{ .chezmoi.homeDir }}"
 CACHE_DIR="$HOME_DIR/.cache/chezmoi"
 STAMP_FILE="$CACHE_DIR/ollama-models.stamp"
+MODELS_FILE="$HOME_DIR/.config/ollama/models.json"
 REFRESH_DAYS="${CHEZMOI_OLLAMA_MODELS_REFRESH_DAYS:-7}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
 
@@ -221,6 +222,13 @@ write_stamp() {
   printf '%s\n' "$fingerprint" > "$STAMP_FILE"
 }
 
+write_models_config() {
+  local gemma=$1 qwen=$2 vram_mb=$3 ram_mb=$4 capacity_gb=$5
+  mkdir -p "$(dirname "$MODELS_FILE")"
+  printf '{\n  "gemma": "%s",\n  "qwen": "%s",\n  "vram_mb": %s,\n  "ram_mb": %s,\n  "capacity_gb": %s\n}\n' \
+    "$gemma" "$qwen" "$vram_mb" "$ram_mb" "$capacity_gb" > "$MODELS_FILE"
+}
+
 CAPACITY_GB="$(selection_capacity_gb)"
 VRAM_MB="$(gpu_vram_mb 2>/dev/null || echo 0)"
 RAM_MB="$(system_ram_mb)"
@@ -230,6 +238,7 @@ FINGERPRINT="v1:${VRAM_MB}:${RAM_MB}:${CAPACITY_GB}:${GEMMA_MODEL}:${QWEN_MODEL}
 
 echo "Ollama hardware: ${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM, ~${CAPACITY_GB}GB selection budget"
 echo "Selected models: ${GEMMA_MODEL}, ${QWEN_MODEL}"
+write_models_config "$GEMMA_MODEL" "$QWEN_MODEL" "$VRAM_MB" "$RAM_MB" "$CAPACITY_GB"
 
 if ! should_refresh "$FINGERPRINT"; then
   exit 0

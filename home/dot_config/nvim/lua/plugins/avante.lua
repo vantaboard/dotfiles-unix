@@ -1,9 +1,11 @@
+local ollama_models = require("ollama_models")
+
 require("avante").setup({
   provider = "ollama", -- Use the built-in ollama provider
   providers = {
     ollama = {
       endpoint = "http://localhost:11434",
-      model = "qwen2.5-coder:7b",
+      model = ollama_models.get_coder(),
       api_key_name = "TERM",
       timeout = 30000, -- 30 seconds
       temperature = 0,
