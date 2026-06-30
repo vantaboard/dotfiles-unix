@@ -82,16 +82,19 @@ set -euo pipefail
 {{- end -}}
 {{- $needsKeyd := false -}}
 {{- $needsFastfetch := false -}}
+{{- $needsGh := false -}}
 {{- if not (env "CHEZMOI_CI") -}}
 {{- if $p.packages -}}
 {{- range $p.packages -}}
 {{- if eq . "keyd" -}}{{- $needsKeyd = true -}}{{- end -}}
 {{- if eq . "fastfetch" -}}{{- $needsFastfetch = true -}}{{- end -}}
+{{- if eq . "gh" -}}{{- $needsGh = true -}}{{- end -}}
 {{- end -}}
 {{- else -}}
 {{- range .packages.ubuntu.apt -}}
 {{- if eq . "keyd" -}}{{- $needsKeyd = true -}}{{- end -}}
 {{- if eq . "fastfetch" -}}{{- $needsFastfetch = true -}}{{- end -}}
+{{- if eq . "gh" -}}{{- $needsGh = true -}}{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end }}
@@ -107,10 +110,63 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 
+apt_pkg_candidate() {
+  apt-cache policy "$1" 2>/dev/null | awk -F': ' '/Candidate:/ {print $2; exit}'
+}
+
+ensure_add_apt_repository() {
+  if command -v add-apt-repository >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Installing software-properties-common for add-apt-repository..."
+  sudo apt install -y -qq --no-install-recommends software-properties-common
+}
+
+ensure_universe_repo() {
+  if grep -rE '^[^#]*\buniverse\b' /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null | grep -q .; then
+    return 0
+  fi
+  if command -v lsb_release >/dev/null 2>&1 && [[ "$(lsb_release -si 2>/dev/null)" == "Ubuntu" ]]; then
+    ensure_add_apt_repository
+    echo "universe repository not enabled; enabling (needed for gh, glab, eza, zoxide on some hosts)"
+    sudo add-apt-repository -y universe
+    sudo apt update -qq
+  fi
+}
+
+ensure_gh_repo() {
+  local candidate
+  candidate="$(apt_pkg_candidate gh)"
+  if [[ -n "$candidate" && "$candidate" != "(none)" ]]; then
+    return 0
+  fi
+  local list=/etc/apt/sources.list.d/github-cli.list
+  local keyring=/usr/share/keyrings/githubcli-archive-keyring.gpg
+  if [[ -f "$list" && -f "$keyring" ]]; then
+    sudo apt update -qq
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: gh not available and curl missing; skipping GitHub CLI repo setup"
+    return 0
+  fi
+  echo "gh not in repos; adding GitHub CLI apt repository..."
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | sudo dd of="$keyring" bs=8192 conv=cp fsync status=none
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=${keyring}] https://cli.github.com/packages stable main" \
+    | sudo tee "$list" >/dev/null
+  sudo apt update -qq
+}
+
 sudo apt update -qq
+ensure_universe_repo
+{{- if $needsGh }}
+ensure_gh_repo
+{{- end }}
 {{- if $needsKeyd }}
 
 if ! apt show keyd >/dev/null 2>&1; then
+  ensure_add_apt_repository
   if command -v add-apt-repository >/dev/null 2>&1; then
     echo "keyd not in default repos; adding ppa:keyd-team/ppa"
     sudo add-apt-repository -y ppa:keyd-team/ppa
@@ -123,6 +179,7 @@ fi
 {{- if $needsFastfetch }}
 
 if ! apt show fastfetch >/dev/null 2>&1; then
+  ensure_add_apt_repository
   if command -v add-apt-repository >/dev/null 2>&1; then
     echo "fastfetch not in default repos; adding ppa:zhangsongcui3371/fastfetch"
     sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
@@ -132,26 +189,44 @@ if ! apt show fastfetch >/dev/null 2>&1; then
   fi
 fi
 {{- end }}
-sudo apt install -y -qq --no-install-recommends \
+
+core_pkgs=(
 {{- if env "CHEZMOI_CI" }}
 {{- range .packages.ubuntu.apt_ci }}
 {{- if not (index $aptExcludeMap .) }}
-  {{ . }} \
+  {{ . }}
 {{- end }}
 {{- end }}
 {{- else if $p.packages }}
 {{- range $p.packages }}
 {{- if not (index $aptExcludeMap .) }}
-  {{ . }} \
+  {{ . }}
 {{- end }}
 {{- end }}
 {{- else }}
 {{- range .packages.ubuntu.apt }}
 {{- if not (index $aptExcludeMap .) }}
-  {{ . }} \
+  {{ . }}
 {{- end }}
 {{- end }}
 {{- end }}
+)
+available_pkgs=()
+unavailable_pkgs=()
+for pkg in "${core_pkgs[@]}"; do
+  candidate="$(apt_pkg_candidate "$pkg")" || candidate=""
+  if [[ -n "$candidate" && "$candidate" != "(none)" ]]; then
+    available_pkgs+=("$pkg")
+  else
+    unavailable_pkgs+=("$pkg")
+  fi
+done
+if ((${#unavailable_pkgs[@]})); then
+  echo "Skipping ${#unavailable_pkgs[@]} core package(s) with no install candidate (install-tools may provide fallbacks): ${unavailable_pkgs[*]}"
+fi
+if ((${#available_pkgs[@]})); then
+  sudo apt install -y -qq --no-install-recommends "${available_pkgs[@]}"
+fi
 
 echo "core apt packages installed"
 {{- if not (env "CHEZMOI_CI") }}
@@ -172,7 +247,7 @@ manual_pkgs=(
 available_pkgs=()
 unavailable_pkgs=()
 for pkg in "${manual_pkgs[@]}"; do
-  candidate="$(apt-cache policy "$pkg" 2>/dev/null | awk -F': ' '/Candidate:/ {print $2}')" || candidate=""
+  candidate="$(apt_pkg_candidate "$pkg")" || candidate=""
   if [[ -n "$candidate" && "$candidate" != "(none)" ]]; then
     available_pkgs+=("$pkg")
   else

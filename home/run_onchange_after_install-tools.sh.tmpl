@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v24
+# hash: tools-v25
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -315,6 +315,130 @@ install_zoxide() {
   fi
   echo "Installing zoxide..."
   cargo install zoxide
+}
+
+install_eza() {
+  if command -v eza >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Installing eza..."
+  cargo install eza
+}
+
+install_fastfetch() {
+  if command -v fastfetch >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping fastfetch install"
+    return 0
+  fi
+  local arch deb url tmp
+  case "$(uname -m)" in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *)
+      echo "WARN: unsupported arch for fastfetch deb: $(uname -m)"
+      return 0
+      ;;
+  esac
+  deb="fastfetch-linux-${arch}.deb"
+  url="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/${deb}"
+  tmp="$(mktemp -d)"
+  echo "Installing fastfetch from GitHub release (${arch})..."
+  if ! curl -fsSL -o "$tmp/$deb" "$url"; then
+    echo "WARN: fastfetch deb download failed"
+    rm -rf "$tmp"
+    return 0
+  fi
+  sudo dpkg -i "$tmp/$deb" || sudo apt-get install -f -y
+  rm -rf "$tmp"
+}
+
+install_gh() {
+  if command -v gh >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping gh install"
+    return 0
+  fi
+  local arch tag ver url tmp gh_bin
+  case "$(uname -m)" in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *)
+      echo "WARN: unsupported arch for gh: $(uname -m)"
+      return 0
+      ;;
+  esac
+  tag="$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+    | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p' | head -1)"
+  if [[ -z "$tag" ]]; then
+    echo "WARN: could not resolve latest gh release"
+    return 0
+  fi
+  ver="${tag#v}"
+  url="https://github.com/cli/cli/releases/download/${tag}/gh_${ver}_linux_${arch}.tar.gz"
+  tmp="$(mktemp -d)"
+  echo "Installing gh ${tag} (${arch})..."
+  if ! curl -fsSL "$url" | tar -xz -C "$tmp"; then
+    echo "WARN: gh download failed"
+    rm -rf "$tmp"
+    return 0
+  fi
+  gh_bin="$(find "$tmp" -type f -name gh -path '*/bin/gh' | head -1)"
+  if [[ -z "$gh_bin" ]]; then
+    echo "WARN: gh binary not found in archive"
+    rm -rf "$tmp"
+    return 0
+  fi
+  mkdir -p "$LOCAL_BIN"
+  install -m 755 "$gh_bin" "$LOCAL_BIN/gh"
+  rm -rf "$tmp"
+}
+
+install_glab() {
+  if command -v glab >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping glab install"
+    return 0
+  fi
+  local arch tag ver url tmp glab_bin
+  case "$(uname -m)" in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *)
+      echo "WARN: unsupported arch for glab: $(uname -m)"
+      return 0
+      ;;
+  esac
+  tag="$(curl -fsSL 'https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases?per_page=1' \
+    | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p' | head -1)"
+  if [[ -z "$tag" ]]; then
+    echo "WARN: could not resolve latest glab release"
+    return 0
+  fi
+  ver="${tag#v}"
+  url="https://gitlab.com/gitlab-org/cli/-/releases/${tag}/downloads/glab_${ver}_linux_${arch}.tar.gz"
+  tmp="$(mktemp -d)"
+  echo "Installing glab ${tag} (${arch})..."
+  if ! curl -fsSL "$url" | tar -xz -C "$tmp"; then
+    echo "WARN: glab download failed"
+    rm -rf "$tmp"
+    return 0
+  fi
+  glab_bin="$(find "$tmp" -type f -name glab -path '*/bin/glab' | head -1)"
+  if [[ -z "$glab_bin" ]]; then
+    echo "WARN: glab binary not found in archive"
+    rm -rf "$tmp"
+    return 0
+  fi
+  mkdir -p "$LOCAL_BIN"
+  install -m 755 "$glab_bin" "$LOCAL_BIN/glab"
+  rm -rf "$tmp"
 }
 
 {{- if eq .chezmoi.os "linux" }}
@@ -738,9 +862,28 @@ install_vivid_linux
 {{- end }}
 {{- end }}
 
-{{- if and (index $f "mise") (eq .chezmoi.os "linux") }}
+{{- if and (eq .chezmoi.os "linux") (or (index $f "mise") (index $f "zoxide") (index $f "eza")) }}
 install_rust
+{{- end }}
+
+{{- if and (index $f "zoxide") (eq .chezmoi.os "linux") }}
 install_zoxide
+{{- end }}
+
+{{- if and (index $f "eza") (eq .chezmoi.os "linux") }}
+install_eza
+{{- end }}
+
+{{- if and (index $f "fastfetch") (eq .chezmoi.os "linux") }}
+install_fastfetch
+{{- end }}
+
+{{- if and (index $f "gh_cli") (eq .chezmoi.os "linux") }}
+install_gh
+{{- end }}
+
+{{- if and (index $f "glab") (eq .chezmoi.os "linux") }}
+install_glab
 {{- end }}
 
 {{- $hyprpickerEnabled := false -}}
