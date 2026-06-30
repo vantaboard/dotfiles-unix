@@ -49,6 +49,7 @@ profile_example:
     ripgrep: true
     rofi: true
     ssh_hardening: true
+    sunshine: true
     thermald: true
     tmux: true
     trash_cli: true

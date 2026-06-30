@@ -1,0 +1,131 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "sunshine" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: sunshine-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping sunshine install"
+  exit 0
+fi
+
+sunshine_deb_variant() {
+  if [[ -f /etc/os-release ]]; then
+    # shellcheck source=/dev/null
+    . /etc/os-release
+  fi
+
+  local arch
+  arch="$(dpkg --print-architecture 2>/dev/null || uname -m)"
+  case "$arch" in
+    amd64|x86_64) arch=amd64 ;;
+    *)
+      echo "WARN: Sunshine Linux package is amd64-only; skipping (arch=$arch)" >&2
+      return 1
+      ;;
+  esac
+
+  case "${ID:-}:${VERSION_ID:-}" in
+    ubuntu:24.04) echo "sunshine-ubuntu-24.04-${arch}.deb" ;;
+    ubuntu:22.04) echo "sunshine-ubuntu-22.04-${arch}.deb" ;;
+    debian:trixie|debian:13) echo "sunshine-debian-trixie-${arch}.deb" ;;
+    ubuntu:*)
+      echo "WARN: unsupported Ubuntu ${VERSION_ID:-unknown}; trying sunshine-ubuntu-24.04-${arch}.deb" >&2
+      echo "sunshine-ubuntu-24.04-${arch}.deb"
+      ;;
+    *)
+      echo "WARN: unsupported distro ${ID:-unknown} ${VERSION_ID:-}; skipping sunshine install" >&2
+      return 1
+      ;;
+  esac
+}
+
+ensure_sunshine_autostart() {
+  if ! command -v sunshine >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if systemctl --user enable sunshine.service 2>/dev/null; then
+    systemctl --user start sunshine.service 2>/dev/null || true
+    echo "sunshine autostart enabled (systemd user unit)"
+  else
+    echo "sunshine installed (systemd user session unavailable during apply)"
+  fi
+}
+
+already_installed=0
+if command -v sunshine >/dev/null 2>&1 \
+  || dpkg-query -W -f='${Status}' sunshine 2>/dev/null | grep -q 'install ok installed'; then
+  already_installed=1
+  if command -v sunshine >/dev/null 2>&1; then
+    echo "sunshine already installed: $(sunshine --version 2>/dev/null || echo installed)"
+  else
+    echo "sunshine package already installed"
+  fi
+fi
+
+if [[ "$already_installed" -eq 0 ]]; then
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping sunshine install"
+    exit 0
+  fi
+
+  deb_name="$(sunshine_deb_variant)" || exit 0
+
+  echo "Resolving latest Sunshine release (${deb_name})..."
+  release_json="$(curl -fsSL "https://api.github.com/repos/LizardByte/Sunshine/releases/latest")"
+  deb_url="$(printf '%s' "$release_json" | jq -r --arg name "$deb_name" '.assets[] | select(.name == $name) | .browser_download_url')"
+  if [[ -z "$deb_url" || "$deb_url" == "null" ]]; then
+    echo "WARN: could not find $deb_name in latest Sunshine release; skipping"
+    exit 0
+  fi
+
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+  deb_path="$tmpdir/$deb_name"
+
+  echo "Downloading $deb_name..."
+  curl -fsSL "$deb_url" -o "$deb_path"
+
+  echo "Installing Sunshine..."
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt install -y -qq "$deb_path"
+
+  if command -v sunshine >/dev/null 2>&1; then
+    echo "sunshine installed: $(sunshine --version 2>/dev/null || echo "$deb_name")"
+  else
+    echo "sunshine installed: $deb_name"
+  fi
+
+  cat <<'EOF'
+
+Sunshine is installed. Configure and pair Moonlight clients:
+  Web UI:   https://localhost:47990
+  Service:  systemctl --user status sunshine.service
+
+Pair Moonlight using the PIN shown in the web UI.
+See: https://docs.lizardbyte.dev/projects/sunshine/latest/
+EOF
+fi
+
+ensure_sunshine_autostart
+{{- end -}}
+{{ end -}}

@@ -359,6 +359,13 @@ setup_catalog:
       description: Official .deb from linux.dropbox.com; libappindicator3-1, python3-gi/gpg for CLI; autostart via systemd user unit
       default: false
       packages: [libappindicator3-1, python3-gi, python3-gpg]
+    sunshine:
+      category: desktop
+      label: Sunshine (Moonlight host)
+      description: Official LizardByte .deb from GitHub releases; game streaming host for Moonlight; autostart via systemd user unit
+      default: true
+      requires: [desktop_sway]
+      config_paths: [dot_config/sunshine]
     keyd:
       category: desktop
       label: keyd key remapping

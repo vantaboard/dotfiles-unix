@@ -57,6 +57,7 @@ profile_termux_example:
     grub: false
     displays_resume: false
     ollama: false
+    sunshine: false
     earlyoom: false
     thermald: false
   packages: []

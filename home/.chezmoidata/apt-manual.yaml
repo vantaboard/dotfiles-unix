@@ -1621,6 +1621,7 @@ apt_manual:
       status: install
       first_seen: "2026-06-14"
     sunshine:
+      # Installed via run_onchange_after_install-sunshine.sh (official LizardByte .deb).
       status: ignore
       first_seen: "2026-06-14"
     t1utils:
