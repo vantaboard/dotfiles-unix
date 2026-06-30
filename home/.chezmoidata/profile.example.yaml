@@ -2,6 +2,7 @@ profile_example:
   features:
     bat: true
     clang: true
+    cursor: true
     desktop_sway: true
     desktop_utils: true
     kanshi: true

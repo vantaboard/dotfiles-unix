@@ -42,6 +42,7 @@ profile_ci:
     wayland_session: false
     rofi: false
     desktop_utils: false
+    cursor: false
     neovim: true
     gh_cli: false
     glab: false

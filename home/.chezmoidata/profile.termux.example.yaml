@@ -44,6 +44,7 @@ profile_termux_example:
     dunst: false
     rofi: false
     desktop_utils: false
+    cursor: false
     keyd: false
     neovim: true
     gh_cli: true

@@ -159,7 +159,7 @@ echo "core apt packages installed"
 {{- with .packages }}
 
 # Manually-tracked packages (see scripts/apt-manual-sync). Some originate from
-# third-party repos (Docker, Cursor, ngrok, Proton VPN, Huion, ...) that are not
+# third-party repos (Docker, ngrok, Proton VPN, Huion, ...) that are not
 # configured on every host (e.g. WSL). Filter to packages apt can actually
 # resolve and install them best-effort so a missing repo never aborts the apply.
 manual_pkgs=(

@@ -92,7 +92,7 @@ apt_manual:
       status: install
       first_seen: "2026-06-14"
     cursor:
-      status: install
+      status: ignore
       first_seen: "2026-06-14"
     dash:
       status: install
