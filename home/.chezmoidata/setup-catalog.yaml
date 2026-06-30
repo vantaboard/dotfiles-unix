@@ -64,6 +64,7 @@ setup_catalog:
       label: trash-cli
       default: true
       install_tools: true
+      packages: [python3-venv]
       description: Git clone + Python venv; trash-* wrappers in ~/.local/bin
     wl_clipboard:
       category: shell_core

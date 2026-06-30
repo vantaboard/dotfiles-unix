@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v26
+# hash: tools-v27
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -258,6 +258,42 @@ install_psutil_termux() {
 }
 {{- end }}
 
+{{- if eq .chezmoi.os "linux" }}
+ensure_python3_venv() {
+  local probe tmp_venv pyver
+
+  probe() {
+    tmp_venv="$(mktemp -d)"
+    if python3 -m venv "$tmp_venv" >/dev/null 2>&1; then
+      rm -rf "$tmp_venv"
+      return 0
+    fi
+    rm -rf "$tmp_venv"
+    return 1
+  }
+
+  if probe; then
+    return 0
+  fi
+
+  if ! command -v apt >/dev/null 2>&1; then
+    echo "WARN: python3 venv support missing and apt not available"
+    return 1
+  fi
+
+  pyver="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || true)"
+  echo "Installing python3-venv (required for trash-cli)..."
+  if [[ -n "$pyver" ]]; then
+    sudo apt install -y -qq --no-install-recommends "python${pyver}-venv" \
+      || sudo apt install -y -qq --no-install-recommends python3-venv
+  else
+    sudo apt install -y -qq --no-install-recommends python3-venv
+  fi
+
+  probe
+}
+{{- end }}
+
 install_trash_cli() {
   if ! command -v python3 >/dev/null 2>&1; then
     echo "WARN: python3 not found; skipping trash-cli install"
@@ -281,7 +317,10 @@ install_trash_cli() {
 
   if [[ ! -d "$TRASH_CLI_VENV" ]]; then
     echo "Creating trash-cli virtualenv..."
-    python3 -m venv "$TRASH_CLI_VENV"
+    python3 -m venv "$TRASH_CLI_VENV" || {
+      echo "WARN: could not create trash-cli virtualenv"
+      return 0
+    }
   fi
 
   if ! install_psutil_termux; then
@@ -294,9 +333,17 @@ install_trash_cli() {
   "$TRASH_CLI_VENV/bin/pip" install -q six
   "$TRASH_CLI_VENV/bin/pip" install -q -e "$TRASH_CLI_DIR" --no-deps
 {{- else }}
+  if [[ -d "$TRASH_CLI_VENV" ]] && [[ ! -x "$TRASH_CLI_VENV/bin/python" ]]; then
+    echo "Removing broken trash-cli venv..."
+    rm -rf "$TRASH_CLI_VENV"
+  fi
+
   if [[ ! -d "$TRASH_CLI_VENV" ]]; then
     echo "Creating trash-cli virtualenv..."
-    python3 -m venv "$TRASH_CLI_VENV"
+    if ! ensure_python3_venv || ! python3 -m venv "$TRASH_CLI_VENV"; then
+      echo "WARN: could not create trash-cli virtualenv; install python3-venv and re-run chezmoi apply"
+      return 0
+    fi
   fi
 
   echo "Installing trash-cli into venv..."
