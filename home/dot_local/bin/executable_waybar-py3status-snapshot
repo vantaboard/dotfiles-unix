@@ -20,7 +20,8 @@ def main() -> None:
 
     proc.stdout.readline()
 
-    parts = []
+    parts: list[str] = []
+    batches_seen = 0
     for line in proc.stdout:
         line = line.strip()
         if not line or line == "[[":
@@ -33,10 +34,19 @@ def main() -> None:
             continue
         if not isinstance(modules, list):
             continue
-        for module in modules:
-            if isinstance(module, dict) and module.get("full_text"):
-                parts.append(module["full_text"])
-        break
+
+        batch = [
+            module["full_text"]
+            for module in modules
+            if isinstance(module, dict) and module.get("full_text")
+        ]
+        if not batch:
+            continue
+
+        batches_seen += 1
+        parts = batch
+        if batches_seen >= 2:
+            break
 
     proc.kill()
     proc.wait()
