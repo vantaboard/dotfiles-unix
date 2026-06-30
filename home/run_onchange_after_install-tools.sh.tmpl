@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v25
+# hash: tools-v26
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -83,8 +83,64 @@ install_mise() {
     echo "WARN: curl not found; skipping mise install"
     return 0
   fi
-  echo "Installing mise..."
-  curl -fsSL https://mise.run | sh
+
+  install_mise_from_github() {
+    local arch tag url tmp mise_bin
+    case "$(uname -m)" in
+      x86_64|amd64) arch=x64 ;;
+      aarch64|arm64) arch=arm64 ;;
+      *)
+        echo "WARN: unsupported arch for mise: $(uname -m)"
+        return 1
+        ;;
+    esac
+    tag="$(curl -fsSL --retry 3 --retry-delay 2 --retry-all-errors \
+      https://api.github.com/repos/jdx/mise/releases/latest \
+      | sed -n 's/.*"tag_name": "\([^"]*\)".*/\1/p' | head -1)" || tag=""
+    if [[ -z "$tag" ]]; then
+      return 1
+    fi
+    url="https://github.com/jdx/mise/releases/download/${tag}/mise-${tag}-linux-${arch}.tar.gz"
+    tmp="$(mktemp -d)"
+    echo "Installing mise ${tag} from GitHub (${arch})..."
+    if ! curl -fsSL --retry 3 --retry-delay 2 --retry-all-errors "$url" | tar -xz -C "$tmp"; then
+      rm -rf "$tmp"
+      return 1
+    fi
+    mise_bin="$(find "$tmp" -type f -name mise | head -1)"
+    if [[ -z "$mise_bin" ]]; then
+      rm -rf "$tmp"
+      return 1
+    fi
+    mkdir -p "$(dirname "$MISE_BIN")"
+    install -m 755 "$mise_bin" "$MISE_BIN"
+    rm -rf "$tmp"
+    return 0
+  }
+
+  if command -v apt >/dev/null 2>&1; then
+    candidate="$(apt-cache policy mise 2>/dev/null | awk -F': ' '/Candidate:/ {print $2; exit}' || true)"
+    if [[ -n "$candidate" && "$candidate" != "(none)" ]]; then
+      echo "Installing mise via apt..."
+      if sudo apt install -y -qq --no-install-recommends mise \
+          && { mise_usable "$MISE_BIN" || { command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; }; }; then
+        echo "mise installed via apt"
+        return 0
+      fi
+      echo "WARN: apt mise install failed; trying other methods..."
+    fi
+  fi
+
+  echo "Installing mise via mise.run..."
+  if curl -fsSL --retry 3 --retry-delay 2 --retry-all-errors https://mise.run | sh; then
+    :
+  elif install_mise_from_github; then
+    :
+  else
+    echo "WARN: mise install failed (network); skipping — re-run chezmoi apply when connectivity is stable"
+    rm -f "$MISE_BIN" 2>/dev/null || true
+    return 0
+  fi
   if ! mise_usable "$MISE_BIN" && ! { command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; }; then
     echo "WARN: mise install failed"
     rm -f "$MISE_BIN" 2>/dev/null || true
