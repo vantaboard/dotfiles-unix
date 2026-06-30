@@ -8,7 +8,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: cursor-dev-appimage-v1
+# hash: cursor-dev-appimage-v2
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Cursor AppImage install"
@@ -20,6 +20,7 @@ LOCAL_BIN="$HOME_DIR/.local/bin"
 INSTALL_DIR="$HOME_DIR/.local/opt/cursor-dev"
 CACHE_DIR="$HOME_DIR/.cache/cursor-dev-install"
 APPIMAGE="$INSTALL_DIR/Cursor.AppImage"
+EXTRACT_DIR="$INSTALL_DIR/extracted"
 VERSION_FILE="$INSTALL_DIR/version"
 UPDATE_CHANNEL="dev"
 UPDATE_BASE_VERSION="${CURSOR_UPDATE_BASE_VERSION:-0.0.0}"
@@ -69,9 +70,23 @@ link_cursor() {
   cat > "$LOCAL_BIN/cursor" <<EOF
 #!/bin/bash
 set -euo pipefail
-exec "$APPIMAGE" --no-sandbox "\$@"
+exec "$EXTRACT_DIR/AppRun" --no-sandbox "\$@"
 EOF
   chmod +x "$LOCAL_BIN/cursor"
+}
+
+extract_appimage() {
+  local tmp_extract
+
+  mkdir -p "$CACHE_DIR"
+  tmp_extract="$(mktemp -d "${CACHE_DIR}/extract.XXXXXX")"
+  (
+    cd "$tmp_extract"
+    "$APPIMAGE" --appimage-extract >/dev/null
+  )
+  rm -rf "$EXTRACT_DIR"
+  mv "$tmp_extract/squashfs-root" "$EXTRACT_DIR"
+  rmdir "$tmp_extract"
 }
 
 appimage_current() {
@@ -80,8 +95,17 @@ appimage_current() {
   [[ "$(wc -c < "$APPIMAGE")" -gt 100000000 ]]
 }
 
+extracted_current() {
+  [[ -x "$EXTRACT_DIR/AppRun" ]] || return 1
+  [[ -f "$EXTRACT_DIR/usr/share/cursor/resources/app/out/main.js" ]]
+}
+
 if appimage_current; then
   echo "Cursor ${UPDATE_CHANNEL} ${target_version} already installed at $APPIMAGE"
+  if ! extracted_current; then
+    echo "Extracting Cursor AppImage to $EXTRACT_DIR..."
+    extract_appimage
+  fi
   link_cursor
   exit 0
 fi
@@ -96,8 +120,10 @@ curl -fsSL "$download_url" -o "$tmp_file"
 chmod +x "$tmp_file"
 mv "$tmp_file" "$APPIMAGE"
 printf '%s\n' "$target_version" > "$VERSION_FILE"
+echo "Extracting Cursor AppImage to $EXTRACT_DIR..."
+extract_appimage
 link_cursor
 
-echo "Cursor ${UPDATE_CHANNEL} ${target_version} installed; cursor -> $APPIMAGE"
+echo "Cursor ${UPDATE_CHANNEL} ${target_version} installed; cursor -> $EXTRACT_DIR/AppRun"
 {{- end -}}
 {{ end -}}
