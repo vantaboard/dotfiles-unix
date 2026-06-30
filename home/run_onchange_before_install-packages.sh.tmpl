@@ -111,7 +111,9 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 apt_pkg_candidate() {
-  apt-cache policy "$1" 2>/dev/null | awk -F': ' '/Candidate:/ {print $2; exit}'
+  # awk exits after the first match; without `|| true`, pipefail turns apt-cache's
+  # SIGPIPE into exit 141 and aborts the script under `set -e`.
+  apt-cache policy "$1" 2>/dev/null | awk -F': ' '/Candidate:/ {print $2; exit}' || true
 }
 
 ensure_add_apt_repository() {
@@ -123,7 +125,7 @@ ensure_add_apt_repository() {
 }
 
 ensure_universe_repo() {
-  if grep -rE '^[^#]*\buniverse\b' /etc/apt/sources.list /etc/apt/sources.list.d/*.list 2>/dev/null | grep -q .; then
+  if grep -rqE '^[^#]*\buniverse\b' /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
     return 0
   fi
   if command -v lsb_release >/dev/null 2>&1 && [[ "$(lsb_release -si 2>/dev/null)" == "Ubuntu" ]]; then
@@ -136,7 +138,7 @@ ensure_universe_repo() {
 
 ensure_gh_repo() {
   local candidate
-  candidate="$(apt_pkg_candidate gh)"
+  candidate="$(apt_pkg_candidate gh)" || candidate=""
   if [[ -n "$candidate" && "$candidate" != "(none)" ]]; then
     return 0
   fi
