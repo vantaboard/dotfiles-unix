@@ -66,19 +66,6 @@ nvidia_modeset_errors_recent() {
         | head -n1
 }
 
-sway_drm_device() {
-    local pid
-    pid="$(pgrep -x swayfx 2>/dev/null | head -n1)"
-    [[ -z "$pid" ]] && pid="$(pgrep -x sway 2>/dev/null | head -n1)"
-    [[ -z "$pid" ]] && return 1
-    tr '\0' '\n' < "/proc/$pid/environ" | sed -n 's/^WLR_DRM_DEVICES=//p' | head -n1
-}
-
-gpu_mismatch_requires_restart() {
-    is_docked || return 1
-    [[ "$(sway_drm_device)" == "/dev/dri/card1" ]]
-}
-
 gbm_errors_recent() {
     journalctl -b --since "10 sec ago" --no-pager 2>/dev/null \
         | awk '/gbm_bo_create failed/ { count++ } END { print count + 0 }'
@@ -212,12 +199,6 @@ apply_recovery() {
 }
 
 wait_for_swaysock || { log "no sway socket; user may be at login screen"; exit 0; }
-
-if gpu_mismatch_requires_restart; then
-    log "dock connected but sway uses card1; restarting session for card2"
-    swaymsg_cmd exit || true
-    exit 0
-fi
 
 wait_for_drm || log "drm wait timed out; proceeding anyway"
 wait_for_gpu_ready || true

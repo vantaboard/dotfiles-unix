@@ -1,5 +1,8 @@
-# Docked: three externals on NVIDIA (card2). The sway-session wrapper uses
-# card2 only when docked, so the Intel laptop panel is not exposed to Sway.
+# Docked: three externals on NVIDIA (card2), laptop panel off. sway-session
+# exposes both GPUs (card2:card1) so dock hotplug re-matches profiles live —
+# no session restart needed. eDP-1 stays connected while docked, and kanshi
+# only matches a profile that lists every connected output, so the docked
+# profile must include eDP-1 explicitly.
 # DP-5 is the primary ASUS monitor; postswitch/sway-docked-layout sets 144Hz when docked.
 # Order matters — more specific docked profile must come before undocked.
 # Physical layout (left to right): BenQ GW2485TC (DP-4), ASUS VG248 primary
@@ -8,6 +11,7 @@
 # Primary ASUS VG248 (DP-5) runs at 144Hz via postswitch/sway-docked-layout. DP-6
 # stays at 60Hz: the dock MST link cannot drive both ASUS monitors at 144Hz together.
 profile docked-home {
+    output eDP-1 disable
     output DP-4 enable mode 1920x1080@60Hz position 0,0
     output DP-5 enable mode 1920x1080@60Hz position 1920,0
     output DP-6 enable mode 1920x1080@60Hz position 3840,0
