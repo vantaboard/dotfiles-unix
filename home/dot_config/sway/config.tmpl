@@ -28,8 +28,11 @@ exec_always --no-startup-id $HOME/.local/bin/sway-wallpaper
 
 include $HOME/.config/sway/input-devices.conf
 
-input type:keyboard xkb_layout "us,es"
-input type:keyboard xkb_options "grp:alt_shift_toggle"
+input "type:keyboard" {
+    xkb_layout "us,es"
+    xkb_options "grp:win_space_toggle,compose:ralt"
+}
+
 {{- if $swayfxEnabled }}
 # Hide the cursor after idle ms but keep pointer/hover active.
 # Vanilla sway clears focus on hide; swayfx is patched in install-tools.
