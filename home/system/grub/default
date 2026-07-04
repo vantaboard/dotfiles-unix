@@ -4,8 +4,11 @@
 #   info -f grub -n 'Simple configuration'
 
 GRUB_DEFAULT=0
-GRUB_TIMEOUT_STYLE=hidden
-GRUB_TIMEOUT=0
+GRUB_TIMEOUT_STYLE=menu
+# Wait 5 minutes at the menu before auto-booting the default entry
+GRUB_TIMEOUT=300
+# Ubuntu falls back to a 30s timeout after a failed boot; keep it at 5 min too
+GRUB_RECORDFAIL_TIMEOUT=300
 GRUB_DISTRIBUTOR=`( . /etc/os-release; echo ${NAME:-Ubuntu} ) 2>/dev/null || echo Ubuntu`
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 GRUB_CMDLINE_LINUX=""
