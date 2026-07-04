@@ -28,6 +28,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/ssh/sshd_config.d/99-keyonly-port.conf" | sha256sum }}
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd-sleep/displays-resume.tmpl" | sha256sum }}
+# hash: {{ include "system/modprobe.d/nvidia-s0ix.conf" | sha256sum }}
 # hash: {{ include "system/systemd/logind.conf.d/ignore-lid-switch.conf" | sha256sum }}
 # hash: {{ include "system/systemd/ollama.service" | sha256sum }}
 # hash: {{ include "system/systemd/ollama.service.d/override.conf" | sha256sum }}
@@ -81,6 +82,19 @@ if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
   sudo systemctl disable --now autorandr-lid-listener.service 2>/dev/null || true
   if dpkg-query -W -f='${Status}' autorandr 2>/dev/null | grep -q 'install ok installed'; then
     sudo apt-get remove -y --purge autorandr
+  fi
+  # NVIDIA + s2idle: without S0ix power management, VRAM restore is broken on
+  # wake and sway cannot light up any output (see the conf file for details).
+  # The nvidia modules are baked into the initramfs, so a rebuild is needed
+  # for the option to take effect at boot.
+  if [[ -d /etc/modprobe.d && -d /proc/driver/nvidia ]]; then
+    if ! cmp -s "$SOURCE/modprobe.d/nvidia-s0ix.conf" /etc/modprobe.d/nvidia-s0ix.conf; then
+      deploy_file "$SOURCE/modprobe.d/nvidia-s0ix.conf" /etc/modprobe.d/nvidia-s0ix.conf
+      if command -v update-initramfs >/dev/null 2>&1; then
+        sudo update-initramfs -u
+      fi
+      echo "NVIDIA S0ix power management enabled; reboot for suspend/resume fix"
+    fi
   fi
 fi
 
