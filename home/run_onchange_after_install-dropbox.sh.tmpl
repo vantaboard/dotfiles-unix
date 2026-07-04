@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: dropbox-v3
+# hash: dropbox-v4
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping dropbox install"
@@ -25,7 +25,10 @@ fi
 
 ensure_dropbox_deps() {
   export DEBIAN_FRONTEND=noninteractive
-  sudo apt install -y -qq --no-install-recommends libappindicator3-1 python3-gi python3-gpg
+  # libayatana-appindicator3-1 (not libappindicator3-1): the two conflict, and
+  # Sunshine's .deb depends on the ayatana variant. Installing the legacy one
+  # makes apt remove Sunshine.
+  sudo apt install -y -qq --no-install-recommends libayatana-appindicator3-1 python3-gi python3-gpg
 }
 
 fix_dropbox_python() {
