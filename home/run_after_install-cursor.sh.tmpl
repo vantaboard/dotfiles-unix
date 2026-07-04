@@ -8,7 +8,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: cursor-dev-appimage-v2
+# hash: cursor-dev-appimage-v3
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Cursor AppImage install"
@@ -75,6 +75,23 @@ EOF
   chmod +x "$LOCAL_BIN/cursor"
 }
 
+register_url_handler() {
+  local handler="$HOME_DIR/.local/share/applications/cursor-url-handler.desktop"
+
+  if [[ ! -f "$handler" ]]; then
+    echo "WARN: $handler missing; skipping cursor:// handler registration"
+    return 0
+  fi
+
+  if ! command -v xdg-mime >/dev/null 2>&1; then
+    echo "WARN: xdg-mime not found; install xdg-utils to register cursor:// handler"
+    return 0
+  fi
+
+  xdg-mime default cursor-url-handler.desktop x-scheme-handler/cursor
+  echo "Registered cursor:// URL handler -> $LOCAL_BIN/cursor --open-url"
+}
+
 extract_appimage() {
   local tmp_extract
 
@@ -107,6 +124,7 @@ if appimage_current; then
     extract_appimage
   fi
   link_cursor
+  register_url_handler
   exit 0
 fi
 
@@ -123,6 +141,7 @@ printf '%s\n' "$target_version" > "$VERSION_FILE"
 echo "Extracting Cursor AppImage to $EXTRACT_DIR..."
 extract_appimage
 link_cursor
+register_url_handler
 
 echo "Cursor ${UPDATE_CHANNEL} ${target_version} installed; cursor -> $EXTRACT_DIR/AppRun"
 {{- end -}}

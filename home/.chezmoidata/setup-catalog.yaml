@@ -390,7 +390,7 @@ setup_catalog:
       label: Cursor
       default: true
       packages: [jq]
-      description: Linux installs the dev/Nightly AppImage from Cursor's update API into ~/.local/opt/cursor-dev; cursor is linked in ~/.local/bin
+      description: Linux installs the dev/Nightly AppImage from Cursor's update API into ~/.local/opt/cursor-dev; cursor is linked in ~/.local/bin and cursor:// OAuth callbacks are registered via cursor-url-handler.desktop
       config_paths: [dot_config/Cursor, dot_config/cursor]
     gh_cli:
       category: dev
