@@ -9,9 +9,17 @@ HOME_DIR="{{ .chezmoi.homeDir }}"
 case "${1}/${2}" in
   post/*)
     uid="$(id -u "$USER_NAME")"
-    runuser -u "$USER_NAME" -- \
-      env "XDG_RUNTIME_DIR=/run/user/${uid}" "HOME=${HOME_DIR}" \
-      "${HOME_DIR}/.local/bin/displays-resume"
+    # Anything forked from this hook (even nohup'd) stays in the
+    # systemd-suspend.service cgroup and is killed ~1s after wake when the
+    # unit deactivates. Launch a transient unit instead so the recovery
+    # script survives long enough to actually fix the outputs.
+    # || true: a unit from a previous wake may still be running (name clash);
+    # the script's flock dedupes anyway and the hook must not fail the cycle.
+    systemd-run --collect --unit="displays-resume-wake" \
+      --uid="$uid" \
+      --setenv="XDG_RUNTIME_DIR=/run/user/${uid}" \
+      --setenv="HOME=${HOME_DIR}" \
+      "${HOME_DIR}/.local/bin/displays-resume" --foreground || true
     ;;
 esac
 

@@ -6,9 +6,10 @@
 # docked-home profile, and postswitch runs — HUP alone does not. After DRM is
 # ready we simulate that: stop kanshi, cycle dock outputs, restart kanshi.
 #
-# Invoked from /usr/lib/systemd/system-sleep/displays-resume on post wake.
-# Re-exec in the background so the sleep hook returns immediately while we
-# wait for DRM to settle.
+# Invoked from /usr/lib/systemd/system-sleep/displays-resume on post wake via
+# a systemd-run transient unit (--foreground). A plain background fork from
+# the sleep hook would die when systemd-suspend.service's cgroup is cleaned
+# up ~1s after wake. Without --foreground (manual runs) we self-background.
 set -uo pipefail
 
 : "${HOME:=$(getent passwd "$(id -un)" | cut -d: -f6)}"
