@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: nvim-tools-v8
+# hash: nvim-tools-v9
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Neovim tool installs"
@@ -287,6 +287,19 @@ install_go_tools() {
   done
 }
 
+{{ if index $f "unreal" -}}
+{{- $engine := $p.unreal_engine_path | default "" -}}
+install_unreal_gdb_init() {
+  local script="{{ $engine }}/Engine/Build/BatchFiles/Linux/GenerateGDBInit.sh"
+  if [[ ! -x "$script" ]]; then
+    echo "WARN: UE GenerateGDBInit.sh not found at $script"
+    return 0
+  fi
+  echo "Generating UE GDB pretty-printers..."
+  bash "$script"
+}
+
+{{ end -}}
 if ! command -v curl >/dev/null 2>&1; then
   echo "WARN: curl not found; skipping Neovim tool installs"
   exit 0
@@ -303,6 +316,9 @@ install_netcoredbg
 install_cpptools_adapter
 install_jsonc_parser
 install_go_tools
+{{ if index $f "unreal" -}}
+install_unreal_gdb_init
+{{ end -}}
 
 echo "Neovim tool install complete"
 {{- end -}}
