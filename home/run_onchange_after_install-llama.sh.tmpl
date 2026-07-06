@@ -64,8 +64,8 @@ install_llama_cpp() {
   local backend="$1"
   local tmp archive url extract_dir
 
-  tmp="$(mktemp -d "${CACHE_DIR}/llama-cpp.XXXXXX")"
   mkdir -p "$CACHE_DIR"
+  tmp="$(mktemp -d "${CACHE_DIR}/llama-cpp.XXXXXX")"
 
   case "$backend" in
     cuda)
@@ -126,8 +126,8 @@ install_llama_swap() {
     return 1
   fi
 
-  tmp="$(mktemp -d "${CACHE_DIR}/llama-swap.XXXXXX")"
   mkdir -p "$CACHE_DIR"
+  tmp="$(mktemp -d "${CACHE_DIR}/llama-swap.XXXXXX")"
 
   echo "Installing llama-swap ${LLAMA_SWAP_VERSION} (${ARCH})..."
   curl -fsSL "$url" -o "${CACHE_DIR}/${archive}"
