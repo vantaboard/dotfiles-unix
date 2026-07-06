@@ -640,6 +640,18 @@ install_swayfx() {
       "$LOCAL_BIN/swayfx" --version 2>/dev/null | grep -qi swayfx
   }
 
+  # sway-session sets WLR_RENDERER=vulkan (NVIDIA GLES2/GBM corrupts buffers
+  # and breaks multi-GPU output enable), so wlroots must be built with the
+  # Vulkan renderer — without it wlroots silently falls back to GLES2.
+  swayfx_has_vulkan() {
+    local lib
+    for lib in "$LOCAL_PREFIX"/lib/x86_64-linux-gnu/libwlroots-*.so "$LOCAL_PREFIX"/lib/libwlroots-*.so; do
+      [[ -e "$lib" ]] || continue
+      ldd "$lib" 2>/dev/null | grep -qi libvulkan && return 0
+    done
+    return 1
+  }
+
   swayfx_hide_cursor_patched() {
     [[ -f "$SWAYFX_DIR/sway/input/cursor.c" ]] || return 1
     ! grep -q 'wlr_seat_pointer_notify_clear_focus(cursor->seat->wlr_seat)' \
@@ -745,6 +757,7 @@ install_swayfx() {
     libxcb-render-util0-dev libxcb-ewmh-dev libxcb-icccm4-dev
     libliftoff-dev libdisplay-info-dev liblcms2-dev libpixman-1-dev
     libgles2-mesa-dev libudev-dev libevdev-dev libmtdev-dev libwacom-dev
+    libvulkan-dev glslang-tools
   )
   local dep missing=()
   if command -v dpkg >/dev/null 2>&1; then
@@ -782,8 +795,8 @@ install_swayfx() {
 
   apply_swayfx_hide_cursor_patch || true
 
-  if swayfx_usable && swayfx_hide_cursor_patched; then
-    echo "swayfx already installed (hide-cursor keep-active)"
+  if swayfx_usable && swayfx_hide_cursor_patched && swayfx_has_vulkan; then
+    echo "swayfx already installed (hide-cursor keep-active, vulkan renderer)"
     return 0
   fi
 
@@ -813,6 +826,7 @@ install_swayfx() {
       --prefix="$LOCAL_PREFIX" \
       --buildtype=release \
       -Dwerror=false \
+      -Dwlroots:renderers=gles2,vulkan \
       --reconfigure 2>/dev/null; then
       echo "Reconfigure failed; wiping build dir and starting fresh..."
       rm -rf "$SWAYFX_DIR/build"
@@ -822,7 +836,8 @@ install_swayfx() {
     meson setup "$SWAYFX_DIR/build" "$SWAYFX_DIR" \
       --prefix="$LOCAL_PREFIX" \
       --buildtype=release \
-      -Dwerror=false
+      -Dwerror=false \
+      -Dwlroots:renderers=gles2,vulkan
   fi
   ninja -C "$SWAYFX_DIR/build"
   ninja -C "$SWAYFX_DIR/build" install
@@ -833,7 +848,11 @@ install_swayfx() {
   fi
 
   if swayfx_usable; then
-    echo "swayfx ready ($LOCAL_BIN/swayfx)"
+    if swayfx_has_vulkan; then
+      echo "swayfx ready ($LOCAL_BIN/swayfx, vulkan renderer)"
+    else
+      echo "WARN: swayfx built without vulkan renderer; NVIDIA GLES2 fallback is broken"
+    fi
   else
     echo "WARN: swayfx install failed"
     return 0

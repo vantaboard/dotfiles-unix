@@ -87,6 +87,18 @@ check "sway config syntax" bash -c '
     fi
 '
 check "swayfx installed (blur/shadows)" test -x "$HOME/.local/bin/swayfx"
+# WLR_RENDERER=vulkan is required on NVIDIA (GLES2/GBM corrupts buffers and
+# breaks enabling outputs on the secondary GPU); without vulkan compiled in,
+# wlroots silently falls back to GLES2.
+wlroots_has_vulkan() {
+    local lib
+    for lib in "$HOME"/.local/lib/x86_64-linux-gnu/libwlroots-*.so "$HOME"/.local/lib/libwlroots-*.so; do
+        [[ -e "$lib" ]] || continue
+        ldd "$lib" 2>/dev/null | grep -qi libvulkan && return 0
+    done
+    return 1
+}
+check "wlroots built with vulkan renderer" wlroots_has_vulkan
 check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
 
 if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
