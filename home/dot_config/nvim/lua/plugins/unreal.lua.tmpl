@@ -31,5 +31,8 @@ vim.keymap.set("n", "<leader>ub", commands.build, { desc = "UnrealEngine: Build"
 vim.keymap.set("n", "<leader>ur", commands.rebuild, { desc = "UnrealEngine: Rebuild" })
 vim.keymap.set("n", "<leader>uc", commands.clean, { desc = "UnrealEngine: Clean" })
 vim.keymap.set("n", "<leader>uo", commands.open, { desc = "UnrealEngine: Open Editor" })
-vim.keymap.set("n", "<leader>ue", commands.build_engine, { desc = "UnrealEngine: Build Engine Plugin" })
+-- Prebuilt engine installs ship Build.sh, so build_engine() mis-detects them as
+-- source trees and tries to rebuild UnrealEditor (fails on frozen UE5Rules.dll).
+-- RunUAT BuildPlugin works for both binary and source installs.
+vim.keymap.set("n", "<leader>ue", commands.build_plugin, { desc = "UnrealEngine: Build Engine Plugin" })
 {{- end -}}
