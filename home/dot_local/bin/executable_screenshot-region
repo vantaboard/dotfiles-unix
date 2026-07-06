@@ -6,6 +6,7 @@ export PATH="$HOME/.local/bin:/usr/bin:/bin${PATH:+:$PATH}"
 grim_bin="$(command -v grim || true)"
 slurp_bin="$(command -v slurp || true)"
 swappy_bin="${HOME:?}/.local/bin/swappy"
+hyprpicker_bin="$(command -v hyprpicker || true)"
 
 if [[ -z "$grim_bin" ]]; then
     echo "screenshot-region: grim is required" >&2
@@ -19,6 +20,25 @@ if [[ ! -x "$swappy_bin" ]]; then
     echo "screenshot-region: swappy is required ($swappy_bin)" >&2
     exit 1
 fi
+if [[ -z "$hyprpicker_bin" ]]; then
+    echo "screenshot-region: hyprpicker is required to freeze the screen during selection" >&2
+    exit 1
+fi
+
+freeze_pid=""
+kill_freeze() {
+    if [[ -n "$freeze_pid" ]] && kill -0 "$freeze_pid" 2>/dev/null; then
+        kill "$freeze_pid" 2>/dev/null || true
+        wait "$freeze_pid" 2>/dev/null || true
+    fi
+    freeze_pid=""
+}
+
+# Freeze the screen so dropdowns, tooltips, and motion don't disappear before capture.
+"$hyprpicker_bin" -rz &
+freeze_pid=$!
+sleep 0.2
+trap kill_freeze EXIT
 
 geom="$("$slurp_bin")" || exit 0
 "$grim_bin" -g "$geom" - | "$swappy_bin" -f -
