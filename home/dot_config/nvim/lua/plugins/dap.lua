@@ -57,6 +57,33 @@ dap.adapters.cppdbg = {
     command = os.getenv("HOME") .. "/.local/share/vscode-cpptools/extension/debugAdapters/bin/OpenDebugAD7",
 }
 
+local unreal_gdb_setup = {
+    {
+        description = "enable pretty printing",
+        text = "-enable-pretty-printing",
+        ignoreFailures = true,
+    },
+    {
+        description = "load UE gdbinit",
+        text = "source " .. (os.getenv("HOME") or "~") .. "/.gdbinit",
+        ignoreFailures = true,
+    },
+}
+
+local function unreal_editor_binary()
+    local engine = vim.g.unreal_engine_path or vim.env.UE_ROOT
+    if not engine or engine == "" then
+        engine = vim.fn.input("Unreal Engine path: ", "", "path")
+        if engine ~= "" then
+            vim.g.unreal_engine_path = engine
+        end
+    end
+    if not engine or engine == "" then
+        return nil
+    end
+    return vim.fs.joinpath(engine, "Engine/Binaries/Linux/UnrealEditor")
+end
+
 dap.configurations.python = {}
 
 dap.configurations.cpp = {
@@ -83,6 +110,36 @@ dap.configurations.cpp = {
                 ignoreFailures = false,
             },
         },
+    },
+    {
+        name = "Launch UnrealEditor (project)",
+        type = "cppdbg",
+        request = "launch",
+        program = unreal_editor_binary,
+        args = function()
+            if vim.g.unreal_uproject and vim.g.unreal_uproject ~= "" then
+                return { vim.g.unreal_uproject }
+            end
+            local path = vim.fn.input("Path to .uproject: ", vim.fn.getcwd(), "file")
+            if path ~= "" then
+                vim.g.unreal_uproject = path
+            end
+            return { path }
+        end,
+        cwd = "${workspaceFolder}",
+        stopOnEntry = false,
+        MIMode = "gdb",
+        miDebuggerPath = "/usr/bin/gdb",
+        setupCommands = unreal_gdb_setup,
+    },
+    {
+        name = "Attach to UnrealEditor",
+        type = "cppdbg",
+        request = "attach",
+        processId = require("dap.utils").pick_process,
+        MIMode = "gdb",
+        miDebuggerPath = "/usr/bin/gdb",
+        setupCommands = unreal_gdb_setup,
     },
 }
 
