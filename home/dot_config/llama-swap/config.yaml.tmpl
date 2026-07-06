@@ -1,7 +1,7 @@
 # llama-swap: OpenAI-compatible proxy for local llama-server instances.
 # Model aliases "coder" and "chat" are referenced by Minuet and Avante.
-{{- $home := .chezmoi.homeDir -}}
-{{- $models := printf "%s/.local/share/llama.cpp/models" $home -}}
+{{ $home := .chezmoi.homeDir }}
+{{ $models := printf "%s/.local/share/llama.cpp/models" $home }}
 
 models:
   coder:
