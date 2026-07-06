@@ -1,0 +1,56 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "unreal" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+ENGINE="${1:-{{ $p.unreal_engine_path | default "" }}}"
+if [[ -z "$ENGINE" || ! -d "$ENGINE" ]]; then
+  echo "Usage: install-unreal-neovim-plugin [engine_path]" >&2
+  exit 1
+fi
+
+NVIM_PACK="${NVIM_PACK:-{{ .chezmoi.homeDir }}/.local/share/nvim/site/pack/core/opt/UnrealEngine.nvim}"
+PLUGIN_SRC="$NVIM_PACK/Plugins/NeovimSourceCodeAccess/NeovimSourceCodeAccess.uplugin"
+UAT="$ENGINE/Engine/Build/BatchFiles/RunUAT.sh"
+BUILD_DIR="{{ .chezmoi.homeDir }}/.local/share/nvim/data/unrealengine/NeovimSourceCodeAccess"
+INSTALL_DIR="$ENGINE/Engine/Plugins/Developer/NeovimSourceCodeAccess"
+
+if [[ ! -f "$PLUGIN_SRC" ]]; then
+  echo "UnrealEngine.nvim not installed; open Neovim once to fetch plugins" >&2
+  exit 1
+fi
+
+if [[ ! -x "$UAT" ]]; then
+  echo "RunUAT.sh not found at $UAT" >&2
+  exit 1
+fi
+
+echo "Building NeovimSourceCodeAccess via RunUAT BuildPlugin..."
+bash "$UAT" BuildPlugin \
+  -Plugin="$PLUGIN_SRC" \
+  -Package="$BUILD_DIR"
+
+echo "Installing plugin into engine tree (copy, not symlink)..."
+rm -rf "$INSTALL_DIR"
+cp -a "$BUILD_DIR" "$INSTALL_DIR"
+
+python3 - <<'PY'
+import json
+from pathlib import Path
+import sys
+
+uplugin = Path(sys.argv[1])
+data = json.loads(uplugin.read_text())
+data["EnabledByDefault"] = True
+uplugin.write_text(json.dumps(data, indent=2) + "\n")
+print(f"Patched {uplugin} (EnabledByDefault=true)")
+PY "$INSTALL_DIR/NeovimSourceCodeAccess.uplugin"
+
+echo "Done. Restart Unreal Editor, then set Source Code Editor to Neovim."
+{{- end -}}
+{{ end -}}

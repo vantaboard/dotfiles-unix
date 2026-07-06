@@ -53,13 +53,21 @@ local function open_editor()
   vim.fn.jobstart(cmd, { detach = true, env = env })
 end
 
+local function install_engine_plugin()
+  local script = vim.fn.expand("~/.local/bin/install-unreal-neovim-plugin")
+  if vim.fn.executable(script) ~= 1 then
+    vim.notify("install-unreal-neovim-plugin not found; run chezmoi apply", vim.log.levels.ERROR)
+    return
+  end
+  vim.cmd("botright split")
+  vim.fn.termopen({ script, engine_path }, { cwd = engine_path })
+end
+
 vim.keymap.set("n", "<leader>ug", commands.generate_lsp, { desc = "UnrealEngine: Generate LSP" })
 vim.keymap.set("n", "<leader>ub", commands.build, { desc = "UnrealEngine: Build" })
 vim.keymap.set("n", "<leader>ur", commands.rebuild, { desc = "UnrealEngine: Rebuild" })
 vim.keymap.set("n", "<leader>uc", commands.clean, { desc = "UnrealEngine: Clean" })
 vim.keymap.set("n", "<leader>uo", open_editor, { desc = "UnrealEngine: Open Editor" })
--- Prebuilt engine installs ship Build.sh, so build_engine() mis-detects them as
--- source trees and tries to rebuild UnrealEditor (fails on frozen UE5Rules.dll).
--- RunUAT BuildPlugin works for both binary and source installs.
-vim.keymap.set("n", "<leader>ue", commands.build_plugin, { desc = "UnrealEngine: Build Engine Plugin" })
+-- build_plugin symlinks outside the engine tree; UE 5.8 skips the plugin on scan.
+vim.keymap.set("n", "<leader>ue", install_engine_plugin, { desc = "UnrealEngine: Build Engine Plugin" })
 {{- end -}}

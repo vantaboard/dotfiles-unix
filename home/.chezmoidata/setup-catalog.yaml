@@ -417,7 +417,7 @@ setup_catalog:
     unreal:
       category: dev
       label: Unreal Engine Neovim support
-      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers for UE debugging. Launches UE with SDL_VIDEODRIVER=x11 for Sway/XWayland stability (Vulkan RHI is required on Linux).
+      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers for UE debugging. Installs NeovimSourceCodeAccess into the engine via install-unreal-neovim-plugin (RunUAT BuildPlugin + copy into Engine/Plugins).
       default: false
       requires: [neovim, clang]
       packages: [clangd]
