@@ -9,11 +9,7 @@ require("auto-save").setup({
     enabled = true,
     execution_message = {
         message = function()
-            if vim.bo.filetype == "cpp" then
-                cmake:start()
-            end
-
-            return ("AutoSave: saved at " .. vim.fn.strftime("%H:%M:%S"))
+            return ""
         end,
         dim = 0.18,
         cleaning_interval = 0,
@@ -38,6 +34,10 @@ require("auto-save").setup({
         disabling = nil,
         before_asserting_save = nil,
         before_saving = nil,
-        after_saving = nil,
+        after_saving = function()
+            if vim.bo.filetype == "cpp" then
+                cmake:start()
+            end
+        end,
     },
 })
