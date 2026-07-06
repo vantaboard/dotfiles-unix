@@ -414,6 +414,14 @@ setup_catalog:
       default: true
       packages: [clang]
       zshrc_block: clang_exports
+    unreal:
+      category: dev
+      label: Unreal Engine Neovim support
+      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers for UE debugging
+      default: false
+      requires: [neovim, clang]
+      packages: [clangd]
+      config_paths: [dot_config/nvim/lua/plugins/unreal.lua]
     ffmpeg:
       category: dev
       label: ffmpeg

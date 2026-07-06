@@ -54,6 +54,7 @@ profile_example:
     thermald: true
     tmux: true
     trash_cli: true
+    unreal: false
     wl_clipboard: true
     zoxide: true
     zsh: true
