@@ -20,32 +20,50 @@ if [[ -f "$unreal_env" ]]; then
 fi
 
 # Expose both GPUs so dock hotplug works live without restarting the session.
-# The external displays are wired to card2 (NVIDIA); the laptop panel to card1
-# (Intel). NVIDIA is listed first (primary renderer): wlroots' Intel-render/
+# The external displays are wired to the NVIDIA dGPU; the laptop panel to the
+# Intel iGPU. NVIDIA is listed first (primary renderer): wlroots' Intel-render/
 # NVIDIA-scanout path is unstable, whereas NVIDIA-render/Intel-scanout works.
 #
+# DRM card numbers are NOT stable across boots (nvidia-drm and i915 race at
+# boot, so either can grab card1). Resolve nodes by driver name instead of
+# hardcoding cardN.
+find_card_by_driver() {
+  local driver="$1" card node
+  for card in /sys/class/drm/card[0-9]*; do
+    [[ -e "$card/device/driver" ]] || continue
+    [[ "$(basename "$(readlink -f "$card/device/driver")")" == "$driver" ]] || continue
+    node="/dev/dri/$(basename "$card")"
+    [[ -e "$node" ]] && { echo "$node"; return 0; }
+  done
+  return 1
+}
+
 # nvidia-drm often appears several seconds after GDM starts the session. Wait
-# for card2 at early boot rather than falling back to Intel-only too eagerly.
-if [[ ! -e /dev/dri/card2 && -d /sys/module/nvidia ]]; then
+# for the NVIDIA node at early boot rather than falling back to Intel-only too
+# eagerly.
+nvidia_card="$(find_card_by_driver nvidia || true)"
+if [[ -z "$nvidia_card" && -d /sys/module/nvidia ]]; then
   read -r uptime _ </proc/uptime
   if awk "BEGIN { exit !($uptime < 120) }"; then
     for _ in $(seq 1 30); do
-      [[ -e /dev/dri/card2 ]] && break
+      nvidia_card="$(find_card_by_driver nvidia || true)"
+      [[ -n "$nvidia_card" ]] && break
       sleep 1
     done
   fi
 fi
+intel_card="$(find_card_by_driver i915 || true)"
 
-if [[ -e /dev/dri/card2 ]]; then
-  export WLR_DRM_DEVICES=/dev/dri/card2:/dev/dri/card1
+if [[ -n "$nvidia_card" ]]; then
+  export WLR_DRM_DEVICES="${nvidia_card}${intel_card:+:${intel_card}}"
   # wlroots' GLES2 path on the proprietary NVIDIA driver corrupts buffers
   # session-wide (heavy apps like Cursor trigger it), and the pixman software
   # renderer fixes it but is too slow. The Vulkan renderer is GPU-accelerated
   # and avoids the broken GLES2/GBM path.
   export WLR_RENDERER=vulkan
-elif [[ -e /dev/dri/card1 ]]; then
+elif [[ -n "$intel_card" ]]; then
   # NVIDIA unavailable (driver failure): laptop panel only, Intel GLES2.
-  export WLR_DRM_DEVICES=/dev/dri/card1
+  export WLR_DRM_DEVICES="$intel_card"
 fi
 
 SWAYFX_BIN="${HOME}/.local/bin/swayfx"

@@ -47,12 +47,24 @@ if [[ -f /etc/gdm3/custom.conf ]]; then
 else
     echo "INFO: /etc/gdm3/custom.conf not found; skipping GDM Wayland checks"
 fi
-check "Intel DRM device exists" test -e /dev/dri/card1
-check "NVIDIA DRM device exists" test -e /dev/dri/card2
-check "sway-session exposes both GPUs" \
-    grep -qF 'export WLR_DRM_DEVICES=/dev/dri/card2:/dev/dri/card1' /usr/local/bin/sway-session
+# Card numbers are not stable across boots; resolve nodes by driver name.
+find_card_by_driver() {
+    local driver="$1" card node
+    for card in /sys/class/drm/card[0-9]*; do
+        [[ -e "$card/device/driver" ]] || continue
+        [[ "$(basename "$(readlink -f "$card/device/driver")")" == "$driver" ]] || continue
+        node="/dev/dri/$(basename "$card")"
+        [[ -e "$node" ]] && { echo "$node"; return 0; }
+    done
+    return 1
+}
+has_card_with_driver() { find_card_by_driver "$1" >/dev/null; }
+check "Intel DRM device exists" has_card_with_driver i915
+check "NVIDIA DRM device exists" has_card_with_driver nvidia
+check "sway-session resolves GPUs by driver" \
+    grep -qF 'find_card_by_driver' /usr/local/bin/sway-session
 check "sway-session falls back to Intel without NVIDIA" \
-    grep -qF 'export WLR_DRM_DEVICES=/dev/dri/card1' /usr/local/bin/sway-session
+    grep -qF 'export WLR_DRM_DEVICES="$intel_card"' /usr/local/bin/sway-session
 if [[ -f "$HOME/.config/kanshi/config" ]]; then
     check "kanshi config syntax" bash -c '
         timeout 0.5 kanshi -c "$HOME/.config/kanshi/config" &
@@ -79,16 +91,22 @@ check "kanshi config syntax" grep -q '^profile ' "$HOME/.config/kanshi/config"
 
 if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
     check "active session is wayland" test "$XDG_SESSION_TYPE" = "wayland"
-    check "WLR_DRM_DEVICES exposes both GPUs" bash -c '
+    wlr_drm_devices_match() {
+        local pid val expected nvidia_card intel_card
         pid="$(pgrep -x swayfx | head -1)"
         [[ -z "$pid" ]] && pid="$(pgrep -x sway | head -1)"
+        [[ -n "$pid" ]] || return 1
         val="$(tr "\0" "\n" < "/proc/$pid/environ" | sed -n "s/^WLR_DRM_DEVICES=//p")"
-        if [[ -e /dev/dri/card2 ]]; then
-            [[ "$val" == "/dev/dri/card2:/dev/dri/card1" ]]
+        nvidia_card="$(find_card_by_driver nvidia || true)"
+        intel_card="$(find_card_by_driver i915 || true)"
+        if [[ -n "$nvidia_card" ]]; then
+            expected="${nvidia_card}${intel_card:+:${intel_card}}"
         else
-            [[ "$val" == "/dev/dri/card1" ]]
+            expected="$intel_card"
         fi
-    '
+        [[ "$val" == "$expected" ]]
+    }
+    check "WLR_DRM_DEVICES exposes both GPUs" wlr_drm_devices_match
     check "sway IPC responds" swaymsg -t get_version
     check "kanshi running" pgrep -x kanshi
     active_outputs="$(swaymsg -t get_outputs | jq '[.[] | select(.active)] | length')"

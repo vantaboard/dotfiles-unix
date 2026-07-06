@@ -48,9 +48,11 @@ swaymsg_cmd() {
     timeout 8 swaymsg "$@" 2>/dev/null
 }
 
+# Card numbers are not stable across boots (nvidia-drm/i915 probe race), so
+# glob every card's connectors rather than assuming the dock GPU is card2.
 docked_drm_ports_connected() {
     local count=0 port
-    for port in /sys/class/drm/card2-DP-*/status; do
+    for port in /sys/class/drm/card*-DP-*/status; do
         [[ -e "$port" ]] || continue
         [[ "$(cat "$port" 2>/dev/null)" == "connected" ]] && ((count++)) || true
     done
@@ -92,9 +94,12 @@ wait_for_drm() {
             [[ "$count" -ge 3 ]] && { log "DRM ready: ${count} DP ports connected"; return 0; }
             (( attempt % 15 == 0 )) && log "waiting for DRM (${count}/3 DP connected, ${attempt}s)"
         else
-            [[ -e /sys/class/drm/card1-eDP-1/status ]] \
-                && [[ "$(cat /sys/class/drm/card1-eDP-1/status 2>/dev/null)" == "connected" ]] \
-                && { log "DRM ready: laptop panel connected"; return 0; }
+            local edp
+            for edp in /sys/class/drm/card*-eDP-*/status; do
+                [[ -e "$edp" ]] || continue
+                [[ "$(cat "$edp" 2>/dev/null)" == "connected" ]] \
+                    && { log "DRM ready: laptop panel connected"; return 0; }
+            done
             (( attempt % 15 == 0 )) && log "waiting for laptop panel DRM (${attempt}s)"
         fi
         sleep 1

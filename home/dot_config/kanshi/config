@@ -1,5 +1,5 @@
-# Docked: three externals on NVIDIA (card2), laptop panel off. sway-session
-# exposes both GPUs (card2:card1) so dock hotplug re-matches profiles live —
+# Docked: three externals on the NVIDIA dGPU, laptop panel off. sway-session
+# exposes both GPUs (resolved by driver name) so dock hotplug re-matches profiles live —
 # no session restart needed. eDP-1 stays connected while docked, and kanshi
 # only matches a profile that lists every connected output, so the docked
 # profile must include eDP-1 explicitly.
