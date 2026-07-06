@@ -277,6 +277,10 @@ vim.lsp.config('clangd', {
         "--background-index",
         "--suggest-missing-includes",
         "--clang-tidy",
+        "--header-insertion=never",
+        "--completion-style=detailed",
+        "--limit-results=500",
+        "--function-arg-placeholders=false",
     },
     filetypes = { "c", "cc", "cpp", "objc", "objcpp", "cuda" },
 })
@@ -359,4 +363,4 @@ vim.lsp.config('pkgbuild_language_server', {
     root_dir = util.root_pattern("PKGBUILD"),
 })
 
-vim.lsp.enable({"jdtls", "html", "eslint", "cssls", "lua_ls", "jsonls", "pylsp", "pyright", "ruff", "ts_ls"})
+vim.lsp.enable({"jdtls", "html", "eslint", "cssls", "lua_ls", "jsonls", "pylsp", "pyright", "ruff", "ts_ls", "clangd"})
