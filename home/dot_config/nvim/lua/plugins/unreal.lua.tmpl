@@ -17,8 +17,8 @@ local engine_path = {{ $engine | quote }}
 
 vim.g.unreal_engine_path = engine_path
 
--- Sway/Wayland + NVIDIA: native Vulkan swapchains segfault in libnvidia-glcore.
--- Epic recommends X11 via SDL; OpenGL RHI avoids VulkanRHI entirely on Linux.
+-- Sway/Wayland + NVIDIA: route the window through XWayland. Linux desktop RHI
+-- is Vulkan-only (OpenGL was removed in UE 4.26); -opengl is ignored with a warning.
 local launch_env = {
   SDL_VIDEODRIVER = "x11",
 }
@@ -36,7 +36,7 @@ local helpers = require("unrealengine.helpers")
 
 local function open_editor()
   local binary = vim.fs.joinpath(engine_path, "Engine/Binaries/Linux/UnrealEditor")
-  local cmd = { binary, "-opengl" }
+  local cmd = { binary }
   local uproject = helpers.get_uproject_path_info(nil)
   if uproject then
     table.insert(cmd, uproject.path)

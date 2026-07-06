@@ -126,7 +126,7 @@ dap.configurations.cpp = {
                     vim.g.unreal_uproject = uproject
                 end
             end
-            return { "-opengl", uproject }
+            return { uproject }
         end,
         cwd = "${workspaceFolder}",
         stopOnEntry = false,
