@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: neovim-v0.12.3
+# hash: neovim-v0.12.4
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Neovim tarball install"
@@ -24,7 +24,7 @@ if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
 fi
 
 HOME_DIR="{{ .chezmoi.homeDir }}"
-NEOVIM_VERSION="0.12.3"
+NEOVIM_VERSION="0.12.4"
 LOCAL_BIN="$HOME_DIR/.local/bin"
 CACHE_DIR="$HOME_DIR/.cache/neovim-install"
 
