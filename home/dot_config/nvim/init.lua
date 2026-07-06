@@ -330,6 +330,7 @@ require("plugins.dadbod")
 require("plugins.attempt")
 require("plugins.avante")
 require("plugins.minuet")
+require("ai_disable").setup()
 
 vim.o.exrc = true
 

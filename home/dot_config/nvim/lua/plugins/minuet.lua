@@ -1,5 +1,10 @@
 -- Minuet inline completions via llama-swap (llama-server FIM backend).
 require("minuet").setup({
+  enable_predicates = {
+    function()
+      return not require("ai_disable").is_disabled()
+    end,
+  },
   provider = "openai_fim_compatible",
   n_completions = 1,
   context_window = 4096,
