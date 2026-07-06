@@ -5,4 +5,4 @@ enabled_services:
   - earlyoom.service
   - thermald.service
   - docker.service
-  - ollama.service
+  - llama-swap.service

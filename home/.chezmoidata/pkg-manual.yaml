@@ -170,8 +170,9 @@ pkg_manual:
       status: ignore
       first_seen: "2026-06-14"
     ollama:
-      status: install
+      status: ignore
       first_seen: "2026-06-14"
+      note: "Replaced by llama.cpp + llama-swap (see llama feature)"
     openssl:
       status: ignore
       first_seen: "2026-06-14"

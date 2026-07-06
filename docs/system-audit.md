@@ -14,8 +14,8 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | GRUB defaults | `home/system/grub/default` | `/etc/default/grub` |
 | SSH pubkey-only config | `home/system/ssh/sshd_config.d/99-keyonly-port.conf` | `/etc/ssh/sshd_config.d/` |
 | SSH socket port override | `home/system/ssh/ssh.socket.d/port.conf` | `/etc/systemd/system/ssh.socket.d/` |
-| Ollama base unit (clean PATH) | `home/system/systemd/ollama.service` | `/etc/systemd/system/` |
-| Ollama GPU tuning | `home/system/systemd/ollama.service.d/override.conf` | `/etc/systemd/system/ollama.service.d/` |
+| llama-swap systemd unit | `home/system/systemd/llama-swap.service.tmpl` | `/etc/systemd/system/` |
+| llama-swap model config | `home/dot_config/llama-swap/config.yaml.tmpl` | `~/.config/llama-swap/config.yaml` |
 | keyd key remapping | `home/system/keyd/default.conf` | `/etc/keyd/default.conf` (Debian binary: `keyd.rvaiya`) |
 | libinput pointer overrides | `home/system/libinput/local-overrides.quirks.tmpl` | `/etc/libinput/local-overrides.quirks` (from `profile.input_devices.pointers`) |
 | Sway Wayland session | `home/system/wayland-sessions/sway.desktop` | `/usr/share/wayland-sessions/sway.desktop` |
@@ -41,7 +41,7 @@ These units are enabled automatically on `chezmoi apply` (when the unit file exi
 | `earlyoom.service` | OOM killer daemon |
 | `thermald.service` | Thermal management |
 | `docker.service` | Docker daemon |
-| `ollama.service` | Local LLM server |
+| `llama-swap.service` | Local LLM proxy (llama.cpp + model hot-swap) |
 | `displays-resume` (systemd-sleep) | Re-apply sway layout after suspend/hibernate |
 
 ---
@@ -83,7 +83,7 @@ Display layout is managed by **kanshi** (`~/.config/kanshi/config`) and the sway
 | Stale `/home/blackboardd` paths | Templatized or removed |
 | Stale `/home/brighten-tompkins` paths | Templatized with `{{ .chezmoi.homeDir }}` |
 | NvIM `.luarc.json` packer paths | Replaced with minimal templated library paths |
-| Ollama base unit bloated PATH | Replaced with clean unit using system PATH only |
+| Ollama base unit bloated PATH | Replaced by llama-swap running as user with pinned GGUF models |
 
 ---
 
@@ -91,7 +91,7 @@ Display layout is managed by **kanshi** (`~/.config/kanshi/config`) and the sway
 
 - [x] SSH hardening (port 9701)
 - [x] GRUB config
-- [x] Ollama override + clean base unit
+- [x] llama-swap systemd unit + llama.cpp binaries
 - [x] enabled-services.yaml (VPN units excluded)
 - [x] WireGuard — **not tracked** (manual setup doc)
 - [x] OpenVPN / Proton VPN — **not tracked** (manual setup doc)

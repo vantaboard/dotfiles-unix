@@ -38,7 +38,7 @@ profile_example:
     neovim: true
     ngrok: true
     oh_my_zsh: true
-    ollama: true
+    llama: true
     omz_codeclimate: false
     omz_extract: true
     omz_fzf: false
@@ -124,7 +124,7 @@ profile_example:
     - keyd.service
     - docker.service
     - earlyoom.service
-    - ollama.service
+    - llama-swap.service
     - thermald.service
   system_deploy:
     - keyd
@@ -132,7 +132,7 @@ profile_example:
     - libinput
     - sway_session
     - grub
-    - ollama
+    - llama
     - ssh
   secrets:
     git_gpg_key: ""

@@ -57,7 +57,7 @@ profile_termux_example:
     ssh_hardening: false
     grub: false
     displays_resume: false
-    ollama: false
+    llama: true
     sunshine: false
     earlyoom: false
     thermald: false

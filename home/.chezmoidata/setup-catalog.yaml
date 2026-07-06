@@ -449,13 +449,13 @@ setup_catalog:
       label: displays-resume sleep hook
       default: true
       system_deploy: displays_resume
-    ollama:
+    llama:
       category: system
-      label: Ollama LLM service
+      label: llama.cpp + llama-swap LLM service
       default: true
-      description: systemd unit + auto-pull of latest hardware-matched Gemma and Qwen models on chezmoi apply
-      system_deploy: ollama
-      systemd_unit: ollama.service
+      description: systemd unit + pinned Hugging Face GGUF downloads on chezmoi apply
+      system_deploy: llama
+      systemd_unit: llama-swap.service
     earlyoom:
       category: system
       label: earlyoom
