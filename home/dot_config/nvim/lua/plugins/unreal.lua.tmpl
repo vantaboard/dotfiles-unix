@@ -27,12 +27,58 @@ require("unrealengine").setup({
   engine_path = engine_path,
   build_type = "Development",
   with_editor = true,
-  auto_generate = true,
+  auto_generate = false,
   environment_variables = launch_env,
 })
 
 local commands = require("unrealengine.commands")
 local helpers = require("unrealengine.helpers")
+
+local function project_has_cpp(uproject)
+  local source = vim.fs.joinpath(uproject.cwd, "Source")
+  if vim.fn.isdirectory(source) ~= 1 then
+    return false
+  end
+  local targets = vim.fs.find(function(name)
+    return name:match("%.Target%.cs$")
+  end, { path = source, type = "file" })
+  return #targets > 0
+end
+
+local function require_cpp_project(action)
+  local uproject = helpers.get_uproject_path_info(nil)
+  if not uproject then
+    vim.notify("No .uproject found in cwd", vim.log.levels.ERROR)
+    return nil
+  end
+  if not project_has_cpp(uproject) then
+    vim.notify(
+      action
+        .. " needs C++ targets (Source/*.Target.cs). In UE: Tools → New C++ Class to add a module, then retry.",
+      vim.log.levels.WARN
+    )
+    return nil
+  end
+  return uproject
+end
+
+local function generate_lsp()
+  if require_cpp_project("LSP generation") then
+    commands.generate_lsp()
+  end
+end
+
+local function build()
+  if require_cpp_project("Build") then
+    commands.build()
+  end
+end
+
+local function rebuild()
+  if require_cpp_project("Rebuild") then
+    commands.rebuild()
+  end
+end
 
 local function open_editor()
   local binary = vim.fs.joinpath(engine_path, "Engine/Binaries/Linux/UnrealEditor")
@@ -63,9 +109,9 @@ local function install_engine_plugin()
   vim.fn.termopen({ script, engine_path }, { cwd = engine_path })
 end
 
-vim.keymap.set("n", "<leader>ug", commands.generate_lsp, { desc = "UnrealEngine: Generate LSP" })
-vim.keymap.set("n", "<leader>ub", commands.build, { desc = "UnrealEngine: Build" })
-vim.keymap.set("n", "<leader>ur", commands.rebuild, { desc = "UnrealEngine: Rebuild" })
+vim.keymap.set("n", "<leader>ug", generate_lsp, { desc = "UnrealEngine: Generate LSP" })
+vim.keymap.set("n", "<leader>ub", build, { desc = "UnrealEngine: Build" })
+vim.keymap.set("n", "<leader>ur", rebuild, { desc = "UnrealEngine: Rebuild" })
 vim.keymap.set("n", "<leader>uc", commands.clean, { desc = "UnrealEngine: Clean" })
 vim.keymap.set("n", "<leader>uo", open_editor, { desc = "UnrealEngine: Open Editor" })
 -- build_plugin symlinks outside the engine tree; UE 5.8 skips the plugin on scan.
