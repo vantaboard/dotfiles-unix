@@ -417,7 +417,7 @@ setup_catalog:
     unreal:
       category: dev
       label: Unreal Engine Neovim support
-      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers for UE debugging. Installs NeovimSourceCodeAccess into the engine via install-unreal-neovim-plugin (RunUAT BuildPlugin + copy into Engine/Plugins).
+      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers. Installs NeovimSourceCodeAccess as a project plugin (required for prebuilt UE; engine-level install breaks UBT).
       default: false
       requires: [neovim, clang]
       packages: [clangd]

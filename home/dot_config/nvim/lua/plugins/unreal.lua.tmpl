@@ -108,8 +108,13 @@ local function install_engine_plugin()
     vim.notify("install-unreal-neovim-plugin not found; run chezmoi apply", vim.log.levels.ERROR)
     return
   end
+  local uproject = helpers.get_uproject_path_info(nil)
+  if not uproject then
+    vim.notify("Open Neovim in a directory with a .uproject, then run <leader>ue", vim.log.levels.ERROR)
+    return
+  end
   vim.cmd("botright split")
-  vim.fn.termopen({ script, engine_path }, { cwd = engine_path })
+  vim.fn.termopen({ script, engine_path, uproject.path }, { cwd = uproject.cwd })
 end
 
 vim.keymap.set("n", "<leader>ug", generate_lsp, { desc = "UnrealEngine: Generate LSP" })

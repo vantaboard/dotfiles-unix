@@ -9,16 +9,29 @@
 set -euo pipefail
 
 ENGINE="${1:-{{ $p.unreal_engine_path | default "" }}}"
+UPROJECT="${2:-}"
+
 if [[ -z "$ENGINE" || ! -d "$ENGINE" ]]; then
-  echo "Usage: install-unreal-neovim-plugin [engine_path]" >&2
+  echo "Usage: install-unreal-neovim-plugin [engine_path] [project.uproject]" >&2
   exit 1
 fi
 
+if [[ -z "$UPROJECT" ]]; then
+  UPROJECT="$(find "$PWD" -maxdepth 1 -name '*.uproject' -print -quit)"
+fi
+
+if [[ -z "$UPROJECT" || ! -f "$UPROJECT" ]]; then
+  echo "No .uproject in cwd; pass path: install-unreal-neovim-plugin [engine] /path/to/Game.uproject" >&2
+  exit 1
+fi
+
+PROJECT_DIR="$(dirname "$(realpath "$UPROJECT")")"
 NVIM_PACK="${NVIM_PACK:-{{ .chezmoi.homeDir }}/.local/share/nvim/site/pack/core/opt/UnrealEngine.nvim}"
 PLUGIN_SRC="$NVIM_PACK/Plugins/NeovimSourceCodeAccess/NeovimSourceCodeAccess.uplugin"
 UAT="$ENGINE/Engine/Build/BatchFiles/RunUAT.sh"
 BUILD_DIR="{{ .chezmoi.homeDir }}/.local/share/nvim/data/unrealengine/NeovimSourceCodeAccess"
-INSTALL_DIR="$ENGINE/Engine/Plugins/Developer/NeovimSourceCodeAccess"
+INSTALL_DIR="$PROJECT_DIR/Plugins/NeovimSourceCodeAccess"
+ENGINE_PLUGIN="$ENGINE/Engine/Plugins/Developer/NeovimSourceCodeAccess"
 
 if [[ ! -f "$PLUGIN_SRC" ]]; then
   echo "UnrealEngine.nvim not installed; open Neovim once to fetch plugins" >&2
@@ -30,26 +43,41 @@ if [[ ! -x "$UAT" ]]; then
   exit 1
 fi
 
+# Prebuilt engines ship a frozen UE5Rules.dll; engine plugins break UBT for game targets.
+if [[ -e "$ENGINE_PLUGIN" ]]; then
+  echo "Removing engine-level NeovimSourceCodeAccess (incompatible with prebuilt UE)..."
+  rm -rf "$ENGINE_PLUGIN"
+fi
+
 echo "Building NeovimSourceCodeAccess via RunUAT BuildPlugin..."
 bash "$UAT" BuildPlugin \
   -Plugin="$PLUGIN_SRC" \
   -Package="$BUILD_DIR"
 
-echo "Installing plugin into engine tree (copy, not symlink)..."
+echo "Installing plugin into project Plugins/ (copy, not symlink)..."
 rm -rf "$INSTALL_DIR"
 cp -a "$BUILD_DIR" "$INSTALL_DIR"
 
-python3 - <<'PY'
+python3 - "$INSTALL_DIR/NeovimSourceCodeAccess.uplugin" "$UPROJECT" <<'PY'
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 uplugin = Path(sys.argv[1])
 data = json.loads(uplugin.read_text())
 data["EnabledByDefault"] = True
 uplugin.write_text(json.dumps(data, indent=2) + "\n")
 print(f"Patched {uplugin} (EnabledByDefault=true)")
-PY "$INSTALL_DIR/NeovimSourceCodeAccess.uplugin"
+
+uproject = Path(sys.argv[2])
+proj = json.loads(uproject.read_text())
+plugins = proj.get("Plugins", [])
+if not any(p.get("Name") == "NeovimSourceCodeAccess" for p in plugins):
+    plugins.append({"Name": "NeovimSourceCodeAccess", "Enabled": True})
+    proj["Plugins"] = plugins
+    uproject.write_text(json.dumps(proj, indent="\t") + "\n")
+    print(f"Registered NeovimSourceCodeAccess in {uproject}")
+PY
 
 LINUX_ENGINE_INI="$ENGINE/Engine/Config/Linux/LinuxEngine.ini"
 if [[ -f "$LINUX_ENGINE_INI" ]] && ! grep -q 'Slate.EnableTooltips=False' "$LINUX_ENGINE_INI"; then
@@ -59,7 +87,7 @@ if [[ -f "$LINUX_ENGINE_INI" ]] && ! grep -q 'Slate.EnableTooltips=False' "$LINU
 [SystemSettings]
 Slate.EnableTooltips=False
 EOF
-  echo "Patched $LINUX_ENGINE_INI (Slate.EnableTooltips=False)"
+  echo "Patched $LINUX_ENGINE_INI (Slate.EnableTooltips=False)" || true
 fi
 
 echo "Done. Restart Unreal Editor, then set Source Code Editor to Neovim."
