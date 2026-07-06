@@ -41,9 +41,9 @@ for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
 done
 
 # Default output for empty or unassigned workspaces. With 3 outputs: left 3/6/7,
-# middle 1/5, right 2/4/8. Otherwise map workspace i to screen i (capped).
+# middle 2/5/8, right 1/4. Otherwise map workspace i to screen i (capped).
 if [[ "${#MONITOR_ARRAY[@]}" -ge 3 ]]; then
-    WS_OUTPUT_SCREEN=(1 2 0 2 1 0 0 2)
+    WS_OUTPUT_SCREEN=(2 1 0 2 1 0 0 1)
 else
     WS_OUTPUT_SCREEN=()
     for i in {0..7}; do
