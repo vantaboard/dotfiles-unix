@@ -1,0 +1,309 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "neovim" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: nvim-tools-v8
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Neovim tool installs"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+LOCAL_BIN="$HOME_DIR/.local/bin"
+LOCAL_OPT="$HOME_DIR/.local/opt"
+CACHE_DIR="$HOME_DIR/.cache/nvim-tools-install"
+NVIM_VENV="$HOME_DIR/.local/share/nvim/venv"
+CPPTOOLS_ROOT="$HOME_DIR/.local/share/vscode-cpptools"
+CPPTOOLS_DIR="$CPPTOOLS_ROOT/extension"
+
+LLS_VERSION="3.18.2"
+NETCOREDBG_VERSION="3.2.0-1092"
+CPPTOOLS_VERSION="v1.32.2"
+
+mkdir -p "$LOCAL_BIN" "$LOCAL_OPT" "$CACHE_DIR"
+
+case "$(uname -m)" in
+  x86_64) ARCH="x64"; NETCOREDBG_ARCH="amd64"; CPPTOOLS_VSIX="cpptools-linux-x64.vsix" ;;
+  aarch64|arm64) ARCH="arm64"; NETCOREDBG_ARCH="arm64"; CPPTOOLS_VSIX="cpptools-linux-arm64.vsix" ;;
+  *)
+    echo "WARN: unsupported architecture $(uname -m); skipping Neovim tool installs"
+    exit 0
+    ;;
+esac
+
+link_bin() {
+  local src="$1"
+  local name="$2"
+  if [[ -x "$src" ]]; then
+    ln -sf "$src" "$LOCAL_BIN/$name"
+  fi
+}
+
+install_python_provider() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARN: python3 not found; skipping pynvim venv"
+    return 0
+  fi
+  if [[ -x "$NVIM_VENV/bin/python" ]] && "$NVIM_VENV/bin/python" -c 'import neovim' 2>/dev/null; then
+    echo "pynvim venv already configured"
+    return 0
+  fi
+  echo "Installing pynvim into $NVIM_VENV..."
+  python3 -m venv "$NVIM_VENV"
+  "$NVIM_VENV/bin/python" -m pip install --upgrade pip pynvim
+}
+
+install_node_provider() {
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "WARN: npm not found; skipping neovim node provider"
+    return 0
+  fi
+  if npm list -g neovim >/dev/null 2>&1; then
+    echo "neovim npm package already installed"
+    return 0
+  fi
+  echo "Installing neovim npm provider..."
+  npm install -g neovim
+}
+
+install_lua_language_server() {
+  if command -v lua-language-server >/dev/null 2>&1; then
+    echo "lua-language-server already installed"
+    return 0
+  fi
+  local tarball="lua-language-server-${LLS_VERSION}-linux-${ARCH}.tar.gz"
+  local url="https://github.com/LuaLS/lua-language-server/releases/download/${LLS_VERSION}/${tarball}"
+  local install_dir="$LOCAL_OPT/lua-language-server-${LLS_VERSION}-linux-${ARCH}"
+  local tmp
+  tmp="$(mktemp -d "${CACHE_DIR}/lls.XXXXXX")"
+  echo "Installing lua-language-server ${LLS_VERSION}..."
+  curl -fsSL "$url" -o "$tmp/$tarball"
+  rm -rf "$install_dir"
+  mkdir -p "$install_dir"
+  tar -xzf "$tmp/$tarball" -C "$install_dir"
+  rm -rf "$tmp"
+  link_bin "$install_dir/bin/lua-language-server" "lua-language-server"
+}
+
+install_pyright() {
+  if command -v pyright-langserver >/dev/null 2>&1 || command -v pyright >/dev/null 2>&1; then
+    echo "pyright already installed"
+    return 0
+  fi
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "WARN: npm not found; skipping pyright"
+    return 0
+  fi
+  echo "Installing pyright..."
+  npm install -g pyright
+}
+
+install_python_lsps() {
+  if command -v uv >/dev/null 2>&1; then
+    command -v ruff >/dev/null 2>&1 || uv tool install ruff
+    if ! command -v pylsp >/dev/null 2>&1; then
+      uv tool install 'python-lsp-server[all]'
+      uv tool install pylsp-mypy 2>/dev/null || true
+    fi
+    return 0
+  fi
+  if command -v pipx >/dev/null 2>&1; then
+    command -v ruff >/dev/null 2>&1 || pipx install ruff
+    command -v pylsp >/dev/null 2>&1 || pipx install 'python-lsp-server[all]'
+    return 0
+  fi
+  if command -v pip3 >/dev/null 2>&1; then
+    command -v ruff >/dev/null 2>&1 || pip3 install --user ruff
+    command -v pylsp >/dev/null 2>&1 || pip3 install --user 'python-lsp-server[all]' pylsp-mypy
+    return 0
+  fi
+  echo "WARN: uv/pipx/pip3 not found; skipping ruff and pylsp"
+}
+
+install_jsonc_parser() {
+  local parser="$HOME_DIR/.local/share/nvim/site/parser/jsonc.so"
+  if [[ -f "$parser" ]]; then
+    echo "jsonc tree-sitter parser already installed"
+    return 0
+  fi
+  if ! command -v tree-sitter >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1; then
+    echo "WARN: tree-sitter or git not found; skipping jsonc parser install"
+    return 0
+  fi
+  local tmp
+  tmp="$(mktemp -d "${CACHE_DIR}/jsonc.XXXXXX")"
+  echo "Installing jsonc tree-sitter parser..."
+  git clone --depth 1 https://github.com/sunilunnithan/tree-sitter-jsonc "$tmp/src"
+  mkdir -p "$(dirname "$parser")"
+  tree-sitter build -o "$parser" "$tmp/src"
+  rm -rf "$tmp"
+}
+
+install_dotnet_sdk() {
+  if dotnet --list-sdks 2>/dev/null | grep -q .; then
+    return 0
+  fi
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "Installing dotnet-sdk-8.0 for csharp-ls..."
+    if command -v sudo >/dev/null 2>&1; then
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y dotnet-sdk-8.0 || echo "WARN: dotnet-sdk install failed"
+    else
+      DEBIAN_FRONTEND=noninteractive apt-get install -y dotnet-sdk-8.0 2>/dev/null || echo "WARN: dotnet-sdk install failed (no sudo)"
+    fi
+  fi
+}
+
+install_csharp_ls() {
+  if command -v csharp-ls >/dev/null 2>&1 || command -v omnisharp >/dev/null 2>&1; then
+    echo "C# LSP already installed"
+    return 0
+  fi
+  if command -v dotnet >/dev/null 2>&1; then
+    echo "Installing csharp-ls..."
+    if dotnet tool install --global csharp-ls 2>/dev/null && command -v csharp-ls >/dev/null 2>&1; then
+      return 0
+    fi
+    echo "WARN: csharp-ls dotnet tool install failed; trying OmniSharp"
+  fi
+  local omnisharp_version="v1.39.15"
+  local tarball="omnisharp-linux-x64-net6.0.tar.gz"
+  local url="https://github.com/OmniSharp/omnisharp-roslyn/releases/download/${omnisharp_version}/${tarball}"
+  local install_dir="$LOCAL_OPT/omnisharp-${omnisharp_version}-linux-x64"
+  local tmp
+  tmp="$(mktemp -d "${CACHE_DIR}/omnisharp.XXXXXX")"
+  echo "Installing OmniSharp ${omnisharp_version}..."
+  curl -fsSL "$url" -o "$tmp/$tarball"
+  tar -xzf "$tmp/$tarball" -C "$tmp"
+  rm -rf "$install_dir"
+  mkdir -p "$install_dir"
+  if [[ -d "$tmp/OmniSharp" ]]; then
+    cp -a "$tmp/OmniSharp/." "$install_dir/"
+  else
+    find "$tmp" -mindepth 1 -maxdepth 1 ! -name "$tarball" -exec cp -a {} "$install_dir/" \;
+  fi
+  rm -rf "$tmp"
+  if [[ -x "$install_dir/OmniSharp" ]]; then
+    link_bin "$install_dir/OmniSharp" "omnisharp"
+  elif [[ -x "$install_dir/run" ]]; then
+    link_bin "$install_dir/run" "omnisharp"
+  else
+    echo "WARN: OmniSharp install failed"
+  fi
+}
+
+install_netcoredbg() {
+  if command -v netcoredbg >/dev/null 2>&1; then
+    echo "netcoredbg already installed"
+    return 0
+  fi
+  local tarball="netcoredbg-linux-${NETCOREDBG_ARCH}.tar.gz"
+  local url="https://github.com/Samsung/netcoredbg/releases/download/${NETCOREDBG_VERSION}/${tarball}"
+  local install_dir="$LOCAL_OPT/netcoredbg-${NETCOREDBG_VERSION}-linux-${NETCOREDBG_ARCH}"
+  local tmp
+  tmp="$(mktemp -d "${CACHE_DIR}/netcoredbg.XXXXXX")"
+  echo "Installing netcoredbg ${NETCOREDBG_VERSION}..."
+  curl -fsSL "$url" -o "$tmp/$tarball"
+  tar -xzf "$tmp/$tarball" -C "$tmp"
+  rm -rf "$install_dir"
+  if [[ -d "$tmp/netcoredbg" ]]; then
+    mv "$tmp/netcoredbg" "$install_dir"
+  else
+    mkdir -p "$install_dir"
+    find "$tmp" -mindepth 1 -maxdepth 1 ! -name "$tarball" -exec mv {} "$install_dir/" \;
+  fi
+  rm -rf "$tmp"
+  chmod +x "$install_dir/netcoredbg" 2>/dev/null || true
+  link_bin "$install_dir/netcoredbg" "netcoredbg"
+}
+
+install_cpptools_adapter() {
+  local adapter="$CPPTOOLS_DIR/debugAdapters/bin/OpenDebugAD7"
+  if [[ -x "$adapter" ]]; then
+    echo "OpenDebugAD7 already installed"
+    return 0
+  fi
+  if ! command -v unzip >/dev/null 2>&1; then
+    echo "WARN: unzip not found; skipping cpptools debug adapter"
+    return 0
+  fi
+  local vsix="$CPPTOOLS_VSIX"
+  local url="https://github.com/microsoft/vscode-cpptools/releases/download/${CPPTOOLS_VERSION}/${vsix}"
+  local tmp
+  tmp="$(mktemp -d "${CACHE_DIR}/cpptools.XXXXXX")"
+  echo "Installing cpptools debug adapter ${CPPTOOLS_VERSION}..."
+  curl -fsSL "$url" -o "$tmp/$vsix"
+  rm -rf "$CPPTOOLS_ROOT"
+  mkdir -p "$CPPTOOLS_ROOT"
+  unzip -q "$tmp/$vsix" -d "$CPPTOOLS_ROOT"
+  rm -rf "$tmp"
+  find "$CPPTOOLS_DIR" -type f \( -name 'OpenDebugAD7' -o -name 'OpenDebugAD7.exe' \) -exec chmod +x {} +
+}
+
+install_go_tools() {
+  if ! command -v go >/dev/null 2>&1; then
+    echo "WARN: go not found; skipping go tool installs"
+    return 0
+  fi
+  export PATH="${GOBIN:-$HOME_DIR/go/bin}:$HOME_DIR/.local/bin:$PATH"
+  mkdir -p "${GOBIN:-$HOME_DIR/go/bin}"
+  local tools=(
+    "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
+    "github.com/koron/iferr"
+    "golang.org/x/tools/cmd/callgraph"
+    "github.com/josharian/impl"
+    "github.com/davidrjenni/reftools/cmd/fillswitch"
+    "github.com/onsi/ginkgo/v2/ginkgo"
+    "github.com/kyoh86/richgo"
+    "gotest.tools/gotestsum"
+    "go.uber.org/mock/mockgen"
+    "github.com/tmc/json-to-struct"
+    "github.com/twpayne/go-jsonstruct/v3/cmd/gojsonstruct"
+    "github.com/abenz1267/gomvp"
+    "golang.org/x/tools/cmd/gonew"
+    "golang.org/x/vuln/cmd/govulncheck"
+    "github.com/abice/go-enum"
+    "golang.org/x/tools/cmd/goimports"
+    "mvdan.cc/gofumpt"
+    "github.com/fatih/gomodifytags"
+  )
+  echo "Installing Go tools..."
+  for tool in "${tools[@]}"; do
+    go install "${tool}@latest" || echo "WARN: failed to install ${tool}"
+  done
+}
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping Neovim tool installs"
+  exit 0
+fi
+
+install_python_provider
+install_node_provider
+install_lua_language_server
+install_pyright
+install_python_lsps
+install_dotnet_sdk
+install_csharp_ls
+install_netcoredbg
+install_cpptools_adapter
+install_jsonc_parser
+install_go_tools
+
+echo "Neovim tool install complete"
+{{- end -}}
+{{ end -}}
