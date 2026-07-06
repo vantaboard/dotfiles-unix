@@ -105,6 +105,7 @@ profile_example:
     - libxkbcommon-dev
     - neovim
     - network-manager
+    - network-manager-gnome
     - openssh-server
     - playerctl
     - pkg-config

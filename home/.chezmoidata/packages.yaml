@@ -43,6 +43,7 @@ packages:
       - libnotify-bin
       - keyd
       - network-manager
+      - network-manager-gnome
       - pulseaudio
       - flatpak
       # Editors and dev tools
