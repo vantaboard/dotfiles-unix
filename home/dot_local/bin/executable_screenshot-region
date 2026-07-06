@@ -5,7 +5,7 @@ export PATH="$HOME/.local/bin:/usr/bin:/bin${PATH:+:$PATH}"
 
 grim_bin="$(command -v grim || true)"
 slurp_bin="$(command -v slurp || true)"
-swappy_bin="${HOME:?}/.local/bin/swappy"
+wl_copy_bin="$(command -v wl-copy || true)"
 hyprpicker_bin="$(command -v hyprpicker || true)"
 
 if [[ -z "$grim_bin" ]]; then
@@ -16,8 +16,8 @@ if [[ -z "$slurp_bin" ]]; then
     echo "screenshot-region: slurp is required" >&2
     exit 1
 fi
-if [[ ! -x "$swappy_bin" ]]; then
-    echo "screenshot-region: swappy is required ($swappy_bin)" >&2
+if [[ -z "$wl_copy_bin" ]]; then
+    echo "screenshot-region: wl-copy is required" >&2
     exit 1
 fi
 if [[ -z "$hyprpicker_bin" ]]; then
@@ -41,4 +41,4 @@ sleep 0.2
 trap kill_freeze EXIT
 
 geom="$("$slurp_bin")" || exit 0
-"$grim_bin" -g "$geom" - | "$swappy_bin" -f -
+"$grim_bin" -g "$geom" - | "$wl_copy_bin" --type image/png
