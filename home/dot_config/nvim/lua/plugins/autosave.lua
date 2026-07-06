@@ -1,10 +1,3 @@
-local Job = require("plenary.job")
-
-local cmake = Job:new({
-    command = "cmake",
-    args = { "--build", "." },
-})
-
 require("auto-save").setup({
     enabled = true,
     execution_message = {
@@ -34,10 +27,6 @@ require("auto-save").setup({
         disabling = nil,
         before_asserting_save = nil,
         before_saving = nil,
-        after_saving = function()
-            if vim.bo.filetype == "cpp" then
-                cmake:start()
-            end
-        end,
+        after_saving = nil,
     },
 })
