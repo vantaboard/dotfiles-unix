@@ -74,7 +74,7 @@ local pack_plugins = {
 'https://github.com/theHamsta/nvim-dap-virtual-text',
         -- completion
 'https://github.com/b0o/SchemaStore.nvim',
-'https://github.com/folke/neodev.nvim',
+'https://github.com/folke/lazydev.nvim',
 'https://github.com/folke/neoconf.nvim',
         'https://github.com/rcarriga/nvim-dap-ui',
 'https://github.com/hrsh7th/nvim-cmp',
@@ -309,6 +309,8 @@ require("mappings")
 require("tsconfig")
 
 require("plugins.dap")
+require("plugins.lazydev")
+require("plugins.octo")
 require("plugins.lualine")
 require("plugins.lsp.completion")
 require("plugins.lsp.servers")
@@ -330,8 +332,18 @@ require("plugins.avante")
 require("plugins.minuet")
 
 vim.o.exrc = true
-vim.g.python3_host_prog = "/usr/bin/python"
-vim.g.python_host_prog = "/usr/bin/python2"
+
+local go_bin = vim.fs.joinpath(vim.env.HOME, "go", "bin")
+if vim.fn.isdirectory(go_bin) == 1 then
+  if vim.env.GOBIN == nil or vim.env.GOBIN == "" then
+    vim.env.GOBIN = go_bin
+  end
+  vim.env.PATH = go_bin .. ":" .. vim.env.PATH
+end
+
+vim.g.python3_host_prog = vim.fn.expand("~/.local/share/nvim/venv/bin/python")
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
 
 -- views can only be fully collapsed with the global statusline
 vim.opt.laststatus = 3
