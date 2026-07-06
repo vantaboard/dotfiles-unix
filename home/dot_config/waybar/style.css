@@ -37,6 +37,12 @@ window#waybar {
     border-bottom: 3px solid #e50000;
 }
 
+#mode {
+    padding: 0 8px;
+    color: #e5e5e5;
+    background-color: #b6204a;
+}
+
 #custom-py3status {
     padding: 0 4px;
 }
