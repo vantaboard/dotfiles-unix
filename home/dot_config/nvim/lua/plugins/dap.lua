@@ -117,19 +117,24 @@ dap.configurations.cpp = {
         request = "launch",
         program = unreal_editor_binary,
         args = function()
+            local uproject
             if vim.g.unreal_uproject and vim.g.unreal_uproject ~= "" then
-                return { vim.g.unreal_uproject }
+                uproject = vim.g.unreal_uproject
+            else
+                uproject = vim.fn.input("Path to .uproject: ", vim.fn.getcwd(), "file")
+                if uproject ~= "" then
+                    vim.g.unreal_uproject = uproject
+                end
             end
-            local path = vim.fn.input("Path to .uproject: ", vim.fn.getcwd(), "file")
-            if path ~= "" then
-                vim.g.unreal_uproject = path
-            end
-            return { path }
+            return { "-opengl", uproject }
         end,
         cwd = "${workspaceFolder}",
         stopOnEntry = false,
         MIMode = "gdb",
         miDebuggerPath = "/usr/bin/gdb",
+        environment = {
+            { "SDL_VIDEODRIVER", "x11" },
+        },
         setupCommands = unreal_gdb_setup,
     },
     {

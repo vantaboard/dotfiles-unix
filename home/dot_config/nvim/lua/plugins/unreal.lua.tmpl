@@ -17,20 +17,47 @@ local engine_path = {{ $engine | quote }}
 
 vim.g.unreal_engine_path = engine_path
 
+-- Sway/Wayland + NVIDIA: native Vulkan swapchains segfault in libnvidia-glcore.
+-- Epic recommends X11 via SDL; OpenGL RHI avoids VulkanRHI entirely on Linux.
+local launch_env = {
+  SDL_VIDEODRIVER = "x11",
+}
+
 require("unrealengine").setup({
   engine_path = engine_path,
   build_type = "Development",
   with_editor = true,
   auto_generate = true,
+  environment_variables = launch_env,
 })
 
 local commands = require("unrealengine.commands")
+local helpers = require("unrealengine.helpers")
+
+local function open_editor()
+  local binary = vim.fs.joinpath(engine_path, "Engine/Binaries/Linux/UnrealEditor")
+  local cmd = { binary, "-opengl" }
+  local uproject = helpers.get_uproject_path_info(nil)
+  if uproject then
+    table.insert(cmd, uproject.path)
+  end
+
+  local env = vim.fn.environ()
+  for k, v in pairs(launch_env) do
+    env[k] = v
+  end
+  if vim.v.servername and vim.v.servername ~= "" then
+    env.NVIM = vim.v.servername
+  end
+
+  vim.fn.jobstart(cmd, { detach = true, env = env })
+end
 
 vim.keymap.set("n", "<leader>ug", commands.generate_lsp, { desc = "UnrealEngine: Generate LSP" })
 vim.keymap.set("n", "<leader>ub", commands.build, { desc = "UnrealEngine: Build" })
 vim.keymap.set("n", "<leader>ur", commands.rebuild, { desc = "UnrealEngine: Rebuild" })
 vim.keymap.set("n", "<leader>uc", commands.clean, { desc = "UnrealEngine: Clean" })
-vim.keymap.set("n", "<leader>uo", commands.open, { desc = "UnrealEngine: Open Editor" })
+vim.keymap.set("n", "<leader>uo", open_editor, { desc = "UnrealEngine: Open Editor" })
 -- Prebuilt engine installs ship Build.sh, so build_engine() mis-detects them as
 -- source trees and tries to rebuild UnrealEditor (fails on frozen UE5Rules.dll).
 -- RunUAT BuildPlugin works for both binary and source installs.

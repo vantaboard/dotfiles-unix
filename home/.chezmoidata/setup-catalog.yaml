@@ -417,7 +417,7 @@ setup_catalog:
     unreal:
       category: dev
       label: Unreal Engine Neovim support
-      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers for UE debugging
+      description: UnrealEngine.nvim, clangd LSP, and GDB pretty-printers for UE debugging. Launches UE with SDL_VIDEODRIVER=x11 and -opengl for Sway/NVIDIA stability.
       default: false
       requires: [neovim, clang]
       packages: [clangd]
