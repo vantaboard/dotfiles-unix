@@ -25,7 +25,11 @@ require("minuet").setup({
     openai_compatible = {
       model = ollama_models.get_coder(),
       end_point = "http://localhost:11434/v1/chat/completions",
-      api_key_name = "TERM",
+      -- Ollama ignores the Bearer token; any non-empty string works. TERM is
+      -- usually set in terminals; fall back for GUI / stripped environments.
+      api_key = function()
+        return vim.env.TERM or "ollama"
+      end,
       name = "Ollama",
       stream = true,
       optional = {
