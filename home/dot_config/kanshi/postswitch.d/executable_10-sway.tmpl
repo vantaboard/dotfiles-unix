@@ -35,10 +35,28 @@ for i in {0..7}; do
 done
 
 for i in $(seq 0 $((${#MONITOR_ARRAY[@]}-1))); do
-    CONFIG_OUTPUT+="workspace \$ws$i output \$screen$i\n"
-
     if [ $i -lt ${#MOVE_KEYS[@]} ]; then
         CONFIG_OUTPUT+="bindsym \$mod+shift+${MOVE_KEYS[$i]} move workspace to output \$screen$i\n"
+    fi
+done
+
+# Default output for empty or unassigned workspaces. With 3 outputs: left 3/6/7,
+# middle 1/5, right 2/4/8. Otherwise map workspace i to screen i (capped).
+if [[ "${#MONITOR_ARRAY[@]}" -ge 3 ]]; then
+    WS_OUTPUT_SCREEN=(1 2 0 2 1 0 0 2)
+else
+    WS_OUTPUT_SCREEN=()
+    for i in {0..7}; do
+        if [ "$i" -lt "${#MONITOR_ARRAY[@]}" ]; then
+            WS_OUTPUT_SCREEN[$i]=$i
+        fi
+    done
+fi
+
+for i in {0..7}; do
+    if [ -n "${WS_OUTPUT_SCREEN[$i]:-}" ]; then
+        screen_idx=${WS_OUTPUT_SCREEN[$i]}
+        CONFIG_OUTPUT+="workspace \$ws$i output \$screen$screen_idx\n"
     fi
 done
 
