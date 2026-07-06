@@ -168,6 +168,14 @@ wait_for_kanshi_outputs() {
     return 1
 }
 
+# Direct spawn: `swaymsg exec --no-startup-id kanshi` with separate args
+# fails because swaymsg parses --no-startup-id as its own option (the error
+# was swallowed by 2>/dev/null, so kanshi silently never restarted).
+start_kanshi() {
+    setsid -f env SWAYSOCK="${SWAYSOCK:-}" WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+        kanshi >/dev/null 2>&1 || true
+}
+
 simulate_dock_replug() {
     local out
     log "simulating dock replug (stop kanshi, cycle DP outputs, restart kanshi)"
@@ -177,7 +185,7 @@ simulate_dock_replug() {
         swaymsg_cmd "output $out disable" || true
     done
     sleep 5
-    swaymsg_cmd exec --no-startup-id kanshi || true
+    start_kanshi
     wait_for_kanshi_outputs 3 || log "kanshi outputs slow after replug simulation"
 }
 
@@ -192,7 +200,7 @@ apply_recovery() {
     else
         pkill -x kanshi 2>/dev/null || true
         sleep 1
-        swaymsg_cmd exec --no-startup-id kanshi || true
+        start_kanshi
         wait_for_kanshi_outputs 1 || true
     fi
 

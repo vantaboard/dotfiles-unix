@@ -1,0 +1,88 @@
+#!/usr/bin/bash
+# Retry kanshi profile application after dock hotplug races.
+#
+# On dock unplug, kanshi matches the 'undocked' profile while wlroots is
+# still tearing down the MST outputs; the output commit can fail and kanshi
+# does not retry until the next connector change, leaving eDP-1 off (black
+# screen). The same race can leave the dock outputs dark on plug-in.
+# Poll DRM connector state vs sway's active outputs and restart kanshi
+# (which re-applies the matching profile) when they disagree for two
+# consecutive ticks. Started from the sway config, so session env is set.
+set -uo pipefail
+
+LOG="${HOME}/.local/state/kanshi-watchdog.log"
+mkdir -p "$(dirname "$LOG")"
+exec >>"$LOG" 2>&1
+log() { echo "$(date -Is) $*"; }
+
+lockfile="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/kanshi-watchdog.lock"
+exec 9>"$lockfile"
+flock -n 9 || exit 0
+
+log "=== kanshi-watchdog started pid=$$ ==="
+
+dp_connected_count() {
+    local n=0 p
+    for p in /sys/class/drm/card*-DP-*/status; do
+        [[ -e "$p" ]] || continue
+        [[ "$(cat "$p" 2>/dev/null)" == "connected" ]] && ((n++)) || true
+    done
+    echo "$n"
+}
+
+active_count() {
+    # $1: jq name prefix, e.g. "eDP" or "DP-"
+    swaymsg -t get_outputs 2>/dev/null \
+        | jq --arg prefix "$1" \
+            '[.[] | select(.name | startswith($prefix)) | select(.active)] | length' \
+        2>/dev/null || echo ""
+}
+
+restart_kanshi() {
+    log "restarting kanshi ($1)"
+    pkill -x kanshi 2>/dev/null || true
+    sleep 1
+    # Direct spawn: `swaymsg exec --no-startup-id kanshi` with separate args
+    # fails because swaymsg parses --no-startup-id as its own option.
+    setsid -f kanshi >/dev/null 2>&1 || true
+}
+
+mismatch=0
+sway_failures=0
+while sleep 5; do
+    if ! swaymsg -t get_version >/dev/null 2>&1; then
+        ((sway_failures++)) || true
+        # Session is gone; exit so we don't outlive sway.
+        (( sway_failures >= 12 )) && { log "sway unreachable for 60s; exiting"; exit 0; }
+        continue
+    fi
+    sway_failures=0
+
+    if ! pgrep -x kanshi >/dev/null 2>&1; then
+        restart_kanshi "kanshi not running"
+        mismatch=0
+        continue
+    fi
+
+    dp_conn="$(dp_connected_count)"
+    edp_active="$(active_count eDP)"
+    dp_active="$(active_count DP-)"
+    [[ -z "$edp_active" || -z "$dp_active" ]] && continue
+
+    if (( dp_conn == 0 && edp_active == 0 )); then
+        # Undocked but the laptop panel is off: the failure this watchdog exists for.
+        ((mismatch++)) || true
+    elif (( dp_conn >= 1 && dp_active == 0 && edp_active == 0 )); then
+        # External outputs connected but nothing is lit at all.
+        ((mismatch++)) || true
+    else
+        mismatch=0
+    fi
+
+    if (( mismatch >= 2 )); then
+        restart_kanshi "dp_connected=${dp_conn} dp_active=${dp_active} edp_active=${edp_active}"
+        mismatch=0
+        # Give kanshi time to apply before judging again.
+        sleep 15
+    fi
+done
