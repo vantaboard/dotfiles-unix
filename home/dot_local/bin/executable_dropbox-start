@@ -1,0 +1,23 @@
+#!/bin/sh
+# Start the Dropbox daemon with a usable DISPLAY.
+#
+# Dropbox's bundled Qt only shows its tray icon when it can reach X11
+# (XWayland). The systemd user manager has no DISPLAY at login because sway
+# starts XWayland lazily, so import-environment runs before DISPLAY exists.
+# Derive it from the XWayland socket, which sway creates upfront even in
+# lazy mode.
+set -eu
+
+if [ -z "${DISPLAY:-}" ]; then
+  for _ in $(seq 100); do
+    sock="$(ls /tmp/.X11-unix 2>/dev/null | head -n 1)"
+    if [ -n "$sock" ]; then
+      DISPLAY=":${sock#X}"
+      export DISPLAY
+      break
+    fi
+    sleep 0.2
+  done
+fi
+
+exec /usr/bin/python3 /usr/bin/dropbox "${1:-start}"

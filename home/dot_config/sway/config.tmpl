@@ -1,6 +1,6 @@
 include /etc/sway/config.d/*
 
-{{- $p := .profile_example -}}
+{{ $p := .profile_example -}}
 {{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
 {{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
 {{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
@@ -18,7 +18,7 @@ include /etc/sway/config.d/*
 # activated services (notably xdg-desktop-portal and its gtk backend) start
 # without a display, fail to activate, and any portal call blocks for the full
 # ~25s D-Bus timeout — which makes Waybar exit and leaves no status bar.
-exec --no-startup-id dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE SWAYSOCK
+exec --no-startup-id dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE SWAYSOCK
 exec --no-startup-id dunst
 {{- if index $f "sunshine" }}
 # `start`, not `enable --now`: sunshine.service is an alias of

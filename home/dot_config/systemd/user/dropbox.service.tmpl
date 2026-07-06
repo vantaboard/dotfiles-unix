@@ -5,7 +5,9 @@ After=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/python3 /usr/bin/dropbox start
+# dropbox-start derives DISPLAY from the XWayland socket so the tray icon
+# appears; the systemd user manager has no DISPLAY at login (lazy XWayland).
+ExecStart=%h/.local/bin/dropbox-start start
 ExecStop=/usr/bin/python3 /usr/bin/dropbox stop
 
 [Install]
