@@ -421,7 +421,7 @@ setup_catalog:
       default: false
       requires: [neovim, clang]
       packages: [clangd]
-      config_paths: [dot_config/nvim/lua/plugins/unreal.lua]
+      config_paths: [dot_config/nvim/lua/plugins/unreal.lua, dot_config/environment.d/unreal.conf, dot_local/bin/unreal-editor, dot_local/bin/install-unreal-neovim-plugin]
     ffmpeg:
       category: dev
       label: ffmpeg

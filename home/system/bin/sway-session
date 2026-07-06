@@ -11,6 +11,14 @@ if [[ -f "$env_file" ]]; then
   set +a
 fi
 
+unreal_env="${XDG_CONFIG_HOME:-$HOME/.config}/environment.d/unreal.conf"
+if [[ -f "$unreal_env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$unreal_env"
+  set +a
+fi
+
 # Expose both GPUs so dock hotplug works live without restarting the session.
 # The external displays are wired to card2 (NVIDIA); the laptop panel to card1
 # (Intel). NVIDIA is listed first (primary renderer): wlroots' Intel-render/

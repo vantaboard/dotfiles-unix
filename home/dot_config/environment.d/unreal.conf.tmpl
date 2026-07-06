@@ -1,0 +1,11 @@
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "unreal" -}}
+# UE 5.7+ defaults to SDL3 on Wayland; popups/notifications are unclickable on Sway.
+# Force XWayland for all SDL apps (including Epic launcher / UnrealEditor).
+SDL_VIDEODRIVER=x11
+SDL_VIDEO_DRIVER=x11
+{{- end -}}

@@ -1,0 +1,25 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "unreal" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+ENGINE="${UE_ENGINE:-{{ $p.unreal_engine_path | default "" }}}"
+EDITOR="$ENGINE/Engine/Binaries/Linux/UnrealEditor"
+
+if [[ ! -x "$EDITOR" ]]; then
+  echo "UnrealEditor not found at $EDITOR" >&2
+  exit 1
+fi
+
+export SDL_VIDEODRIVER=x11
+export SDL_VIDEO_DRIVER=x11
+export GDK_BACKEND=x11
+
+exec "$EDITOR" "$@"
+{{- end -}}
+{{ end -}}

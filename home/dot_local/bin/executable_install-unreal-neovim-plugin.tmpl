@@ -51,6 +51,17 @@ uplugin.write_text(json.dumps(data, indent=2) + "\n")
 print(f"Patched {uplugin} (EnabledByDefault=true)")
 PY "$INSTALL_DIR/NeovimSourceCodeAccess.uplugin"
 
+LINUX_ENGINE_INI="$ENGINE/Engine/Config/Linux/LinuxEngine.ini"
+if [[ -f "$LINUX_ENGINE_INI" ]] && ! grep -q 'Slate.EnableTooltips=False' "$LINUX_ENGINE_INI"; then
+  cat >> "$LINUX_ENGINE_INI" <<'EOF'
+
+; Wayland/Sway: tooltips steal focus and break popup clicks (UE 5.7+ SDL3)
+[SystemSettings]
+Slate.EnableTooltips=False
+EOF
+  echo "Patched $LINUX_ENGINE_INI (Slate.EnableTooltips=False)"
+fi
+
 echo "Done. Restart Unreal Editor, then set Source Code Editor to Neovim."
 {{- end -}}
 {{ end -}}

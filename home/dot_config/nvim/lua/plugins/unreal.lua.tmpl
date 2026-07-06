@@ -81,8 +81,11 @@ local function rebuild()
 end
 
 local function open_editor()
-  local binary = vim.fs.joinpath(engine_path, "Engine/Binaries/Linux/UnrealEditor")
-  local cmd = { binary }
+  local launcher = vim.fn.expand("~/.local/bin/unreal-editor")
+  if vim.fn.executable(launcher) ~= 1 then
+    launcher = vim.fs.joinpath(engine_path, "Engine/Binaries/Linux/UnrealEditor")
+  end
+  local cmd = { launcher }
   local uproject = helpers.get_uproject_path_info(nil)
   if uproject then
     table.insert(cmd, uproject.path)
