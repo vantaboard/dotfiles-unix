@@ -1,0 +1,34 @@
+# Pinned Hugging Face GGUF models for local inference (llama.cpp).
+# Tiers are selected by VRAM in run_after_pull-llm-models.sh.tmpl.
+llm_models:
+  tiers:
+    high:
+      min_vram_mb: 8192
+      coder:
+        filename: coder.gguf
+        url: https://huggingface.co/bartowski/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf
+        sha256: ""
+      chat:
+        filename: chat.gguf
+        url: https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf
+        sha256: ""
+    medium:
+      min_vram_mb: 4096
+      coder:
+        filename: coder.gguf
+        url: https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf
+        sha256: ""
+      chat:
+        filename: chat.gguf
+        url: https://huggingface.co/bartowski/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf
+        sha256: ""
+    low:
+      min_vram_mb: 0
+      coder:
+        filename: coder.gguf
+        url: https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
+        sha256: ""
+      chat:
+        filename: chat.gguf
+        url: https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
+        sha256: ""

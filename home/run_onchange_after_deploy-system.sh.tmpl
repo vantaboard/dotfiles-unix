@@ -30,8 +30,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/systemd-sleep/displays-resume.tmpl" | sha256sum }}
 # hash: {{ include "system/modprobe.d/nvidia-s0ix.conf" | sha256sum }}
 # hash: {{ include "system/systemd/logind.conf.d/ignore-lid-switch.conf" | sha256sum }}
-# hash: {{ include "system/systemd/ollama.service" | sha256sum }}
-# hash: {{ include "system/systemd/ollama.service.d/override.conf" | sha256sum }}
+# hash: {{ include "system/systemd/llama-swap.service.tmpl" | sha256sum }}
 
 deploy_file() {
   local src="$1"
@@ -129,12 +128,16 @@ if has_deploy ssh && [[ -d /etc/ssh ]]; then
   fi
 fi
 
-if has_deploy ollama && { command -v ollama >/dev/null 2>&1 || [[ -f /usr/local/bin/ollama ]]; }; then
-  deploy_file "$SOURCE/systemd/ollama.service" /etc/systemd/system/ollama.service
-  sudo mkdir -p /etc/systemd/system/ollama.service.d
-  deploy_dir_file "$SOURCE/systemd/ollama.service.d/override.conf" \
-    /etc/systemd/system/ollama.service.d/override.conf
+if has_deploy llama && { command -v llama-swap >/dev/null 2>&1 || [[ -x /usr/local/bin/llama-swap ]]; }; then
+  TMP_LLAMA_SWAP="$(mktemp)"
+  chezmoi execute-template < "$SOURCE/systemd/llama-swap.service.tmpl" > "$TMP_LLAMA_SWAP"
+  deploy_file "$TMP_LLAMA_SWAP" /etc/systemd/system/llama-swap.service
+  rm -f "$TMP_LLAMA_SWAP"
   sudo systemctl daemon-reload 2>/dev/null || true
+  # Retire Ollama if previously deployed.
+  sudo systemctl disable --now ollama.service 2>/dev/null || true
+  sudo rm -f /etc/systemd/system/ollama.service
+  sudo rm -rf /etc/systemd/system/ollama.service.d
 fi
 
 if has_deploy keyd && {

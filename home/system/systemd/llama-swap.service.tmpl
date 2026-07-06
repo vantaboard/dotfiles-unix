@@ -1,0 +1,16 @@
+[Unit]
+Description=llama-swap local LLM proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ .chezmoi.username }}
+Environment=HOME={{ .chezmoi.homeDir }}
+WorkingDirectory={{ .chezmoi.homeDir }}
+ExecStart=/usr/local/bin/llama-swap --config {{ .chezmoi.homeDir }}/.config/llama-swap/config.yaml --listen 127.0.0.1:9292
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

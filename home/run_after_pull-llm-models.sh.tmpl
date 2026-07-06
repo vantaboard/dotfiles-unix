@@ -1,0 +1,220 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "llama" -}}
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+{{ else -}}
+#!/bin/bash
+{{ end -}}
+set -euo pipefail
+
+# hash: llm-models-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping LLM model download"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+CACHE_DIR="$HOME_DIR/.cache/chezmoi"
+STAMP_FILE="$CACHE_DIR/llm-models.stamp"
+MANIFEST_FILE="$HOME_DIR/.config/llama-cpp/models.json"
+MODELS_DIR="$HOME_DIR/.local/share/llama.cpp/models"
+REFRESH_DAYS="${CHEZMOI_LLM_MODELS_REFRESH_DAYS:-7}"
+LLM_HOST="${LLM_HOST:-http://127.0.0.1:9292}"
+IS_TERMUX={{ if eq .chezmoi.os "android" }}1{{ else }}0{{ end }}
+
+gpu_vram_mb() {
+  local mb
+  if mb="$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1)"; then
+    [[ -n "$mb" && "$mb" =~ ^[0-9]+$ ]] || return 1
+    printf '%s' "$mb"
+    return 0
+  fi
+  if [[ -r /sys/class/drm/card0/device/mem_info_vram_total ]]; then
+    local bytes
+    bytes="$(cat /sys/class/drm/card0/device/mem_info_vram_total 2>/dev/null)" || return 1
+    printf '%s' "$((bytes / 1024 / 1024))"
+    return 0
+  fi
+  return 1
+}
+
+system_ram_mb() {
+  awk '/^MemTotal:/ { printf "%d", int($2 / 1024) }' /proc/meminfo 2>/dev/null || echo 4096
+}
+
+select_tier() {
+  local vram_mb=${1:-0}
+  if (( IS_TERMUX )); then
+    echo "low"
+  elif (( vram_mb >= 8192 )); then
+    echo "high"
+  elif (( vram_mb >= 4096 )); then
+    echo "medium"
+  else
+    echo "low"
+  fi
+}
+
+tier_coder_url() {
+  case "$1" in
+    high) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf" ;;
+    medium) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf" ;;
+    low) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf" ;;
+  esac
+}
+
+tier_chat_url() {
+  case "$1" in
+    high) echo "https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf" ;;
+    medium) echo "https://huggingface.co/bartowski/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf" ;;
+    low) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf" ;;
+  esac
+}
+
+tier_coder_sha256() {
+  case "$1" in
+    high|medium|low) echo "" ;;
+  esac
+}
+
+tier_chat_sha256() {
+  case "$1" in
+    high|medium|low) echo "" ;;
+  esac
+}
+
+write_manifest() {
+  local tier=$1 vram_mb=$2 ram_mb=$3
+  mkdir -p "$(dirname "$MANIFEST_FILE")"
+  printf '{\n  "tier": "%s",\n  "vram_mb": %s,\n  "ram_mb": %s,\n  "coder": "%s/.local/share/llama.cpp/models/coder.gguf",\n  "chat": "%s/.local/share/llama.cpp/models/chat.gguf"\n}\n' \
+    "$tier" "$vram_mb" "$ram_mb" "$HOME_DIR" "$HOME_DIR" > "$MANIFEST_FILE"
+}
+
+download_model() {
+  local url=$1 dest=$2 expected_sha=$3
+  local tmp="${dest}.partial"
+
+  if [[ -f "$dest" ]]; then
+    if [[ -z "$expected_sha" ]]; then
+      echo "OK: $(basename "$dest") already present"
+      return 0
+    fi
+    if [[ "$(sha256sum "$dest" | awk '{print $1}')" == "$expected_sha" ]]; then
+      echo "OK: $(basename "$dest") checksum matches"
+      return 0
+    fi
+    echo "WARN: $(basename "$dest") checksum mismatch; re-downloading"
+    rm -f "$dest"
+  fi
+
+  mkdir -p "$(dirname "$dest")"
+  echo "Downloading $(basename "$dest")..."
+  curl -fL --retry 3 --retry-delay 5 --continue-at - "$url" -o "$tmp"
+  mv "$tmp" "$dest"
+
+  if [[ -n "$expected_sha" ]]; then
+    local actual
+    actual="$(sha256sum "$dest" | awk '{print $1}')"
+    if [[ "$actual" != "$expected_sha" ]]; then
+      echo "ERROR: $(basename "$dest") sha256 mismatch (expected ${expected_sha}, got ${actual})"
+      rm -f "$dest"
+      return 1
+    fi
+  fi
+  echo "OK: $(basename "$dest")"
+}
+
+should_refresh() {
+  local fingerprint=$1
+  if [[ "${CHEZMOI_LLM_MODELS_REFRESH:-}" == "1" ]]; then
+    return 0
+  fi
+  if [[ ! -f "$STAMP_FILE" ]]; then
+    return 0
+  fi
+  if ! grep -qxF "$fingerprint" "$STAMP_FILE"; then
+    return 0
+  fi
+  if find "$STAMP_FILE" -mtime "+${REFRESH_DAYS}" 2>/dev/null | grep -q .; then
+    return 0
+  fi
+  echo "LLM models up to date (refresh in <= ${REFRESH_DAYS} days or CHEZMOI_LLM_MODELS_REFRESH=1)"
+  return 1
+}
+
+write_stamp() {
+  local fingerprint=$1
+  mkdir -p "$CACHE_DIR"
+  printf '%s\n' "$fingerprint" > "$STAMP_FILE"
+}
+
+ensure_llm_ready() {
+  if curl -fsS "${LLM_HOST}/health" >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ "$IS_TERMUX" == "1" ]]; then
+    sv up llama-server 2>/dev/null || true
+  elif command -v systemctl >/dev/null 2>&1; then
+    sudo systemctl start llama-swap.service 2>/dev/null || true
+  fi
+  local i
+  for i in $(seq 1 30); do
+    if curl -fsS "${LLM_HOST}/health" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+VRAM_MB="$(gpu_vram_mb 2>/dev/null || echo 0)"
+RAM_MB="$(system_ram_mb)"
+TIER="$(select_tier "$VRAM_MB")"
+CODER_URL="$(tier_coder_url "$TIER")"
+CHAT_URL="$(tier_chat_url "$TIER")"
+CODER_SHA="$(tier_coder_sha256 "$TIER")"
+CHAT_SHA="$(tier_chat_sha256 "$TIER")"
+FINGERPRINT="v1:${TIER}:${VRAM_MB}:${RAM_MB}:${CODER_URL}:${CHAT_URL}"
+
+echo "LLM tier: ${TIER} (${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM)"
+write_manifest "$TIER" "$VRAM_MB" "$RAM_MB"
+
+if ! should_refresh "$FINGERPRINT"; then
+  exit 0
+fi
+
+FAILED=0
+download_model "$CODER_URL" "$MODELS_DIR/coder.gguf" "$CODER_SHA" || FAILED=1
+if [[ "$CHAT_URL" != "$CODER_URL" ]]; then
+  download_model "$CHAT_URL" "$MODELS_DIR/chat.gguf" "$CHAT_SHA" || FAILED=1
+else
+  ln -sf coder.gguf "$MODELS_DIR/chat.gguf"
+fi
+
+if (( FAILED == 0 )); then
+  write_stamp "$FINGERPRINT"
+  echo "LLM model download complete"
+  if ensure_llm_ready; then
+    echo "LLM API reachable at ${LLM_HOST}"
+  else
+    echo "NOTE: models downloaded; start llama-swap / llama-server then retry"
+  fi
+else
+  echo "WARN: one or more model downloads failed; stamp not updated"
+fi
+{{- end -}}
+{{ end -}}

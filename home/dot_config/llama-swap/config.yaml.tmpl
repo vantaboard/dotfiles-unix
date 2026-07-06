@@ -1,0 +1,37 @@
+# llama-swap: OpenAI-compatible proxy for local llama-server instances.
+# Model aliases "coder" and "chat" are referenced by Minuet and Avante.
+{{- $home := .chezmoi.homeDir -}}
+{{- $models := printf "%s/.local/share/llama.cpp/models" $home -}}
+
+models:
+  coder:
+    cmd: >-
+      /usr/local/bin/llama-server
+      --port ${PORT}
+      --host 127.0.0.1
+      --model {{ $models }}/coder.gguf
+      -ngl 99
+      -fa
+      -c 16384
+      -ctk q8_0
+      -ctv q8_0
+      --cache-reuse 256
+    aliases:
+      - coder
+    ttl: 600
+
+  chat:
+    cmd: >-
+      /usr/local/bin/llama-server
+      --port ${PORT}
+      --host 127.0.0.1
+      --model {{ $models }}/chat.gguf
+      -ngl 99
+      -fa
+      -c 16384
+      -ctk q8_0
+      -ctv q8_0
+      --cache-reuse 256
+    aliases:
+      - chat
+    ttl: 600

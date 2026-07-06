@@ -1,0 +1,155 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "llama" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: llama-binaries-v1-b9873-v235
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping llama.cpp / llama-swap install"
+  exit 0
+fi
+
+LLAMA_CPP_VERSION="b9873"
+LLAMA_SWAP_VERSION="v235"
+CUDA_VERSION="12.8"
+INSTALL_ROOT="/usr/local/lib/llama.cpp"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/chezmoi/llama-install"
+
+case "$(uname -m)" in
+  x86_64) ARCH="amd64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *)
+    echo "WARN: unsupported architecture $(uname -m); skipping llama install"
+    exit 0
+    ;;
+esac
+
+install_dir() {
+  sudo install -d "$@"
+}
+
+install_bin() {
+  local src="$1"
+  local dest="$2"
+  sudo install -m755 "$src" "$dest"
+}
+
+llama_server_ok() {
+  [[ -x /usr/local/bin/llama-server ]] && /usr/local/bin/llama-server --version 2>/dev/null | grep -q "${LLAMA_CPP_VERSION#b}"
+}
+
+llama_swap_ok() {
+  [[ -x /usr/local/bin/llama-swap ]] && /usr/local/bin/llama-swap --version 2>/dev/null | grep -q "235"
+}
+
+detect_backend() {
+  if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+    echo "cuda"
+    return 0
+  fi
+  if [[ -e /dev/dri/renderD128 ]] || [[ -e /dev/dri/card0 ]]; then
+    echo "vulkan"
+    return 0
+  fi
+  echo "cpu"
+}
+
+install_llama_cpp() {
+  local backend="$1"
+  local tmp archive url extract_dir
+
+  tmp="$(mktemp -d "${CACHE_DIR}/llama-cpp.XXXXXX")"
+  mkdir -p "$CACHE_DIR"
+
+  case "$backend" in
+    cuda)
+      url="https://github.com/ai-dock/llama.cpp-cuda/releases/download/${LLAMA_CPP_VERSION}/llama.cpp-${LLAMA_CPP_VERSION}-cuda-${CUDA_VERSION}-${ARCH}.tar.gz"
+      archive="llama.cpp-cuda-${ARCH}.tar.gz"
+      ;;
+    vulkan)
+      url="https://github.com/ggml-org/llama.cpp/releases/download/${LLAMA_CPP_VERSION}/llama-${LLAMA_CPP_VERSION}-bin-ubuntu-vulkan-x64.tar.gz"
+      archive="llama-vulkan-${ARCH}.tar.gz"
+      if [[ "$ARCH" != "amd64" ]]; then
+        echo "WARN: Vulkan prebuilt unavailable for ${ARCH}; falling back to CPU"
+        backend="cpu"
+        url="https://github.com/ggml-org/llama.cpp/releases/download/${LLAMA_CPP_VERSION}/llama-${LLAMA_CPP_VERSION}-bin-ubuntu-${ARCH}.tar.gz"
+        archive="llama-cpu-${ARCH}.tar.gz"
+      fi
+      ;;
+    cpu)
+      url="https://github.com/ggml-org/llama.cpp/releases/download/${LLAMA_CPP_VERSION}/llama-${LLAMA_CPP_VERSION}-bin-ubuntu-${ARCH}.tar.gz"
+      archive="llama-cpu-${ARCH}.tar.gz"
+      ;;
+  esac
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping llama.cpp install"
+    return 1
+  fi
+
+  echo "Installing llama.cpp ${LLAMA_CPP_VERSION} (${backend}, ${ARCH})..."
+  curl -fsSL "$url" -o "${CACHE_DIR}/${archive}"
+  tar -xzf "${CACHE_DIR}/${archive}" -C "$tmp"
+
+  extract_dir="$(find "$tmp" -maxdepth 2 -type f -name 'llama-server' -printf '%h\n' | head -1)"
+  if [[ -z "$extract_dir" ]]; then
+    extract_dir="$tmp"
+  fi
+
+  install_dir "$INSTALL_ROOT"
+  sudo rm -rf "${INSTALL_ROOT:?}"/*
+  sudo cp -a "${extract_dir}/." "$INSTALL_ROOT/"
+
+  install_bin "${INSTALL_ROOT}/llama-server" /usr/local/bin/llama-server
+  for bin in llama-cli llama-quantize; do
+    if [[ -x "${INSTALL_ROOT}/${bin}" ]]; then
+      install_bin "${INSTALL_ROOT}/${bin}" "/usr/local/bin/${bin}"
+    fi
+  done
+
+  rm -rf "$tmp"
+  echo "llama.cpp installed (${backend})"
+}
+
+install_llama_swap() {
+  local tmp archive="llama-swap_${LLAMA_SWAP_VERSION#v}_linux_${ARCH}.tar.gz"
+  local url="https://github.com/mostlygeek/llama-swap/releases/download/${LLAMA_SWAP_VERSION}/${archive}"
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping llama-swap install"
+    return 1
+  fi
+
+  tmp="$(mktemp -d "${CACHE_DIR}/llama-swap.XXXXXX")"
+  mkdir -p "$CACHE_DIR"
+
+  echo "Installing llama-swap ${LLAMA_SWAP_VERSION} (${ARCH})..."
+  curl -fsSL "$url" -o "${CACHE_DIR}/${archive}"
+  tar -xzf "${CACHE_DIR}/${archive}" -C "$tmp"
+  install_bin "${tmp}/llama-swap" /usr/local/bin/llama-swap
+  rm -rf "$tmp"
+  echo "llama-swap installed"
+}
+
+if llama_server_ok && llama_swap_ok; then
+  echo "llama.cpp and llama-swap already installed"
+  exit 0
+fi
+
+BACKEND="$(detect_backend)"
+if ! llama_server_ok; then
+  install_llama_cpp "$BACKEND"
+fi
+if ! llama_swap_ok; then
+  install_llama_swap
+fi
+
+echo "Local LLM binaries ready"
+{{- end -}}
+{{ end -}}
