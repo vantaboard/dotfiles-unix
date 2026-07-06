@@ -117,6 +117,34 @@ install_llama_cpp() {
   echo "llama.cpp installed (${backend})"
 }
 
+register_ld_library_path() {
+  local conf="/etc/ld.so.conf.d/llama-cpp.conf"
+  if ! grep -qxF "$INSTALL_ROOT" "$conf" 2>/dev/null; then
+    echo "$INSTALL_ROOT" | sudo tee "$conf" >/dev/null
+    sudo ldconfig
+    echo "Registered ${INSTALL_ROOT} with ldconfig"
+  fi
+}
+
+install_cuda_runtime_deps() {
+  if ! command -v apt >/dev/null 2>&1; then
+    echo "WARN: apt not found; install libcudart12 libnccl2 libcublas12 manually for CUDA llama.cpp"
+    return 0
+  fi
+  local pkgs=(libcudart12 libnccl2 libcublas12)
+  local missing=()
+  local pkg
+  for pkg in "${pkgs[@]}"; do
+    if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q 'install ok installed'; then
+      missing+=("$pkg")
+    fi
+  done
+  if ((${#missing[@]})); then
+    echo "Installing CUDA runtime deps for llama.cpp: ${missing[*]}"
+    sudo apt install -y -qq --no-install-recommends "${missing[@]}"
+  fi
+}
+
 install_llama_swap() {
   local tmp archive="llama-swap_${LLAMA_SWAP_VERSION#v}_linux_${ARCH}.tar.gz"
   local url="https://github.com/mostlygeek/llama-swap/releases/download/${LLAMA_SWAP_VERSION}/${archive}"
@@ -138,6 +166,11 @@ install_llama_swap() {
 }
 
 if llama_server_ok && llama_swap_ok; then
+  BACKEND="$(detect_backend)"
+  if [[ "$BACKEND" == "cuda" ]]; then
+    install_cuda_runtime_deps
+  fi
+  register_ld_library_path
   echo "llama.cpp and llama-swap already installed"
   exit 0
 fi
@@ -146,6 +179,10 @@ BACKEND="$(detect_backend)"
 if ! llama_server_ok; then
   install_llama_cpp "$BACKEND"
 fi
+if [[ "$BACKEND" == "cuda" ]]; then
+  install_cuda_runtime_deps
+fi
+register_ld_library_path
 if ! llama_swap_ok; then
   install_llama_swap
 fi

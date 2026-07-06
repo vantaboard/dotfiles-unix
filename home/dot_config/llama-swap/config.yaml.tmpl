@@ -11,7 +11,7 @@ models:
       --host 127.0.0.1
       --model {{ $models }}/coder.gguf
       -ngl 99
-      -fa
+      -fa on
       -c 16384
       -ctk q8_0
       -ctv q8_0
@@ -27,7 +27,7 @@ models:
       --host 127.0.0.1
       --model {{ $models }}/chat.gguf
       -ngl 99
-      -fa
+      -fa on
       -c 16384
       -ctk q8_0
       -ctv q8_0

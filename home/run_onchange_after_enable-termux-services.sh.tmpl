@@ -123,7 +123,7 @@ exec llama-server \\
   --port ${LISTEN_PORT} \\
   --model "$MODEL_PATH" \\
   -ngl 99 \\
-  -fa \\
+  -fa on \\
   -c 8192 \\
   --cache-reuse 256
 EOF
