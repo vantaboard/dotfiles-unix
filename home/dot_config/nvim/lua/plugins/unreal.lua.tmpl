@@ -1,0 +1,35 @@
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "unreal" -}}
+{{- $engine := $p.unreal_engine_path | default "" -}}
+local engine_path = {{ $engine | quote }}
+
+vim.g.unreal_engine_path = engine_path
+
+require("unrealengine").setup({
+  engine_path = engine_path,
+  build_type = "Development",
+  with_editor = true,
+  auto_generate = true,
+})
+
+local commands = require("unrealengine.commands")
+
+vim.keymap.set("n", "<leader>ug", commands.generate_lsp, { desc = "UnrealEngine: Generate LSP" })
+vim.keymap.set("n", "<leader>ub", commands.build, { desc = "UnrealEngine: Build" })
+vim.keymap.set("n", "<leader>ur", commands.rebuild, { desc = "UnrealEngine: Rebuild" })
+vim.keymap.set("n", "<leader>uc", commands.clean, { desc = "UnrealEngine: Clean" })
+vim.keymap.set("n", "<leader>uo", commands.open, { desc = "UnrealEngine: Open Editor" })
+vim.keymap.set("n", "<leader>ue", commands.build_engine, { desc = "UnrealEngine: Build Engine Plugin" })
+{{- end -}}

@@ -35,6 +35,7 @@ vim.api.nvim_create_autocmd('PackChanged', { callback = hooks })
 
 local pack_plugins = {
   'https://github.com/Mathijs-Bakker/godotdev.nvim',
+  'https://github.com/mbwilding/UnrealEngine.nvim',
   'https://github.com/ray-x/go.nvim',
   -- recommended if need floating window support
   'https://github.com/ray-x/guihua.lua',
@@ -318,6 +319,7 @@ require("plugins.markdown-preview")
 require("plugins.numb")
 require("plugins.nvimtree")
 require("plugins.godot")
+pcall(require, "plugins.unreal")
 -- require("plugins.nvim-treesitter")
 require("plugins.telescope")
 require("plugins.noice")
