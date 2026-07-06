@@ -6,8 +6,10 @@ require("avante").setup({
       model = "chat",
       api_key_name = "TERM",
       timeout = 30000,
-      temperature = 0,
-      max_tokens = 4096,
+      extra_request_body = {
+        temperature = 0,
+        max_tokens = 4096,
+      },
       ["local"] = true,
     },
   },
