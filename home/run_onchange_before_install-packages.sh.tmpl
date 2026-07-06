@@ -18,7 +18,7 @@ set -eu
 {{ $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) }}
 {{ $f := $p.features }}
 
-# hash: {{ index $f "ollama" }}
+# hash: {{ index $f "llama" }}
 
 if ! command -v pkg >/dev/null 2>&1; then
   echo "pkg not found; not a Termux environment, skipping"
@@ -48,8 +48,8 @@ apt install -y --no-install-recommends \
 {{- end }}
 {{- end }}
 {{- end }}
-{{- if index $f "ollama" }}
-  ollama \
+{{- if index $f "llama" }}
+  llama-cpp \
   termux-services \
 {{- end }}
 

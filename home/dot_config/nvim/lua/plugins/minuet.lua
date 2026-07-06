@@ -1,48 +1,51 @@
-local ollama_models = require("ollama_models")
-
-local function is_termux()
-  return os.getenv("TERMUX_VERSION") ~= nil
-end
-
--- Git/VCS buffers: local cmp-git is enough; minuet would call Ollama on every keystroke.
-local auto_trigger_ignore_ft = {
-  "help",
-  "TelescopePrompt",
-  "neo-tree",
-  "lazy",
-  "AvanteInput",
-  "gitcommit",
-  "gitrebase",
-  "gitconfig",
-  "fugitive",
-  "fugitiveblame",
-  "octo",
-}
-
+-- Minuet inline completions via llama-swap (llama-server FIM backend).
 require("minuet").setup({
-  provider = "openai_compatible",
+  provider = "openai_fim_compatible",
+  n_completions = 1,
+  context_window = 4096,
+  request_timeout = 60,
   provider_options = {
-    openai_compatible = {
-      model = ollama_models.get_coder(),
-      end_point = "http://localhost:11434/v1/chat/completions",
-      -- Ollama ignores the Bearer token; any non-empty string works. TERM is
-      -- usually set in terminals; fall back for GUI / stripped environments.
+    openai_fim_compatible = {
+      model = "coder",
+      end_point = "http://127.0.0.1:9292/v1/completions",
       api_key = function()
-        return vim.env.TERM or "ollama"
+        return vim.env.TERM or "local"
       end,
-      name = "Ollama",
+      name = "Llama.cpp",
       stream = true,
       optional = {
-        max_tokens = 256,
-        stop = { "\n" },
+        max_tokens = 56,
+        top_p = 0.9,
+        stop = { "\n\n" },
+      },
+      template = {
+        prompt = function(context_before_cursor, context_after_cursor, _)
+          return "<|fim_prefix|>"
+            .. context_before_cursor
+            .. "<|fim_suffix|>"
+            .. context_after_cursor
+            .. "<|fim_middle|>"
+        end,
+        suffix = false,
       },
     },
   },
   notify = "warn",
   virtualtext = {
-    -- Termux has no local Ollama; skip auto-trigger to avoid pointless requests.
-    auto_trigger_ft = is_termux() and {} or { "*" },
-    auto_trigger_ignore_ft = auto_trigger_ignore_ft,
+    auto_trigger_ft = { "*" },
+    auto_trigger_ignore_ft = {
+      "help",
+      "TelescopePrompt",
+      "neo-tree",
+      "lazy",
+      "AvanteInput",
+      "gitcommit",
+      "gitrebase",
+      "gitconfig",
+      "fugitive",
+      "fugitiveblame",
+      "octo",
+    },
     keymap = {
       accept = "<Tab>",
       accept_line = "<C-l>",
@@ -52,7 +55,7 @@ require("minuet").setup({
   },
 })
 
--- Ollama often isn't running; connection failures shouldn't spam the UI.
+-- llama-swap often isn't running; connection failures shouldn't spam the UI.
 do
   local utils = require("minuet.utils")
   local notify = utils.notify

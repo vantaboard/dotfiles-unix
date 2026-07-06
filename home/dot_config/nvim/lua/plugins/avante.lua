@@ -1,21 +1,16 @@
-local ollama_models = require("ollama_models")
-
 require("avante").setup({
-  provider = "ollama", -- Use the built-in ollama provider
+  provider = "openai",
   providers = {
-    ollama = {
-      endpoint = "http://localhost:11434",
-      model = ollama_models.get_coder(),
+    openai = {
+      endpoint = "http://127.0.0.1:9292/v1",
+      model = "chat",
       api_key_name = "TERM",
-      timeout = 30000, -- 30 seconds
+      timeout = 30000,
       temperature = 0,
       max_tokens = 4096,
-      -- Optional: you can still inherit from openai if you need specific parsing
-      -- but the new native ollama provider handles most standard setups.
       ["local"] = true,
     },
   },
-  -- Ensure these match your previous intent
   behaviour = {
     auto_suggestions = false,
     auto_set_highlight_group = true,
@@ -27,6 +22,6 @@ require("avante").setup({
   },
 })
 
-require('render-markdown').setup({
+require("render-markdown").setup({
   file_types = { "markdown", "Avante" },
 })

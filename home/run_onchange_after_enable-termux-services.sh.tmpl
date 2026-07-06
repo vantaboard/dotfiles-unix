@@ -2,7 +2,7 @@
 #!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
 set -euo pipefail
 
-# hash: termux-services-v2
+# hash: termux-services-v3
 
 {{ $p := .profile_termux_example }}
 {{ if index . "profile" }}
@@ -17,7 +17,7 @@ set -euo pipefail
 {{ $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) }}
 {{ $f := $p.features }}
 
-# hash: {{ index $f "ollama" }}
+# hash: {{ index $f "llama" }}
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Termux service setup"
@@ -29,19 +29,22 @@ if ! command -v pkg >/dev/null 2>&1; then
   exit 0
 fi
 
-OLLAMA_FEATURE={{ if index $f "ollama" }}1{{ else }}0{{ end }}
-if [[ "$OLLAMA_FEATURE" != "1" ]] && ! command -v ollama >/dev/null 2>&1; then
-  echo "ollama not installed and feature disabled; skipping Termux service setup"
+LLAMA_FEATURE={{ if index $f "llama" }}1{{ else }}0{{ end }}
+if [[ "$LLAMA_FEATURE" != "1" ]] && ! command -v llama-server >/dev/null 2>&1; then
+  echo "llama-cpp not installed and feature disabled; skipping Termux service setup"
   exit 0
 fi
 
 PREFIX="${PREFIX:-{{ dir .chezmoi.homeDir }}/usr}"
+HOME_DIR="{{ .chezmoi.homeDir }}"
 export SVDIR="${SVDIR:-$PREFIX/var/service}"
 export LOGDIR="${LOGDIR:-$PREFIX/var/log}"
 SH_BIN="$PREFIX/bin/sh"
-SERVICE_DIR="$SVDIR/ollama"
+SERVICE_DIR="$SVDIR/llama-server"
 RUN_SCRIPT="$SERVICE_DIR/run"
 START_SERVICES="$PREFIX/etc/profile.d/start-services.sh"
+MODEL_PATH="$HOME_DIR/.local/share/llama.cpp/models/coder.gguf"
+LISTEN_PORT=9292
 
 install_termux_services() {
   if command -v sv >/dev/null 2>&1 && command -v service-daemon >/dev/null 2>&1; then
@@ -90,14 +93,18 @@ wait_for_supervise() {
   return 1
 }
 
-ollama_service_running() {
-  sv status ollama 2>/dev/null | grep -q 'run: ollama: (pid [0-9]'
+llama_service_running() {
+  sv status llama-server 2>/dev/null | grep -q 'run: llama-server: (pid [0-9]'
 }
 
-setup_ollama_service() {
-  if ! command -v ollama >/dev/null 2>&1; then
-    echo "WARN: ollama feature enabled but ollama not installed (pkg install ollama)"
+setup_llama_service() {
+  if ! command -v llama-server >/dev/null 2>&1; then
+    echo "WARN: llama feature enabled but llama-server not installed (pkg install llama-cpp)"
     return 0
+  fi
+
+  if [[ ! -f "$MODEL_PATH" ]]; then
+    echo "WARN: coder model missing at $MODEL_PATH; run chezmoi apply after models download"
   fi
 
   if ! install_termux_services; then
@@ -111,7 +118,14 @@ setup_ollama_service() {
   fi
   cat > "$RUN_SCRIPT" << EOF
 #!$SH_BIN
-exec ollama serve
+exec llama-server \\
+  --host 127.0.0.1 \\
+  --port ${LISTEN_PORT} \\
+  --model "$MODEL_PATH" \\
+  -ngl 99 \\
+  -fa \\
+  -c 8192 \\
+  --cache-reuse 256
 EOF
   chmod 700 "$RUN_SCRIPT"
   if [[ -e "$PREFIX/share/termux-services/svlogger" ]]; then
@@ -121,32 +135,38 @@ EOF
     : > "$SERVICE_DIR/down"
   fi
 
+  # Retire legacy Ollama service if present.
+  if [[ -d "$SVDIR/ollama" ]]; then
+    sv down ollama 2>/dev/null || true
+    rm -f "$SVDIR/ollama/down" 2>/dev/null || true
+  fi
+
   if ! ensure_service_daemon; then
-    echo "WARN: runsvdir not running. Restart Termux, then: sv-enable ollama && sv up ollama"
+    echo "WARN: runsvdir not running. Restart Termux, then: sv-enable llama-server && sv up llama-server"
     return 0
   fi
 
   wait_for_supervise "$SERVICE_DIR" || true
 
   if command -v sv-enable >/dev/null 2>&1; then
-    sv-enable ollama
+    sv-enable llama-server
   else
     rm -f "$SERVICE_DIR/down"
   fi
 
   wait_for_supervise "$SERVICE_DIR" || sleep 2
-  sv up ollama 2>/dev/null || true
+  sv up llama-server 2>/dev/null || true
   wait_for_supervise "$SERVICE_DIR/log" || true
-  sv up ollama 2>/dev/null || true
+  sv up llama-server 2>/dev/null || true
 
-  if ollama_service_running; then
-    echo "Ollama service running (sv status ollama)"
+  if llama_service_running; then
+    echo "llama-server running on 127.0.0.1:${LISTEN_PORT} (sv status llama-server)"
   else
-    echo "Ollama service files installed but not running yet."
-    echo "  Restart Termux, then run: sv-enable ollama && sv up ollama"
-    echo "  Logs: $PREFIX/var/log/sv/ollama/current"
+    echo "llama-server service files installed but not running yet."
+    echo "  Restart Termux, then run: sv-enable llama-server && sv up llama-server"
+    echo "  Logs: $PREFIX/var/log/sv/llama-server/current"
   fi
 }
 
-setup_ollama_service
+setup_llama_service
 {{ end -}}
