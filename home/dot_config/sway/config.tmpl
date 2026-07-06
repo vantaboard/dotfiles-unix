@@ -21,7 +21,10 @@ include /etc/sway/config.d/*
 exec --no-startup-id dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE SWAYSOCK
 exec --no-startup-id dunst
 {{- if index $f "sunshine" }}
-exec --no-startup-id systemctl --user enable --now sunshine.service
+# `start`, not `enable --now`: sunshine.service is an alias of
+# app-dev.lizardbyte.app.Sunshine.service and systemd refuses to enable
+# alias names, which made the whole `enable --now` fail and skip the start.
+exec --no-startup-id systemctl --user start sunshine.service
 {{- end }}
 exec --no-startup-id kanshi
 exec_always --no-startup-id $HOME/.local/bin/sway-wallpaper

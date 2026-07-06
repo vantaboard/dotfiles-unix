@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: sunshine-v2
+# hash: sunshine-v3
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping sunshine install"
@@ -63,7 +63,10 @@ ensure_sunshine_autostart() {
     return 0
   fi
 
-  if systemctl --user enable sunshine.service 2>/dev/null; then
+  # sunshine.service is an alias of app-dev.lizardbyte.app.Sunshine.service;
+  # systemd refuses to enable alias names, so enable the real unit first.
+  if systemctl --user enable app-dev.lizardbyte.app.Sunshine.service 2>/dev/null \
+    || systemctl --user enable sunshine.service 2>/dev/null; then
     systemctl --user start sunshine.service 2>/dev/null || true
     echo "sunshine autostart enabled (systemd user unit)"
   else
