@@ -49,6 +49,8 @@ local pack_plugins = {
   },
 'https://github.com/saecki/live-rename.nvim',
 'https://github.com/MunifTanjim/nui.nvim',
+'https://github.com/rcarriga/nvim-notify',
+'https://github.com/folke/noice.nvim',
 'https://github.com/junegunn/fzf',
 'https://github.com/mhanberg/output-panel.nvim',
 'https://github.com/vitalk/vim-shebang',
@@ -316,6 +318,7 @@ require("plugins.nvimtree")
 require("plugins.godot")
 -- require("plugins.nvim-treesitter")
 require("plugins.telescope")
+require("plugins.noice")
 require("plugins.spectre")
 require("plugins.autosave")
 require("plugins.texmagic")
