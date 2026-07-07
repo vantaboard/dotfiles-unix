@@ -21,10 +21,13 @@ include /etc/sway/config.d/*
 exec --no-startup-id dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE SWAYSOCK
 exec --no-startup-id dunst
 {{- if index $f "sunshine" }}
-# `start`, not `enable --now`: sunshine.service is an alias of
+# `restart`, not `start`: the user service survives `swaymsg exit` still
+# bound to the dead session's Wayland display/PipeWire streams, so a plain
+# `start` is a no-op and streaming silently stays broken after re-login.
+# (Not `enable --now` either: sunshine.service is an alias of
 # app-dev.lizardbyte.app.Sunshine.service and systemd refuses to enable
-# alias names, which made the whole `enable --now` fail and skip the start.
-exec --no-startup-id systemctl --user start sunshine.service
+# alias names, which made the whole `enable --now` fail and skip the start.)
+exec --no-startup-id systemctl --user restart sunshine.service
 {{- end }}
 exec --no-startup-id kanshi
 # Retries kanshi when a dock hotplug race leaves outputs dark (e.g. undock
