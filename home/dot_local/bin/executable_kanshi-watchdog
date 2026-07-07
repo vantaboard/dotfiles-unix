@@ -47,14 +47,29 @@ restart_kanshi() {
     setsid -f kanshi >/dev/null 2>&1 || true
 }
 
+# On session restart the previous watchdog may still hold the flock for up to
+# a minute, which makes the new session's watchdog exit. Instead of dying with
+# our original sway, adopt the newest session by re-resolving the IPC socket,
+# so whichever single instance survives always serves the live session.
+find_swaysock() {
+    find "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" -maxdepth 1 \
+        -name 'sway-ipc.*.sock' -type s -printf '%T@ %p\n' 2>/dev/null \
+        | sort -rn | head -n1 | cut -d' ' -f2-
+}
+
 mismatch=0
 sway_failures=0
 while sleep 5; do
     if ! swaymsg -t get_version >/dev/null 2>&1; then
-        ((sway_failures++)) || true
-        # Session is gone; exit so we don't outlive sway.
-        (( sway_failures >= 12 )) && { log "sway unreachable for 60s; exiting"; exit 0; }
-        continue
+        SWAYSOCK="$(find_swaysock)"
+        export SWAYSOCK
+        if [[ -z "$SWAYSOCK" ]] || ! swaymsg -t get_version >/dev/null 2>&1; then
+            ((sway_failures++)) || true
+            # No live session at all; exit so we don't linger forever.
+            (( sway_failures >= 12 )) && { log "sway unreachable for 60s; exiting"; exit 0; }
+            continue
+        fi
+        log "adopted sway session at $SWAYSOCK"
     fi
     sway_failures=0
 
