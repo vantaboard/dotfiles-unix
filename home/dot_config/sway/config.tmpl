@@ -55,8 +55,11 @@ exec swayidle -w \
 exec --no-startup-id systemctl --user enable --now dropbox.service
 {{- end }}
 
-# Start a hidden kitty instance for fast startup
-exec --no-startup-id $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
+# Start a hidden kitty instance for fast startup. Kill any daemon leaked from
+# a previous session first: it survives `swaymsg exit` (stuck in a DRM syncobj
+# wait against the dead session, ignoring SIGTERM) and hijacks the
+# single-instance socket, making Mod+Return silently do nothing.
+exec --no-startup-id pkill -9 -f "^$HOME/.local/bin/kitty --single-instance" 2>/dev/null; sleep 1; exec $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
 
 set $mod Mod4
 
