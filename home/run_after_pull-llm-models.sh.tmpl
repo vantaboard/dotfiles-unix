@@ -71,7 +71,10 @@ select_tier() {
 
 tier_coder_url() {
   case "$1" in
-    high) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf" ;;
+    # 3B (not 7B) even on the high tier: the coder model serves inline FIM
+    # completions where latency beats smarts, and 3B leaves room for the chat
+    # model to stay resident on the same GPU (llama-swap group, no swapping).
+    high) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf" ;;
     medium) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf" ;;
     low) echo "https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf" ;;
   esac
@@ -107,18 +110,26 @@ write_manifest() {
 download_model() {
   local url=$1 dest=$2 expected_sha=$3
   local tmp="${dest}.partial"
+  # Sidecar records which URL produced the file, so switching a tier to a
+  # different model actually replaces the old download.
+  local url_file="${dest}.url"
 
   if [[ -f "$dest" ]]; then
-    if [[ -z "$expected_sha" ]]; then
+    if [[ -f "$url_file" && "$(cat "$url_file")" != "$url" ]]; then
+      echo "Model source changed for $(basename "$dest"); re-downloading"
+      rm -f "$dest"
+    elif [[ -z "$expected_sha" ]]; then
       echo "OK: $(basename "$dest") already present"
+      printf '%s\n' "$url" > "$url_file"
       return 0
-    fi
-    if [[ "$(sha256sum "$dest" | awk '{print $1}')" == "$expected_sha" ]]; then
+    elif [[ "$(sha256sum "$dest" | awk '{print $1}')" == "$expected_sha" ]]; then
       echo "OK: $(basename "$dest") checksum matches"
+      printf '%s\n' "$url" > "$url_file"
       return 0
+    else
+      echo "WARN: $(basename "$dest") checksum mismatch; re-downloading"
+      rm -f "$dest"
     fi
-    echo "WARN: $(basename "$dest") checksum mismatch; re-downloading"
-    rm -f "$dest"
   fi
 
   mkdir -p "$(dirname "$dest")"
@@ -135,6 +146,7 @@ download_model() {
       return 1
     fi
   fi
+  printf '%s\n' "$url" > "$url_file"
   echo "OK: $(basename "$dest")"
 }
 

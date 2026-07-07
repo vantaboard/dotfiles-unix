@@ -4,6 +4,9 @@
 {{ $models := printf "%s/.local/share/llama.cpp/models" $home }}
 
 models:
+  # Inline FIM completions (Minuet). 3B so it can stay resident next to the
+  # 7B chat model in 8GB VRAM. No ttl: completions must never pay a reload.
+  # Minuet sends 4096 tokens of context, so 8192 ctx is plenty.
   coder:
     cmd: >-
       /usr/local/bin/llama-server
@@ -12,13 +15,12 @@ models:
       --model {{ $models }}/coder.gguf
       -ngl 99
       -fa on
-      -c 16384
+      -c 8192
       -ctk q8_0
       -ctv q8_0
       --cache-reuse 256
     aliases:
       - coder
-    ttl: 600
 
   chat:
     cmd: >-
@@ -35,3 +37,14 @@ models:
     aliases:
       - chat
     ttl: 600
+
+# Both models fit in the RTX 3070's 8GB (~2GB coder + ~5.5GB chat incl. ctx),
+# so keep them loaded side by side instead of swapping on every switch
+# between Minuet completions and Avante chat.
+groups:
+  resident:
+    swap: false
+    exclusive: false
+    members:
+      - coder
+      - chat
