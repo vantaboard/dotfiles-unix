@@ -111,10 +111,13 @@ if [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]]; then
         val="$(tr "\0" "\n" < "/proc/$pid/environ" | sed -n "s/^WLR_DRM_DEVICES=//p")"
         nvidia_card="$(find_card_by_driver nvidia || true)"
         intel_card="$(find_card_by_driver i915 || true)"
-        if [[ -n "$nvidia_card" ]]; then
-            expected="${nvidia_card}${intel_card:+:${intel_card}}"
-        else
+        # Intel first (primary renderer); see sway-session for why.
+        if [[ -n "$intel_card" && -n "$nvidia_card" ]]; then
+            expected="${intel_card}:${nvidia_card}"
+        elif [[ -n "$intel_card" ]]; then
             expected="$intel_card"
+        else
+            expected="$nvidia_card"
         fi
         [[ "$val" == "$expected" ]]
     }

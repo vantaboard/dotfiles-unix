@@ -21,8 +21,12 @@ fi
 
 # Expose both GPUs so dock hotplug works live without restarting the session.
 # The external displays are wired to the NVIDIA dGPU; the laptop panel to the
-# Intel iGPU. NVIDIA is listed first (primary renderer): wlroots' Intel-render/
-# NVIDIA-scanout path is unstable, whereas NVIDIA-render/Intel-scanout works.
+# Intel iGPU. Intel is listed FIRST (primary renderer): the proprietary NVIDIA
+# driver cannot allocate the linear shared buffers wlroots needs to drive a
+# secondary GPU's output (gbm_bo_create with SCANOUT|RENDERING|LINEAR returns
+# EINVAL), so NVIDIA-render/Intel-scanout can never light up eDP-1. The
+# reverse — Intel renders, NVIDIA scans out via its Vulkan importer — is the
+# standard hybrid-laptop wlroots layout.
 #
 # DRM card numbers are NOT stable across boots (nvidia-drm and i915 race at
 # boot, so either can grab card1). Resolve nodes by driver name instead of
@@ -54,16 +58,20 @@ if [[ -z "$nvidia_card" && -d /sys/module/nvidia ]]; then
 fi
 intel_card="$(find_card_by_driver i915 || true)"
 
-if [[ -n "$nvidia_card" ]]; then
-  export WLR_DRM_DEVICES="${nvidia_card}${intel_card:+:${intel_card}}"
-  # wlroots' GLES2 path on the proprietary NVIDIA driver corrupts buffers
-  # session-wide (heavy apps like Cursor trigger it), and the pixman software
-  # renderer fixes it but is too slow. The Vulkan renderer is GPU-accelerated
-  # and avoids the broken GLES2/GBM path.
+if [[ -n "$intel_card" && -n "$nvidia_card" ]]; then
+  export WLR_DRM_DEVICES="${intel_card}:${nvidia_card}"
+  # The multi-GPU renderer wlroots creates on the secondary (NVIDIA) card
+  # honors WLR_RENDERER. NVIDIA's GLES2/GBM path corrupts buffers and cannot
+  # import cross-GPU buffers reliably; its Vulkan driver is the well-supported
+  # path, so make the NVIDIA-side importer use Vulkan.
   export WLR_RENDERER=vulkan
 elif [[ -n "$intel_card" ]]; then
   # NVIDIA unavailable (driver failure): laptop panel only, Intel GLES2.
   export WLR_DRM_DEVICES="$intel_card"
+elif [[ -n "$nvidia_card" ]]; then
+  # Intel unavailable: NVIDIA-only, Vulkan to avoid the broken GLES2 path.
+  export WLR_DRM_DEVICES="$nvidia_card"
+  export WLR_RENDERER=vulkan
 fi
 
 SWAYFX_BIN="${HOME}/.local/bin/swayfx"
