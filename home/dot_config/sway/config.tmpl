@@ -21,7 +21,7 @@ include /etc/sway/config.d/*
 # Restart the portals after pushing the new session env: they are systemd
 # user services that survive `swaymsg exit` bound to the dead session's
 # Wayland socket, which silently breaks screenshare/screencast until relogin.
-exec --no-startup-id sh -c 'dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE SWAYSOCK; systemctl --user restart xdg-desktop-portal.service xdg-desktop-portal-gtk.service'
+exec --no-startup-id sh -c 'dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE SWAYSOCK; systemctl --user restart xdg-desktop-portal.service xdg-desktop-portal-gtk.service xdg-desktop-portal-wlr.service'
 exec --no-startup-id dunst
 {{- if index $f "sunshine" }}
 # `restart`, not `start`: the user service survives `swaymsg exit` still
