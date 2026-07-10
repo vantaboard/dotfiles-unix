@@ -59,6 +59,13 @@ docked_drm_ports_connected() {
     echo "$count"
 }
 
+dock_usb_present() {
+    # VIA/Realtek hub tree on 3-5 is the dock; USB often reconnects tens of
+    # seconds before NVIDIA MST exposes DP-4/5/6 after s2idle.
+    [[ -e /sys/bus/usb/devices/3-5 ]] || return 1
+    lsusb 2>/dev/null | grep -qE '2109:2822|2109:0822|0bda:5411'
+}
+
 is_docked() {
     [[ "$(docked_drm_ports_connected)" -ge 1 ]]
 }
@@ -88,6 +95,16 @@ wait_for_swaysock() {
 
 wait_for_drm() {
     local attempt count
+    # Prefer waiting for dock DP when the USB hub is back but MST is still down.
+    if dock_usb_present && ! is_docked; then
+        for attempt in $(seq 1 120); do
+            count="$(docked_drm_ports_connected)"
+            [[ "$count" -ge 3 ]] && { log "DRM ready: ${count} DP ports connected"; return 0; }
+            (( attempt % 15 == 0 )) && log "dock USB up, waiting for DP (${count}/3, ${attempt}s)"
+            sleep 1
+        done
+        log "dock USB present but DP never enumerated; falling back"
+    fi
     for attempt in $(seq 1 120); do
         if is_docked; then
             count="$(docked_drm_ports_connected)"
@@ -148,6 +165,14 @@ sway_outputs_healthy() {
             | jq -r '[.[] | select(.name == "eDP-1") | select(.active)
                       | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' \
             2>/dev/null || echo 0)"
+        # Dock USB is back but we only have the laptop panel: resume recovery
+        # likely ran before MST came up and must not declare success.
+        if dock_usb_present && [[ "$(docked_drm_ports_connected)" -ge 1 ]]; then
+            return 1
+        fi
+        if dock_usb_present && [[ "$(sway_dp_active_count)" -eq 0 ]]; then
+            return 1
+        fi
         [[ "$ready" -ge 1 && "$gbm_errors" -eq 0 ]]
     fi
 }
@@ -220,7 +245,7 @@ log "post-GPU settle pause"
 sleep 5
 
 required=1
-if is_docked; then required=3; fi
+if is_docked || dock_usb_present; then required=3; fi
 
 for round in $(seq 1 5); do
     log "recovery round ${round} (need ${required} healthy outputs)"

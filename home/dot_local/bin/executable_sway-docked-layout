@@ -12,6 +12,6 @@ if [[ "$external_active" -ge 3 ]]; then
     swaymsg output DP-6 enable dpms on mode 1920x1080@60Hz position 3840 0
     swaymsg output eDP-1 disable
 else
-    swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0,0
+    swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0 0
 fi
 

@@ -87,8 +87,9 @@ while sleep 5; do
     if (( dp_conn == 0 && edp_active == 0 )); then
         # Undocked but the laptop panel is off: the failure this watchdog exists for.
         ((mismatch++)) || true
-    elif (( dp_conn >= 1 && dp_active == 0 && edp_active == 0 )); then
-        # External outputs connected but nothing is lit at all.
+    elif (( dp_conn >= 1 && dp_active == 0 )); then
+        # Kernel sees dock outputs but sway has not applied the docked profile
+        # (common after resume: recovery ran before MST enumerated).
         ((mismatch++)) || true
     else
         mismatch=0
