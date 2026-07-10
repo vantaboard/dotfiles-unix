@@ -12,7 +12,7 @@ profile_example:
     displays_resume: true
     docker: true
     dropbox: true
-    onlyoffice: false
+    onlyoffice: true
     dunst: true
     earlyoom: true
     eza: true
