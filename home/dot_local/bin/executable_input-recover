@@ -1,0 +1,113 @@
+#!/bin/bash
+# Re-attach dock hotplugged pointer devices sway missed at session start.
+set -euo pipefail
+
+SWAY_BIN="${SWAY_BIN:-swaymsg}"
+LOG_TAG="input-recover"
+DOCK_HUB_USB="${DOCK_HUB_USB:-3-5}"
+
+log() { logger -t "$LOG_TAG" "$*"; echo "$LOG_TAG: $*"; }
+
+sway_pointers() {
+  "$SWAY_BIN" -t get_inputs 2>/dev/null \
+    | jq -r '.[] | select(.type=="pointer") | .name' \
+    | sort -u
+}
+
+proc_rel_mice() {
+  awk '
+    BEGIN { name = ""; has_mouse = 0; has_rel = 0 }
+    /^N: / { gsub(/^N: Name="|"$/, ""); name = $0 }
+    /^H: / { has_mouse = ($0 ~ /mouse[0-9]/) }
+    /^B: REL=/ { has_rel = 1 }
+    /^$/ {
+      if (name != "" && has_mouse && has_rel && name !~ /keyd|passthrough|FootSwitch/) print name
+      name = ""; has_mouse = 0; has_rel = 0
+    }
+    END {
+      if (name != "" && has_mouse && has_rel && name !~ /keyd|passthrough|FootSwitch/) print name
+    }
+  ' /proc/bus/input/devices | sort -u
+}
+
+missing_pointers() {
+  comm -23 <(proc_rel_mice) <(sway_pointers)
+}
+
+rebind_dock_usb() {
+  local hub="$1" dev vend class node
+  [[ -d "/sys/bus/usb/devices/$hub" ]] || return 0
+  for dev in /sys/bus/usb/devices/"${hub}"*; do
+    [[ -f "$dev/idVendor" ]] || continue
+    vend="$(cat "$dev/idVendor" 2>/dev/null || true)"
+    class="$(cat "$dev/bDeviceClass" 2>/dev/null || true)"
+    [[ "$class" == "09" ]] && continue
+    [[ "$vend" == "1d6b" ]] && continue
+    node="$(basename "$dev")"
+    [[ "$node" == *:* ]] && continue
+    log "rebinding usb $node ($vend)"
+    echo "$node" > /sys/bus/usb/drivers/usb/unbind 2>/dev/null || true
+    sleep 0.5
+    echo "$node" > /sys/bus/usb/drivers/usb/bind 2>/dev/null || true
+    sleep 0.5
+  done
+}
+
+reload_udev() {
+  udevadm info --cleanup-db 2>/dev/null || true
+  udevadm control --reload-rules 2>/dev/null || true
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl restart systemd-udevd 2>/dev/null || true
+  fi
+  udevadm trigger --subsystem-match=input --action=change 2>/dev/null || true
+  sleep 2
+}
+
+recover_inputs() {
+  local missing ev
+  missing="$(missing_pointers || true)"
+  [[ -n "$missing" ]] || return 0
+
+  log "missing pointers in sway: $(echo "$missing" | tr '\n' ' ')"
+
+  reload_udev
+
+  if [[ -w /sys/bus/usb/drivers/usb/unbind ]]; then
+    rebind_dock_usb "$DOCK_HUB_USB"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo -n "$0" --rebind-usb "$DOCK_HUB_USB" 2>/dev/null \
+      || log "need passwordless sudo to rebind dock USB devices"
+  fi
+
+  sleep 2
+  missing="$(missing_pointers || true)"
+  if [[ -n "$missing" ]]; then
+    log "still missing; restarting udev and rebinding dock USB"
+    if command -v sudo >/dev/null 2>&1; then
+      sudo -n systemctl restart systemd-udevd 2>/dev/null || true
+      sudo -n udevadm info --cleanup-db 2>/dev/null || true
+      sudo -n "$0" --rebind-usb "$DOCK_HUB_USB" 2>/dev/null || true
+    fi
+    sleep 3
+    missing="$(missing_pointers || true)"
+  fi
+
+  if [[ -n "$missing" ]]; then
+    log "still missing after recovery: $(echo "$missing" | tr '\n' ' ')"
+    return 1
+  fi
+  log "all pointer devices present in sway"
+}
+
+case "${1:-}" in
+  --rebind-usb)
+    rebind_dock_usb "${2:-$DOCK_HUB_USB}"
+    ;;
+  --foreground)
+    recover_inputs
+    ;;
+  *)
+    sleep 3
+    recover_inputs || true
+    ;;
+esac

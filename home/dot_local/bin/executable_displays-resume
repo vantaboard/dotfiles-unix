@@ -256,6 +256,7 @@ for round in $(seq 1 5); do
     log "round ${round} result: ${count}/${required} outputs, gbm_errors=${gbm}"
     if sway_outputs_healthy "$required"; then
         log "outputs healthy after round ${round}"
+        "$HOME/.local/bin/input-recover" --foreground 2>/dev/null || true
         exit 0
     fi
     log "outputs still unhealthy after round ${round}; retrying"

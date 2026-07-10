@@ -36,6 +36,9 @@ exec --no-startup-id kanshi
 # Retries kanshi when a dock hotplug race leaves outputs dark (e.g. undock
 # while wlroots is mid-teardown fails the eDP-1 enable and kanshi gives up).
 exec --no-startup-id $HOME/.local/bin/kanshi-watchdog
+# Dock hotplug can leave pointer devices with stale udev metadata sway never
+# opened at login; rebind after GDM releases /dev/input.
+exec --no-startup-id $HOME/.local/bin/input-recover
 exec_always --no-startup-id $HOME/.local/bin/sway-wallpaper
 
 include $HOME/.config/sway/input-devices.conf
