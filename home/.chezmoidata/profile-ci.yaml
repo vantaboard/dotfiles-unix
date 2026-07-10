@@ -57,6 +57,7 @@ profile_ci:
     displays_resume: false
     llama: false
     sunshine: false
+    onlyoffice: false
     earlyoom: false
     thermald: false
   packages:

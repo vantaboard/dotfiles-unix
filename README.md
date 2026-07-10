@@ -73,6 +73,7 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_onchange_after_install-diff-so-fancy` | diff-so-fancy [v1.4.10 release](https://github.com/so-fancy/diff-so-fancy/releases) binary → `~/.local/bin` (when `diff_so_fancy` enabled) |
 | After dotfiles | `run_onchange_after_install-yt-dlp` | [yt-dlp](https://github.com/yt-dlp/yt-dlp) latest release binary → `~/.local/bin` (when `yt_dlp` enabled; Termux falls back to pkg/pip) |
 | After dotfiles | `run_onchange_after_install-dropbox` | Latest official [Dropbox .deb](https://linux.dropbox.com/packages/ubuntu/) + `libayatana-appindicator3-1` for tray icon; enables `dropbox.service` user unit for autostart (when `dropbox` enabled) |
+| After dotfiles | `run_onchange_after_install-onlyoffice` | Official [ONLYOFFICE Desktop Editors .deb](https://www.onlyoffice.com/download-desktop) for amd64/arm64 (when `onlyoffice` enabled) |
 | After dotfiles | `run_onchange_after_install-sunshine` | Latest official [Sunshine .deb](https://github.com/LizardByte/Sunshine/releases) for Ubuntu/Debian; enables `sunshine.service` user unit for Moonlight streaming (when `sunshine` enabled) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |

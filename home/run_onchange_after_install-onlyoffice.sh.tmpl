@@ -1,0 +1,87 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "onlyoffice" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: onlyoffice-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping ONLYOFFICE install"
+  exit 0
+fi
+
+ONLYOFFICE_BASE_URL="https://download.onlyoffice.com/install/desktop/editors/linux"
+
+onlyoffice_deb_variant() {
+  local arch
+  arch="$(dpkg --print-architecture 2>/dev/null || uname -m)"
+  case "$arch" in
+    amd64|x86_64) echo "onlyoffice-desktopeditors_amd64.deb" ;;
+    arm64|aarch64) echo "onlyoffice-desktopeditors_arm64.deb" ;;
+    *)
+      echo "WARN: ONLYOFFICE Linux package unsupported on arch=$arch; skipping" >&2
+      return 1
+      ;;
+  esac
+}
+
+already_installed=0
+if command -v desktopeditors >/dev/null 2>&1 \
+  || dpkg-query -W -f='${Status}' onlyoffice-desktopeditors 2>/dev/null | grep -q 'install ok installed'; then
+  already_installed=1
+  if dpkg-query -W -f='${Version}' onlyoffice-desktopeditors 2>/dev/null | grep -q .; then
+    echo "ONLYOFFICE already installed: onlyoffice-desktopeditors $(dpkg-query -W -f='${Version}' onlyoffice-desktopeditors)"
+  else
+    echo "ONLYOFFICE already installed"
+  fi
+fi
+
+if [[ "$already_installed" -eq 0 ]]; then
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping ONLYOFFICE install"
+    exit 0
+  fi
+
+  deb_name="$(onlyoffice_deb_variant)" || exit 0
+  deb_url="${ONLYOFFICE_BASE_URL}/${deb_name}"
+
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+  deb_path="$tmpdir/$deb_name"
+
+  echo "Downloading ONLYOFFICE Desktop Editors (${deb_name})..."
+  curl -fsSL "$deb_url" -o "$deb_path"
+
+  echo "Installing ONLYOFFICE..."
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt install -y -qq "$deb_path"
+
+  if dpkg-query -W -f='${Version}' onlyoffice-desktopeditors 2>/dev/null | grep -q .; then
+    echo "ONLYOFFICE installed: onlyoffice-desktopeditors $(dpkg-query -W -f='${Version}' onlyoffice-desktopeditors)"
+  else
+    echo "ONLYOFFICE installed: $deb_name"
+  fi
+
+  cat <<'EOF'
+
+ONLYOFFICE Desktop Editors is installed. Launch from your application menu
+or run: desktopeditors
+
+Download page: https://www.onlyoffice.com/download-desktop
+EOF
+fi
+{{- end -}}
+{{ end -}}

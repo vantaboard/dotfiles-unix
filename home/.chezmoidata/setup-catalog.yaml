@@ -360,6 +360,11 @@ setup_catalog:
       description: Official .deb from linux.dropbox.com; libayatana-appindicator3-1, python3-gi/gpg for CLI; autostart via systemd user unit
       default: false
       packages: [libayatana-appindicator3-1, python3-gi, python3-gpg]
+    onlyoffice:
+      category: desktop
+      label: ONLYOFFICE Desktop Editors
+      description: Official .deb from onlyoffice.com/download-desktop (amd64/arm64)
+      default: false
     sunshine:
       category: desktop
       label: Sunshine (Moonlight host)

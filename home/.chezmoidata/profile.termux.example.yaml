@@ -60,6 +60,7 @@ profile_termux_example:
     displays_resume: false
     llama: true
     sunshine: false
+    onlyoffice: false
     earlyoom: false
     thermald: false
   packages: []
