@@ -1,0 +1,6 @@
+# Dock hotplug can reuse event numbers while udev keeps stale ID_* properties
+# from a previous device on the same USB port path. Re-derive mouse identity
+# from sysfs so libinput/sway attach pointer devices after replug.
+
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{capabilities/rel}=="?*", \
+  ENV{ID_INPUT_MOUSE}="1", GROUP="input", MODE="0660", TAG+="uaccess", TAG+="seat"

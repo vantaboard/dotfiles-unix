@@ -134,6 +134,7 @@ profile_example:
     - keyd
     - displays_resume
     - libinput
+    - udev
     - sway_session
     - grub
     - llama

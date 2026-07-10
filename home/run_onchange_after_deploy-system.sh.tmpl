@@ -25,6 +25,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/grub/default" | sha256sum }}
 # hash: {{ include "system/keyd/default.conf" | sha256sum }}
 # hash: {{ include "system/libinput/local-overrides.quirks.tmpl" | sha256sum }}
+# hash: {{ include "system/udev/99-input-permissions.rules" | sha256sum }}
 # hash: {{ include "system/ssh/sshd_config.d/99-keyonly-port.conf" | sha256sum }}
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd-sleep/displays-resume.tmpl" | sha256sum }}
@@ -157,6 +158,17 @@ if has_deploy libinput; then
   sudo install -d /etc/libinput
   deploy_file "$TMP_QUIRKS" /etc/libinput/local-overrides.quirks
   rm -f "$TMP_QUIRKS"
+fi
+
+if has_deploy udev; then
+  deploy_file "$SOURCE/udev/99-input-permissions.rules" \
+    /etc/udev/rules.d/99-input-permissions.rules
+  if ! id -nG "{{ .chezmoi.username }}" | tr ' ' '\n' | grep -qx input; then
+    sudo usermod -aG input "{{ .chezmoi.username }}"
+    echo "Added {{ .chezmoi.username }} to input group; log out/in for group membership"
+  fi
+  sudo udevadm control --reload-rules 2>/dev/null || true
+  sudo udevadm trigger --subsystem-match=input --action=change 2>/dev/null || true
 fi
 
 echo "System configuration deployed"
