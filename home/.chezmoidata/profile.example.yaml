@@ -18,6 +18,7 @@ profile_example:
     fd: true
     fastfetch: true
     ffmpeg: true
+    yt_dlp: true
     flatpak: false
     fzf: true
     fzf_tab: true

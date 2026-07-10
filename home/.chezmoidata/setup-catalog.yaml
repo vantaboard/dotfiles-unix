@@ -427,6 +427,11 @@ setup_catalog:
       label: ffmpeg
       default: true
       packages: [ffmpeg]
+    yt_dlp:
+      category: dev
+      label: yt-dlp
+      default: true
+      description: Video/audio downloader; latest GitHub release binary in ~/.local/bin (enable ffmpeg for merge/post-process)
     diff_so_fancy:
       category: dev
       label: diff-so-fancy

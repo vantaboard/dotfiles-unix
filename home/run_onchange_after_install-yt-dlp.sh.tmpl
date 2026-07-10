@@ -1,0 +1,127 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "yt_dlp" -}}
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+set -euo pipefail
+{{ else -}}
+#!/bin/bash
+set -euo pipefail
+{{ end -}}
+
+# hash: yt-dlp-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping yt-dlp install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+YT_DLP_BIN="$HOME_DIR/.local/bin/yt-dlp"
+YT_DLP_BASE_URL="https://github.com/yt-dlp/yt-dlp/releases/latest/download"
+
+yt_dlp_usable() {
+  command -v yt-dlp >/dev/null 2>&1 && yt-dlp --version >/dev/null 2>&1
+}
+
+if yt_dlp_usable; then
+  echo "yt-dlp already installed: $(yt-dlp --version)"
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping yt-dlp install"
+  exit 0
+fi
+
+mkdir -p "$HOME_DIR/.local/bin"
+
+install_yt_dlp_termux() {
+  if (apt install -y yt-dlp 2>/dev/null || pkg install -y yt-dlp 2>/dev/null) \
+      && yt_dlp_usable; then
+    echo "yt-dlp installed via Termux package"
+    return 0
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    echo "Installing yt-dlp via pip..."
+    if python3 -m pip install -U --pre "yt-dlp[default]" \
+        && yt_dlp_usable; then
+      echo "yt-dlp installed via pip"
+      return 0
+    fi
+  fi
+
+  echo "Installing yt-dlp zipimport binary (requires python3)..."
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARN: python3 not found; skipping yt-dlp install"
+    return 1
+  fi
+  curl -fsSL "$YT_DLP_BASE_URL/yt-dlp" -o "$YT_DLP_BIN"
+  chmod +x "$YT_DLP_BIN"
+}
+
+install_yt_dlp_linux() {
+  local arch asset
+  case "$(uname -m)" in
+    x86_64|amd64)
+      asset=yt-dlp_linux
+      ;;
+    aarch64|arm64)
+      asset=yt-dlp_linux_aarch64
+      ;;
+    *)
+      asset=yt-dlp
+      ;;
+  esac
+
+  if [[ "$asset" == "yt-dlp" ]]; then
+    echo "WARN: unsupported arch for yt-dlp standalone binary: $(uname -m)"
+    if ! command -v python3 >/dev/null 2>&1; then
+      echo "WARN: python3 not found; skipping yt-dlp install"
+      return 1
+    fi
+    echo "Installing yt-dlp zipimport binary (requires python3)..."
+  else
+    echo "Installing yt-dlp standalone binary (${asset})..."
+  fi
+
+  curl -fsSL "$YT_DLP_BASE_URL/${asset}" -o "$YT_DLP_BIN"
+  chmod +x "$YT_DLP_BIN"
+}
+
+{{- if eq .chezmoi.os "android" }}
+if ! install_yt_dlp_termux; then
+  echo "WARN: yt-dlp install failed"
+  rm -f "$YT_DLP_BIN"
+  exit 0
+fi
+{{- else }}
+if ! install_yt_dlp_linux; then
+  echo "WARN: yt-dlp install failed"
+  rm -f "$YT_DLP_BIN"
+  exit 0
+fi
+{{- end }}
+
+if yt_dlp_usable; then
+  echo "yt-dlp installed: $(yt-dlp --version)"
+else
+  echo "WARN: yt-dlp install failed"
+  rm -f "$YT_DLP_BIN"
+  exit 0
+fi
+{{- end -}}
+{{ end -}}

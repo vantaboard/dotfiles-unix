@@ -71,6 +71,7 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_after_install-cursor` | Cursor dev/Nightly AppImage resolved from Cursor's update API → `~/.local/opt/cursor-dev/Cursor.AppImage` with `cursor` in `~/.local/bin`; registers `cursor://` URL handler for MCP OAuth (when `cursor` enabled; Linux x64 only) |
 | After dotfiles | `run_onchange_after_install-neovim` | Neovim [v0.12.3 release tarball](https://github.com/neovim/neovim/releases/tag/v0.12.3) → `~/.local/opt/nvim-linux-*` with `nvim` in `~/.local/bin` (when `neovim` enabled; Linux only) |
 | After dotfiles | `run_onchange_after_install-diff-so-fancy` | diff-so-fancy [v1.4.10 release](https://github.com/so-fancy/diff-so-fancy/releases) binary → `~/.local/bin` (when `diff_so_fancy` enabled) |
+| After dotfiles | `run_onchange_after_install-yt-dlp` | [yt-dlp](https://github.com/yt-dlp/yt-dlp) latest release binary → `~/.local/bin` (when `yt_dlp` enabled; Termux falls back to pkg/pip) |
 | After dotfiles | `run_onchange_after_install-dropbox` | Latest official [Dropbox .deb](https://linux.dropbox.com/packages/ubuntu/) + `libayatana-appindicator3-1` for tray icon; enables `dropbox.service` user unit for autostart (when `dropbox` enabled) |
 | After dotfiles | `run_onchange_after_install-sunshine` | Latest official [Sunshine .deb](https://github.com/LizardByte/Sunshine/releases) for Ubuntu/Debian; enables `sunshine.service` user unit for Moonlight streaming (when `sunshine` enabled) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |

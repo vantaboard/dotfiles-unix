@@ -52,6 +52,7 @@ profile_termux_example:
     docker: false
     clang: false
     ffmpeg: false
+    yt_dlp: false
     diff_so_fancy: false
     flatpak: false
     ssh_hardening: false

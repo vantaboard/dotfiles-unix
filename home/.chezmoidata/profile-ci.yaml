@@ -49,6 +49,7 @@ profile_ci:
     docker: false
     clang: true
     ffmpeg: false
+    yt_dlp: false
     diff_so_fancy: false
     flatpak: false
     ssh_hardening: false
