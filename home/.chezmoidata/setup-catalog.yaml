@@ -264,6 +264,19 @@ setup_catalog:
         - libjpeg-dev
         - gcc-14
         - g++-14
+    still:
+      category: desktop
+      label: still
+      description: Wayland screen freeze for grim/slurp screenshots; built from faergeek/still v0.0.9 into ~/.local/bin
+      default: true
+      requires: [desktop_sway]
+      install_tools: true
+      packages:
+        - meson
+        - ninja-build
+        - libpixman-1-dev
+        - libwayland-dev
+        - wayland-protocols
     swayfx:
       category: desktop
       label: SwayFX compositor

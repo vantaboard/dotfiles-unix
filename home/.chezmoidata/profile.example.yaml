@@ -30,6 +30,7 @@ profile_example:
     grub: true
     htop: false
     hyprpicker: true
+    still: true
     swappy: true
     swayfx: true
     jq: true

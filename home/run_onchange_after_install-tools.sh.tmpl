@@ -43,6 +43,8 @@ TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-r
 VIVID_VERSION="0.10.1"
 HYPRPICKER_VERSION="v0.3.0"
 HYPRPICKER_DIR="$HOME_DIR/.local/share/src/hyprpicker"
+STILL_VERSION="v0.0.9"
+STILL_DIR="$HOME_DIR/.local/share/src/still"
 SWAYFX_VERSION="0.5.3"
 SCENEFX_VERSION="0.4.1"
 WLROOTS_VERSION="0.19.0"
@@ -627,6 +629,73 @@ install_hyprpicker() {
   fi
 }
 
+install_still() {
+  still_usable() {
+    command -v still >/dev/null 2>&1 && still --help >/dev/null 2>&1
+  }
+
+  if still_usable || [[ -x "$LOCAL_BIN/still" ]]; then
+    echo "still already installed"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping still install"
+    return 0
+  fi
+  if ! command -v meson >/dev/null 2>&1 || ! command -v ninja >/dev/null 2>&1; then
+    echo "WARN: meson/ninja not found; skipping still install"
+    return 0
+  fi
+
+  local build_deps=(
+    meson ninja-build libpixman-1-dev libwayland-dev wayland-protocols
+  )
+  local dep missing=()
+  if command -v dpkg >/dev/null 2>&1; then
+    for dep in "${build_deps[@]}"; do
+      if ! dpkg -s "$dep" >/dev/null 2>&1; then
+        missing+=("$dep")
+      fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      echo "Installing still build dependencies: ${missing[*]}"
+      sudo apt install -y -qq --no-install-recommends "${missing[@]}"
+    fi
+  fi
+
+  mkdir -p "$LOCAL_BIN"
+
+  if [[ ! -d "$STILL_DIR/.git" ]]; then
+    echo "Cloning still ${STILL_VERSION}..."
+    git clone --depth 1 --branch "$STILL_VERSION" \
+      https://github.com/faergeek/still "$STILL_DIR"
+  else
+    git -C "$STILL_DIR" fetch --depth 1 origin tag "$STILL_VERSION" 2>/dev/null || true
+    git -C "$STILL_DIR" checkout "$STILL_VERSION" 2>/dev/null || true
+  fi
+
+  echo "Building still ${STILL_VERSION}..."
+  meson setup "$STILL_DIR/build" "$STILL_DIR" \
+    --buildtype=release --prefix="$LOCAL_PREFIX" --reconfigure 2>/dev/null \
+    || meson setup "$STILL_DIR/build" "$STILL_DIR" \
+      --buildtype=release --prefix="$LOCAL_PREFIX"
+  ninja -C "$STILL_DIR/build"
+  ninja -C "$STILL_DIR/build" install
+
+  if still_usable || [[ -x "$LOCAL_BIN/still" ]]; then
+    echo "still ready ($LOCAL_BIN/still)"
+  else
+    install -m 755 "$STILL_DIR/build/still" "$LOCAL_BIN/still"
+    if still_usable || [[ -x "$LOCAL_BIN/still" ]]; then
+      echo "still ready ($LOCAL_BIN/still)"
+    else
+      echo "WARN: still install failed"
+      return 0
+    fi
+  fi
+}
+
 install_swayfx() {
   SWAYFX_HIDE_CURSOR_PATCH="$HOME_DIR/.local/share/patches/swayfx-hide-cursor-keep-active.patch"
 
@@ -1019,6 +1088,19 @@ install_glab
 
 {{- if $hyprpickerEnabled }}
 install_hyprpicker
+{{- end }}
+
+{{- $stillEnabled := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if eq (index $f "still") true -}}
+{{-     $stillEnabled = true -}}
+{{-   else if and (index $f "desktop_sway") (ne (index $f "still") false) -}}
+{{-     $stillEnabled = true -}}
+{{-   end -}}
+{{- end -}}
+
+{{- if $stillEnabled }}
+install_still
 {{- end }}
 
 {{- $swayfxEnabled := false -}}
