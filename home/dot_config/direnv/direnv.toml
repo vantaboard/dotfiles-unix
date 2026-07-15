@@ -1,0 +1,7 @@
+# Presence of this file is required for direnv >= 2.36 to honor DIRENV_LOG_FORMAT
+# (see ~/.zshenv). Without it, status lines like "direnv: loading …" print during
+# shell startup and Powerlevel10k instant prompt warns about console I/O.
+#
+# DIRENV_LOG_FORMAT="" (set in ~/.zshenv) disables those status logs.
+# On direnv >= 2.38 you can instead use: log_format = "-"
+[global]

@@ -35,9 +35,13 @@ if command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
 fi
 {{- end }}
 {{- if index $f "direnv" }}
-# Silence "direnv: loading …" and load .envrc in zshenv so Powerlevel10k instant
-# prompt (sourced at the top of ~/.zshrc) does not see console I/O from direnv's
-# precmd hook on first prompt.
+# Silence "direnv: loading …" / "direnv: export …" and load .envrc in zshenv so
+# Powerlevel10k instant prompt (sourced at the top of ~/.zshrc) does not see
+# console I/O from direnv's precmd hook on first prompt.
+#
+# direnv >= 2.36 only reads DIRENV_LOG_FORMAT when ~/.config/direnv/direnv.toml
+# exists — an empty value then disables status logging. Early _direnv_hook makes
+# the initial .envrc load happen before instant prompt is sourced.
 export DIRENV_LOG_FORMAT=""
 eval "$(direnv hook zsh)"
 if [[ -o interactive ]]; then
