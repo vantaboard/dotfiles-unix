@@ -1,13 +1,33 @@
 #!/usr/bin/env bash
-# Expose local llama-swap (Avante `chat` model) for Cursor BYOK.
-# Cursor cannot reach localhost — needs a public HTTPS URL.
+# Expose a model-routing proxy for Cursor BYOK:
+#   model "chat" -> llama-swap (Avante's local Qwen)
+#   everything else -> api.openai.com (using Cursor's OpenAI API key header)
+#
+# Cursor's Override OpenAI Base URL is global; the router is how you keep GPT
+# working while still using a custom local model.
 set -euo pipefail
 
-PORT="${LLAMA_SWAP_PORT:-9292}"
-TARGET="http://127.0.0.1:${PORT}"
+LLAMA_PORT="${LLAMA_SWAP_PORT:-9292}"
+ROUTER_PORT="${CURSOR_LLM_ROUTER_PORT:-9293}"
+LLAMA_URL="http://127.0.0.1:${LLAMA_PORT}"
+ROUTER_URL="http://127.0.0.1:${ROUTER_PORT}"
+ROUTER_BIN="${HOME}/.local/bin/cursor-llm-router"
 
-if ! curl -fsS --max-time 2 "${TARGET}/v1/models" >/dev/null 2>&1; then
-  echo "llama-swap not reachable at ${TARGET}" >&2
+if [[ ! -x "$ROUTER_BIN" ]]; then
+  # chezmoi source layout before apply
+  HERE="$(cd "$(dirname "$0")" && pwd)"
+  if [[ -x "$HERE/cursor-llm-router" ]]; then
+    ROUTER_BIN="$HERE/cursor-llm-router"
+  elif [[ -x "$HERE/executable_cursor-llm-router" ]]; then
+    ROUTER_BIN="$HERE/executable_cursor-llm-router"
+  else
+    echo "cursor-llm-router not found; run chezmoi apply first" >&2
+    exit 1
+  fi
+fi
+
+if ! curl -fsS --max-time 2 "${LLAMA_URL}/v1/models" >/dev/null 2>&1; then
+  echo "llama-swap not reachable at ${LLAMA_URL}" >&2
   echo "Start it: sudo systemctl start llama-swap.service" >&2
   exit 1
 fi
@@ -17,10 +37,36 @@ if ! command -v ngrok >/dev/null 2>&1; then
   exit 1
 fi
 
+mkdir -p "${HOME}/.cache/chezmoi"
+
+# Start router if nothing is answering on ROUTER_PORT.
+if ! curl -fsS --max-time 1 "${ROUTER_URL}/v1/models" >/dev/null 2>&1; then
+  echo "Starting cursor-llm-router on ${ROUTER_URL} ..."
+  nohup "$ROUTER_BIN" --listen "127.0.0.1:${ROUTER_PORT}" \
+    --local "$LLAMA_URL" \
+    --local-models "${CURSOR_LOCAL_MODELS:-chat}" \
+    >"${HOME}/.cache/chezmoi/cursor-llm-router.log" 2>&1 &
+  for _ in $(seq 1 20); do
+    curl -fsS --max-time 1 "${ROUTER_URL}/v1/models" >/dev/null 2>&1 && break
+    sleep 0.25
+  done
+  if ! curl -fsS --max-time 1 "${ROUTER_URL}/v1/models" >/dev/null 2>&1; then
+    echo "router failed to start; see ~/.cache/chezmoi/cursor-llm-router.log" >&2
+    exit 1
+  fi
+fi
+
 if curl -fsS --max-time 1 http://127.0.0.1:4040/api/tunnels >/dev/null 2>&1; then
   echo "Using existing ngrok agent on :4040"
+  # Warn if it still points at llama-swap directly.
+  if curl -fsS --max-time 1 http://127.0.0.1:4040/api/tunnels \
+    | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("tunnels",[{}])[0].get("config",{}).get("addr",""))' \
+    | grep -q ":${LLAMA_PORT}$"; then
+    echo "NOTE: ngrok still targets :${LLAMA_PORT}. Restart ngrok aimed at :${ROUTER_PORT}:" >&2
+    echo "  pkill -x ngrok; ngrok http 127.0.0.1:${ROUTER_PORT}" >&2
+  fi
 else
-  /usr/local/bin/ngrok http "127.0.0.1:${PORT}" --log=stdout --log-format=logfmt &
+  /usr/local/bin/ngrok http "127.0.0.1:${ROUTER_PORT}" --log=stdout --log-format=logfmt &
   sleep 1
 fi
 
@@ -32,23 +78,22 @@ for _ in $(seq 1 30); do
     cat <<EOF
 
 Cursor Settings → Models
-  OpenAI API Key:           sk-local
+  OpenAI API Key:           <your real OpenAI key>   # used for GPT passthrough
   Override OpenAI Base URL: ${base}
   + Add Custom Model:       chat
 
-Then pick model \`chat\` in the Agent/Chat picker (not Auto).
-Verified: Avante's Qwen2.5-7B \`chat\` alias supports OpenAI tool calls via llama-swap.
+Routing (via cursor-llm-router on :${ROUTER_PORT}):
+  model "chat"  -> llama-swap (:${LLAMA_PORT})
+  any other OpenAI-family model -> api.openai.com
 
-WARNING: Override OpenAI Base URL is global — disable it when you want Cursor's
-hosted OpenAI/GPT models again. This ngrok URL is ephemeral; re-run this script
-after reboot and update the Base URL.
+Pick \`chat\` for local; pick GPT-* as usual. Claude/Gemini are unaffected
+(they don't use the OpenAI override).
 
 EOF
     if command -v wl-copy >/dev/null 2>&1; then
       printf '%s' "$base" | wl-copy
       echo "(Base URL copied to clipboard)"
     fi
-    # Leave ngrok running in the background; re-run to reprint a fresh URL.
     exit 0
   fi
   sleep 0.5

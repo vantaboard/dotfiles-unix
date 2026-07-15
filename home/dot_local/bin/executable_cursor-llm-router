@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""Route Cursor BYOK traffic by model name.
+
+  chat (and other LOCAL_MODELS) -> llama-swap
+  everything else               -> api.openai.com
+
+Cursor's Override OpenAI Base URL is global; this proxy is the per-model split.
+Uses the Authorization header Cursor sends (put your real OpenAI key there).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Iterable
+
+
+DEFAULT_LOCAL = "http://127.0.0.1:9292"
+DEFAULT_OPENAI = "https://api.openai.com"
+DEFAULT_LOCAL_MODELS = "chat"
+
+
+def env_models(raw: str) -> set[str]:
+    return {m.strip() for m in raw.split(",") if m.strip()}
+
+
+class Router(BaseHTTPRequestHandler):
+    local_base: str = DEFAULT_LOCAL
+    openai_base: str = DEFAULT_OPENAI
+    local_models: set[str] = env_models(DEFAULT_LOCAL_MODELS)
+
+    def log_message(self, fmt: str, *args) -> None:
+        sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
+
+    def _read_body(self) -> bytes:
+        length = int(self.headers.get("Content-Length") or 0)
+        return self.rfile.read(length) if length else b""
+
+    def _upstream_for(self, body: bytes) -> tuple[str, str]:
+        model = ""
+        if body:
+            try:
+                model = str(json.loads(body).get("model") or "")
+            except json.JSONDecodeError:
+                model = ""
+        # Strip provider prefixes some clients send (openai/chat, etc.).
+        bare = model.split("/")[-1]
+        if bare in self.local_models or model in self.local_models:
+            return self.local_base.rstrip("/"), f"local:{bare or model or '?'}"
+        return self.openai_base.rstrip("/"), f"openai:{bare or model or '?'}"
+
+    def _forward(self, method: str, force_local: bool = False) -> None:
+        body = self._read_body() if method in ("POST", "PUT", "PATCH") else b""
+        if force_local:
+            base, label = self.local_base.rstrip("/"), "local:models"
+        else:
+            base, label = self._upstream_for(body)
+
+        url = base + self.path
+        headers = {}
+        # Pass through auth for OpenAI; llama-swap ignores it.
+        auth = self.headers.get("Authorization")
+        if auth:
+            headers["Authorization"] = auth
+        ctype = self.headers.get("Content-Type")
+        if ctype:
+            headers["Content-Type"] = ctype
+        accept = self.headers.get("Accept")
+        if accept:
+            headers["Accept"] = accept
+
+        req = urllib.request.Request(url, data=body if body else None, headers=headers, method=method)
+        self.log_message("%s %s -> %s", method, self.path, label)
+        try:
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                self.send_response(resp.status)
+                hop_by_hop = {
+                    "connection",
+                    "keep-alive",
+                    "proxy-authenticate",
+                    "proxy-authorization",
+                    "te",
+                    "trailers",
+                    "transfer-encoding",
+                    "upgrade",
+                    "content-encoding",
+                    "content-length",
+                }
+                for key, value in resp.headers.items():
+                    if key.lower() in hop_by_hop:
+                        continue
+                    self.send_header(key, value)
+                self.end_headers()
+                while True:
+                    chunk = resp.read(65536)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+        except urllib.error.HTTPError as err:
+            payload = err.read()
+            self.send_response(err.code)
+            self.send_header("Content-Type", err.headers.get("Content-Type", "application/json"))
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+        except Exception as err:  # noqa: BLE001 - surface to client
+            msg = json.dumps({"error": {"message": str(err), "type": "router_error"}}).encode()
+            self.send_response(502)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(msg)))
+            self.end_headers()
+            self.wfile.write(msg)
+
+    def do_GET(self) -> None:  # noqa: N802
+        # Advertise local models from llama-swap; OpenAI catalog stays in Cursor UI.
+        if self.path.startswith("/v1/models"):
+            self._forward("GET", force_local=True)
+            return
+        self._forward("GET")
+
+    def do_POST(self) -> None:  # noqa: N802
+        self._forward("POST")
+
+    def do_OPTIONS(self) -> None:  # noqa: N802
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
+
+
+def main(argv: Iterable[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--listen", default=os.environ.get("CURSOR_LLM_ROUTER_LISTEN", "127.0.0.1:9293"))
+    p.add_argument("--local", default=os.environ.get("LLAMA_SWAP_URL", DEFAULT_LOCAL))
+    p.add_argument("--openai", default=os.environ.get("OPENAI_BASE_URL", DEFAULT_OPENAI))
+    p.add_argument(
+        "--local-models",
+        default=os.environ.get("CURSOR_LOCAL_MODELS", DEFAULT_LOCAL_MODELS),
+        help="Comma-separated model ids routed to llama-swap (default: chat)",
+    )
+    args = p.parse_args(list(argv) if argv is not None else None)
+
+    host, _, port_s = args.listen.partition(":")
+    port = int(port_s or "9293")
+    Router.local_base = args.local
+    Router.openai_base = args.openai
+    Router.local_models = env_models(args.local_models)
+
+    httpd = ThreadingHTTPServer((host, port), Router)
+    print(
+        f"cursor-llm-router on http://{host}:{port} "
+        f"local_models={sorted(Router.local_models)} -> {Router.local_base} ; "
+        f"else -> {Router.openai_base}",
+        flush=True,
+    )
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nstopped", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
