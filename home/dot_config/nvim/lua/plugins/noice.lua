@@ -1,3 +1,7 @@
+require("notify").setup({
+    top_down = false, -- bottom-right instead of top-right
+})
+
 require("noice").setup({
     lsp = {
         -- override markdown rendering so that cmp and other plugins use Treesitter
