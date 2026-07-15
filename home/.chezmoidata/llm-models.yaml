@@ -1,23 +1,24 @@
 # Pinned Hugging Face GGUF models for local inference (llama.cpp).
 # Tiers are selected by VRAM in run_after_pull-llm-models.sh.tmpl.
+# Note: high/medium coder stays on 3B so Minuet FIM can stay resident next to chat.
 llm_models:
   tiers:
     high:
       min_vram_mb: 8192
       coder:
         filename: coder.gguf
-        url: https://huggingface.co/bartowski/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf
-        sha256: ""
+        url: https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf
+        sha256: 3da3afe6cf5c674ac195803ea0dd6fee7e1c228c2105c1ce8c66890d1d4ab460
       chat:
         filename: chat.gguf
         url: https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf
-        sha256: ""
+        sha256: 65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423
     medium:
       min_vram_mb: 4096
       coder:
         filename: coder.gguf
         url: https://huggingface.co/bartowski/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf
-        sha256: ""
+        sha256: 3da3afe6cf5c674ac195803ea0dd6fee7e1c228c2105c1ce8c66890d1d4ab460
       chat:
         filename: chat.gguf
         url: https://huggingface.co/bartowski/gemma-3-4b-it-GGUF/resolve/main/gemma-3-4b-it-Q4_K_M.gguf
@@ -27,8 +28,8 @@ llm_models:
       coder:
         filename: coder.gguf
         url: https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
-        sha256: ""
+        sha256: f530705d447660a4336c329981af164b471b60b974b1d808d57e8ec9fe23b239
       chat:
         filename: chat.gguf
         url: https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
-        sha256: ""
+        sha256: f530705d447660a4336c329981af164b471b60b974b1d808d57e8ec9fe23b239

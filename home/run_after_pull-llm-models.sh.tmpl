@@ -20,7 +20,7 @@
 {{ end -}}
 set -euo pipefail
 
-# hash: llm-models-v1
+# hash: llm-models-v2-sha256
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping LLM model download"
@@ -90,13 +90,21 @@ tier_chat_url() {
 
 tier_coder_sha256() {
   case "$1" in
-    high|medium|low) echo "" ;;
+    # bartowski Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf
+    high|medium) echo "3da3afe6cf5c674ac195803ea0dd6fee7e1c228c2105c1ce8c66890d1d4ab460" ;;
+    # bartowski Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
+    low) echo "f530705d447660a4336c329981af164b471b60b974b1d808d57e8ec9fe23b239" ;;
   esac
 }
 
 tier_chat_sha256() {
   case "$1" in
-    high|medium|low) echo "" ;;
+    # bartowski Qwen2.5-7B-Instruct-Q4_K_M.gguf
+    high) echo "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423" ;;
+    # gemma-3-4b gated/unpinned for now; presence check only
+    medium) echo "" ;;
+    # same file as coder on low tier
+    low) echo "f530705d447660a4336c329981af164b471b60b974b1d808d57e8ec9fe23b239" ;;
   esac
 }
 
@@ -113,11 +121,12 @@ download_model() {
   # Sidecar records which URL produced the file, so switching a tier to a
   # different model actually replaces the old download.
   local url_file="${dest}.url"
+  local attempt actual
 
   if [[ -f "$dest" ]]; then
     if [[ -f "$url_file" && "$(cat "$url_file")" != "$url" ]]; then
       echo "Model source changed for $(basename "$dest"); re-downloading"
-      rm -f "$dest"
+      rm -f "$dest" "$tmp"
     elif [[ -z "$expected_sha" ]]; then
       echo "OK: $(basename "$dest") already present"
       printf '%s\n' "$url" > "$url_file"
@@ -128,26 +137,41 @@ download_model() {
       return 0
     else
       echo "WARN: $(basename "$dest") checksum mismatch; re-downloading"
-      rm -f "$dest"
+      rm -f "$dest" "$tmp"
     fi
   fi
 
   mkdir -p "$(dirname "$dest")"
-  echo "Downloading $(basename "$dest")..."
-  curl -fL --retry 3 --retry-delay 5 --continue-at - "$url" -o "$tmp"
-  mv "$tmp" "$dest"
-
-  if [[ -n "$expected_sha" ]]; then
-    local actual
-    actual="$(sha256sum "$dest" | awk '{print $1}')"
-    if [[ "$actual" != "$expected_sha" ]]; then
-      echo "ERROR: $(basename "$dest") sha256 mismatch (expected ${expected_sha}, got ${actual})"
-      rm -f "$dest"
-      return 1
+  for attempt in 1 2; do
+    echo "Downloading $(basename "$dest") (attempt ${attempt})..."
+    # Attempt 1 may resume a .partial; attempt 2 is always a clean fetch after
+    # a checksum failure (corrupt resumes can land at the right size).
+    if (( attempt == 2 )); then
+      rm -f "$tmp"
+      curl -fL --retry 3 --retry-delay 5 "$url" -o "$tmp"
+    else
+      curl -fL --retry 3 --retry-delay 5 --continue-at - "$url" -o "$tmp"
     fi
-  fi
-  printf '%s\n' "$url" > "$url_file"
-  echo "OK: $(basename "$dest")"
+
+    if [[ -n "$expected_sha" ]]; then
+      actual="$(sha256sum "$tmp" | awk '{print $1}')"
+      if [[ "$actual" != "$expected_sha" ]]; then
+        echo "WARN: $(basename "$dest") sha256 mismatch (expected ${expected_sha}, got ${actual})"
+        rm -f "$tmp"
+        if (( attempt == 1 )); then
+          echo "Retrying without resume..."
+          continue
+        fi
+        echo "ERROR: $(basename "$dest") failed checksum after clean re-download"
+        return 1
+      fi
+    fi
+
+    mv "$tmp" "$dest"
+    printf '%s\n' "$url" > "$url_file"
+    echo "OK: $(basename "$dest")"
+    return 0
+  done
 }
 
 should_refresh() {
@@ -200,7 +224,7 @@ CODER_URL="$(tier_coder_url "$TIER")"
 CHAT_URL="$(tier_chat_url "$TIER")"
 CODER_SHA="$(tier_coder_sha256 "$TIER")"
 CHAT_SHA="$(tier_chat_sha256 "$TIER")"
-FINGERPRINT="v1:${TIER}:${VRAM_MB}:${RAM_MB}:${CODER_URL}:${CHAT_URL}"
+FINGERPRINT="v2:${TIER}:${VRAM_MB}:${RAM_MB}:${CODER_URL}:${CHAT_URL}:${CODER_SHA}:${CHAT_SHA}"
 
 echo "LLM tier: ${TIER} (${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM)"
 write_manifest "$TIER" "$VRAM_MB" "$RAM_MB"
