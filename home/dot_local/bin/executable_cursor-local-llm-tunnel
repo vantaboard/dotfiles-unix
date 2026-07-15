@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Expose local llama-swap (Avante `chat` model) for Cursor BYOK.
+# Cursor cannot reach localhost — needs a public HTTPS URL.
+set -euo pipefail
+
+PORT="${LLAMA_SWAP_PORT:-9292}"
+TARGET="http://127.0.0.1:${PORT}"
+
+if ! curl -fsS --max-time 2 "${TARGET}/v1/models" >/dev/null 2>&1; then
+  echo "llama-swap not reachable at ${TARGET}" >&2
+  echo "Start it: sudo systemctl start llama-swap.service" >&2
+  exit 1
+fi
+
+if ! command -v ngrok >/dev/null 2>&1; then
+  echo "ngrok not found (install via chezmoi ngrok feature)" >&2
+  exit 1
+fi
+
+if curl -fsS --max-time 1 http://127.0.0.1:4040/api/tunnels >/dev/null 2>&1; then
+  echo "Using existing ngrok agent on :4040"
+else
+  /usr/local/bin/ngrok http "127.0.0.1:${PORT}" --log=stdout --log-format=logfmt &
+  sleep 1
+fi
+
+for _ in $(seq 1 30); do
+  if url="$(curl -fsS --max-time 1 http://127.0.0.1:4040/api/tunnels 2>/dev/null \
+    | python3 -c 'import sys,json; d=json.load(sys.stdin); print(next((t["public_url"] for t in d.get("tunnels",[]) if str(t.get("public_url","")).startswith("https")), ""))' \
+    2>/dev/null)" && [[ -n "$url" ]]; then
+    base="${url}/v1"
+    cat <<EOF
+
+Cursor Settings → Models
+  OpenAI API Key:           sk-local
+  Override OpenAI Base URL: ${base}
+  + Add Custom Model:       chat
+
+Then pick model \`chat\` in the Agent/Chat picker (not Auto).
+Verified: Avante's Qwen2.5-7B \`chat\` alias supports OpenAI tool calls via llama-swap.
+
+WARNING: Override OpenAI Base URL is global — disable it when you want Cursor's
+hosted OpenAI/GPT models again. This ngrok URL is ephemeral; re-run this script
+after reboot and update the Base URL.
+
+EOF
+    if command -v wl-copy >/dev/null 2>&1; then
+      printf '%s' "$base" | wl-copy
+      echo "(Base URL copied to clipboard)"
+    fi
+    # Leave ngrok running in the background; re-run to reprint a fresh URL.
+    exit 0
+  fi
+  sleep 0.5
+done
+
+echo "Timed out waiting for ngrok public URL (is ngrok authenticated?)" >&2
+exit 1
