@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+# Blank all outputs until pointer/keyboard activity. Manual `dpms off` does not
+# wake on input in sway; a one-shot swayidle owns both off and resume.
+set -euo pipefail
+
+# Modifiers still held from the binding would instantly cancel the blank.
+sleep 0.25
+
+# Newest swayidle is this one-shot (the session idle manager stays running).
+exec swayidle \
+    timeout 1 'swaymsg "output * dpms off"' \
+    resume 'swaymsg "output * dpms on"; pkill -n -x swayidle'

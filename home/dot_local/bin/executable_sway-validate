@@ -27,6 +27,7 @@ check "still installed" command -v still
 check "swappy installed" command -v swappy
 check "screenshot-region installed" test -x "$HOME/.local/bin/screenshot-region"
 check "suspend installed" test -x "$HOME/.local/bin/suspend"
+check "blank-monitors installed" test -x "$HOME/.local/bin/blank-monitors"
 check "wl-copy installed" command -v wl-copy
 check "waybar installed" command -v waybar
 check "waybar config exists" test -f "$HOME/.config/waybar/config"
@@ -137,7 +138,7 @@ echo
 echo "Manual checks after logging into Sway from GDM:"
 echo "  - Docked 3-monitor layout and undocked eDP switch"
 echo "  - Mod+1..8 workspace routing after dock/undock"
-echo "  - Mod+d launcher, Mod+Return kitty, swaylock, suspend/resume"
+echo "  - Mod+d launcher, Mod+Return kitty, swaylock, blank-monitors, suspend/resume"
 echo "  - screenshot-region (grim/slurp/still/wl-copy), rofi-emoji (bemoji), copyq, sunshine, NVIDIA offload apps"
 echo "  - waybar sway/language indicator and py3status modules"
 
