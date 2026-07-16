@@ -1,0 +1,10 @@
+.ui-tray-option .ui-tray-option__label {
+    user-select: text;
+    -webkit-user-select: text;
+    width: 100%;
+}
+
+.composer-questionnaire-toolbar-option-label {
+    user-select: text;
+    -webkit-user-select: text;
+}
