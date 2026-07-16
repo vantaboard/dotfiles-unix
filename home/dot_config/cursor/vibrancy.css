@@ -8,6 +8,20 @@ body .monaco-workbench .part.auxiliarybar>.content .embedded-aux-bar-editor-cont
   background-color: rgba(37, 37, 38, 0.3) !important;
 }
 
+/*
+ * Composer chat input must be fully opaque. Semi-transparent layers (and the
+ * stock Cursor Dark vibrancy fix at ~0.3 alpha) leave shredded glyph ghosts
+ * after Enter clears the Monaco editor on Wayland/SwayFX.
+ */
+.monaco-workbench .full-input-box,
+.monaco-workbench .full-input-box .monaco-editor,
+.monaco-workbench .full-input-box .monaco-editor-background,
+.monaco-workbench .full-input-box .overflow-guard,
+.monaco-workbench .full-input-box .monaco-editor .margin,
+.monaco-workbench .full-input-box .monaco-editor .inputarea.ime-input {
+  background-color: var(--vibrancy-opaque-editor-background) !important;
+}
+
 .anysphere-icon-button[data-variant=background] {
   color: var(--vibrancy-opaque-editor-background);
 }
