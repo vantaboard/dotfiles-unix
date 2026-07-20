@@ -34,6 +34,8 @@ profile_ci:
     gpg_signing: false
     desktop_sway: false
     hyprpicker: false
+    still: false
+    wayneko: false
     swayfx: false
     swappy: false
     kitty: false

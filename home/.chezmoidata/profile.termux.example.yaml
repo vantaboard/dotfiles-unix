@@ -36,6 +36,7 @@ profile_termux_example:
     gpg_signing: false
     desktop_sway: false
     hyprpicker: false
+    wayneko: false
     swayfx: false
     swappy: false
     kanshi: false

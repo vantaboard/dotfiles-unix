@@ -277,6 +277,19 @@ setup_catalog:
         - libpixman-1-dev
         - libwayland-dev
         - wayland-protocols
+    wayneko:
+      category: desktop
+      label: wayneko
+      description: Animated neko cat for Wayland (oneko); built from ~leon_plickat/wayneko (c1919dc) into ~/.local/bin
+      default: true
+      requires: [desktop_sway]
+      install_tools: true
+      packages:
+        - build-essential
+        - pkg-config
+        - libpixman-1-dev
+        - libwayland-dev
+        - libwayland-bin
     swayfx:
       category: desktop
       label: SwayFX compositor

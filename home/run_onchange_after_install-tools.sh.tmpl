@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v27
+# hash: tools-v28
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -45,6 +45,8 @@ HYPRPICKER_VERSION="v0.3.0"
 HYPRPICKER_DIR="$HOME_DIR/.local/share/src/hyprpicker"
 STILL_VERSION="v0.0.9"
 STILL_DIR="$HOME_DIR/.local/share/src/still"
+WAYNEKO_COMMIT="c1919dc3a7e610d30e4c06efaa5af85941f27d86"
+WAYNEKO_DIR="$HOME_DIR/.local/share/src/wayneko"
 SWAYFX_VERSION="0.5.3"
 SCENEFX_VERSION="0.4.1"
 WLROOTS_VERSION="0.19.0"
@@ -696,6 +698,76 @@ install_still() {
   fi
 }
 
+install_wayneko() {
+  wayneko_usable() {
+    command -v wayneko >/dev/null 2>&1 && wayneko --help >/dev/null 2>&1
+  }
+
+  if wayneko_usable || [[ -x "$LOCAL_BIN/wayneko" ]]; then
+    echo "wayneko already installed"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping wayneko install"
+    return 0
+  fi
+  if ! command -v make >/dev/null 2>&1 || ! command -v pkg-config >/dev/null 2>&1; then
+    echo "WARN: make/pkg-config not found; skipping wayneko install"
+    return 0
+  fi
+  if ! command -v wayland-scanner >/dev/null 2>&1; then
+    echo "WARN: wayland-scanner not found; skipping wayneko install"
+    return 0
+  fi
+
+  local build_deps=(
+    build-essential pkg-config libpixman-1-dev libwayland-dev libwayland-bin
+  )
+  local dep missing=()
+  if command -v dpkg >/dev/null 2>&1; then
+    for dep in "${build_deps[@]}"; do
+      if ! dpkg -s "$dep" >/dev/null 2>&1; then
+        missing+=("$dep")
+      fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      echo "Installing wayneko build dependencies: ${missing[*]}"
+      sudo apt install -y -qq --no-install-recommends "${missing[@]}"
+    fi
+  fi
+
+  mkdir -p "$LOCAL_BIN"
+
+  if [[ ! -d "$WAYNEKO_DIR/.git" ]]; then
+    echo "Cloning wayneko ${WAYNEKO_COMMIT}..."
+    git clone https://git.sr.ht/~leon_plickat/wayneko "$WAYNEKO_DIR"
+  fi
+  # Pin to last good commit: upstream master was force-pushed to a broken
+  # "slop check" that references a nonexistent FFI_VERSION_NUMBER macro.
+  git -C "$WAYNEKO_DIR" fetch --depth 1 origin "$WAYNEKO_COMMIT"
+  git -C "$WAYNEKO_DIR" checkout --force "$WAYNEKO_COMMIT"
+
+  echo "Building wayneko ${WAYNEKO_COMMIT}..."
+  make -C "$WAYNEKO_DIR" clean >/dev/null 2>&1 || true
+  # Prefer gcc: clang inherits -Werror and trips on pointer-type mismatches
+  # in Wayland listener tables (same issue nixpkgs patches around).
+  make -C "$WAYNEKO_DIR" CC=gcc -j"$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)"
+  make -C "$WAYNEKO_DIR" PREFIX="$LOCAL_PREFIX" install
+
+  if wayneko_usable || [[ -x "$LOCAL_BIN/wayneko" ]]; then
+    echo "wayneko ready ($LOCAL_BIN/wayneko)"
+  else
+    install -m 755 "$WAYNEKO_DIR/wayneko" "$LOCAL_BIN/wayneko"
+    if wayneko_usable || [[ -x "$LOCAL_BIN/wayneko" ]]; then
+      echo "wayneko ready ($LOCAL_BIN/wayneko)"
+    else
+      echo "WARN: wayneko install failed"
+      return 0
+    fi
+  fi
+}
+
 install_swayfx() {
   SWAYFX_HIDE_CURSOR_PATCH="$HOME_DIR/.local/share/patches/swayfx-hide-cursor-keep-active.patch"
 
@@ -1101,6 +1173,19 @@ install_hyprpicker
 
 {{- if $stillEnabled }}
 install_still
+{{- end }}
+
+{{- $waynekoEnabled := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   if eq (index $f "wayneko") true -}}
+{{-     $waynekoEnabled = true -}}
+{{-   else if and (index $f "desktop_sway") (ne (index $f "wayneko") false) -}}
+{{-     $waynekoEnabled = true -}}
+{{-   end -}}
+{{- end -}}
+
+{{- if $waynekoEnabled }}
+install_wayneko
 {{- end }}
 
 {{- $swayfxEnabled := false -}}

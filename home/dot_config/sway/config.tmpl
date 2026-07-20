@@ -84,6 +84,16 @@ exec --no-startup-id su - {{ .chezmoi.username }} -c "tmux new -s musikcube -d m
 exec --no-startup-id unclutte0
 exec --no-startup-id webcam
 exec_always --no-startup-id copyq
+{{- $waynekoEnabled := false -}}
+{{- if eq (index $f "wayneko") true -}}
+{{-   $waynekoEnabled = true -}}
+{{- else if and (index $f "desktop_sway") (ne (index $f "wayneko") false) -}}
+{{-   $waynekoEnabled = true -}}
+{{- end -}}
+{{- if $waynekoEnabled }}
+# Animated neko (oneko) on the bottom edge; needs zwlr-layer-shell-unstable-v1.
+exec --no-startup-id $HOME/.local/bin/wayneko
+{{- end }}
 
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
