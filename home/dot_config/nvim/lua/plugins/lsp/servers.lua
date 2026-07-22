@@ -4,8 +4,7 @@ capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 local schemastore = require("schemastore")
 require("neoconf").setup({})
-
--- local neoconf = require("neoconf")
+require("plugins.lsp.mason")
 
 local keyset = vim.keymap.set
 local lbuf = vim.lsp.buf
@@ -127,6 +126,7 @@ vim.lsp.config('terraformls', {
 -- Go Language Server
 vim.lsp.config('gopls', {
     capabilities = capabilities,
+    filetypes = { 'go', 'gomod', 'gowork' },
     on_attach = function(client, bufnr)
         client.server_capabilities.didChangeWatchedFiles = {
             dynamicRegistration = true
@@ -164,7 +164,7 @@ vim.lsp.config('gopls', {
     },
 })
 
-vim.lsp.config('golangcilsp', {
+vim.lsp.config('golangci_lint_ls', {
     capabilities = capabilities,
     init_options = {
         command = {
@@ -361,4 +361,39 @@ vim.lsp.config('pkgbuild_language_server', {
     root_dir = util.root_pattern("PKGBUILD"),
 })
 
-vim.lsp.enable({"jdtls", "html", "eslint", "cssls", "lua_ls", "jsonls", "pylsp", "pyright", "ruff", "ts_ls", "clangd"})
+vim.lsp.enable({
+  "jdtls",
+  "html",
+  "eslint",
+  "cssls",
+  "lua_ls",
+  "jsonls",
+  "pylsp",
+  "pyright",
+  "ruff",
+  "ts_ls",
+  "clangd",
+  "gopls",
+  "golangci_lint_ls",
+})
+
+-- neoconf health / schema helpers still use lspconfig.util.available_servers(),
+-- which only tracks legacy lspconfig.*.setup(). Bridge vim.lsp.enable() into it.
+do
+  local lspconfig_util = require("lspconfig.util")
+  local legacy_available = lspconfig_util.available_servers
+  ---@diagnostic disable-next-line: duplicate-set-field
+  function lspconfig_util.available_servers()
+    local servers = legacy_available()
+    local seen = {}
+    for _, name in ipairs(servers) do
+      seen[name] = true
+    end
+    for name in pairs(vim.lsp._enabled_configs) do
+      if not seen[name] then
+        servers[#servers + 1] = name
+      end
+    end
+    return servers
+  end
+end
