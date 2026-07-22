@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: neovim-v0.12.4
+# hash: neovim-nightly-v1
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Neovim tarball install"
@@ -24,9 +24,9 @@ if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
 fi
 
 HOME_DIR="{{ .chezmoi.homeDir }}"
-NEOVIM_VERSION="0.12.4"
 LOCAL_BIN="$HOME_DIR/.local/bin"
 CACHE_DIR="$HOME_DIR/.cache/neovim-install"
+RELEASE_API="https://api.github.com/repos/neovim/neovim/releases/tags/nightly"
 
 case "$(uname -m)" in
   x86_64) NVIM_ARCH="x86_64" ;;
@@ -39,12 +39,27 @@ esac
 
 NVIM_ROOT="$HOME_DIR/.local/opt/nvim-linux-${NVIM_ARCH}"
 NVIM_BIN="$NVIM_ROOT/bin/nvim"
+VERSION_FILE="$NVIM_ROOT/version"
 TARBALL="nvim-linux-${NVIM_ARCH}.tar.gz"
-DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/${TARBALL}"
+DOWNLOAD_URL="https://github.com/neovim/neovim/releases/download/nightly/${TARBALL}"
 
-nvim_version_ok() {
-  [[ -x "$NVIM_BIN" ]] && "$NVIM_BIN" --version 2>/dev/null | head -1 | grep -q "v${NEOVIM_VERSION}"
-}
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping Neovim tarball install"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: jq not found; skipping Neovim tarball install"
+  exit 0
+fi
+
+metadata="$(curl -fsSL "$RELEASE_API")"
+target_version="$(jq -r '.body // empty' <<<"$metadata" | sed -n 's/^NVIM //p' | head -1)"
+
+if [[ -z "$target_version" ]]; then
+  echo "WARN: Neovim nightly release API did not return a version string"
+  exit 0
+fi
 
 link_nvim_bins() {
   mkdir -p "$LOCAL_BIN"
@@ -58,14 +73,15 @@ link_nvim_bins() {
   fi
 }
 
-if nvim_version_ok; then
-  echo "Neovim v${NEOVIM_VERSION} already installed at $NVIM_BIN"
-  link_nvim_bins
-  exit 0
-fi
+nvim_current() {
+  [[ -x "$NVIM_BIN" ]] || return 1
+  [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$target_version" ]] || return 1
+  "$NVIM_BIN" --version 2>/dev/null | head -1 | grep -q "NVIM ${target_version}"
+}
 
-if ! command -v curl >/dev/null 2>&1; then
-  echo "WARN: curl not found; skipping Neovim tarball install"
+if nvim_current; then
+  echo "Neovim nightly ${target_version} already installed at $NVIM_BIN"
+  link_nvim_bins
   exit 0
 fi
 
@@ -74,15 +90,16 @@ TMP_DIR="$(mktemp -d "${CACHE_DIR}/extract.XXXXXX")"
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-echo "Installing Neovim v${NEOVIM_VERSION} (${NVIM_ARCH})..."
+echo "Installing Neovim nightly ${target_version} (${NVIM_ARCH})..."
 curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$TARBALL"
 tar -xzf "$TMP_DIR/$TARBALL" -C "$TMP_DIR"
 rm -rf "$NVIM_ROOT"
 mv "$TMP_DIR/nvim-linux-${NVIM_ARCH}" "$NVIM_ROOT"
+printf '%s\n' "$target_version" > "$VERSION_FILE"
 
-if nvim_version_ok; then
+if nvim_current; then
   link_nvim_bins
-  echo "Neovim v${NEOVIM_VERSION} installed; nvim -> $NVIM_BIN"
+  echo "Neovim nightly ${target_version} installed; nvim -> $NVIM_BIN"
 else
   echo "WARN: Neovim install failed ($NVIM_BIN missing or wrong version)"
   exit 0

@@ -412,8 +412,8 @@ setup_catalog:
       category: dev
       label: Neovim
       default: true
-      packages: [neovim]
-      description: Linux uses official v0.12.3 tarball in ~/.local/opt via run_onchange_after_install-neovim; apt neovim is a fallback
+      packages: [neovim, jq]
+      description: Linux installs the nightly tarball from GitHub Releases into ~/.local/opt via run_after_install-neovim on each chezmoi apply; apt neovim is a fallback
       config_paths: [dot_config/nvim]
       external: .config/nvim/brighten
     cursor:
