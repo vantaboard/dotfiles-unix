@@ -183,10 +183,8 @@ vim.lsp.config('eslint', {
     filetypes = {
         'javascript',
         'javascriptreact',
-        'javascript.jsx',
         'typescript',
         'typescriptreact',
-        'typescript.tsx',
         'vue',
         'svelte',
         'astro',
@@ -282,7 +280,7 @@ vim.lsp.config('clangd', {
         "--limit-results=500",
         "--function-arg-placeholders=false",
     },
-    filetypes = { "c", "cc", "cpp", "objc", "objcpp", "cuda" },
+    filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
 })
 
 vim.api.nvim_create_autocmd("LspAttach", {

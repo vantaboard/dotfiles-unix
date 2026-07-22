@@ -77,3 +77,8 @@ require("godotdev").setup({
     },
   },
 })
+
+-- Override godotdev's stale filetypes (gd/gdscript3 are not valid Neovim fts).
+vim.lsp.config('gdscript', {
+  filetypes = { 'gdscript', 'gdshader' },
+})

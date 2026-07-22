@@ -91,7 +91,7 @@ local pack_plugins = {
   {
     src = 'https://github.com/L3MON4D3/LuaSnip',
     name = 'LuaSnip',
-    version = 'v2.5.0',
+    version = 'master',
   },
 'https://github.com/saadparwaiz1/cmp_luasnip',
 -- dependencies
@@ -109,7 +109,7 @@ local pack_plugins = {
 'https://github.com/nvim-telescope/telescope-ui-select.nvim',
   {
     src = 'https://github.com/nvim-telescope/telescope.nvim',
-    version = 'v0.2.2',
+    version = 'master',
   },
 'https://github.com/nvim-lua/plenary.nvim',
         -- formatting
