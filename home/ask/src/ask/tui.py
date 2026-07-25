@@ -320,7 +320,7 @@ class AskApp(App[str]):
                     if not self._has_text:
                         status.update(self._status_markup())
                     else:
-                        status.update(f"[dim]{payload}[/]")
+                        status.update(str(payload))
                 elif kind == _PREAMBLE:
                     preview = str(payload).replace("\n", " ").strip()
                     if len(preview) > 100:
@@ -330,10 +330,9 @@ class AskApp(App[str]):
                 elif kind == _DELTA:
                     if not self._has_text:
                         self._stop_thinking()
-                        # Clear status so it can't leave a clipped "Thou…" over
-                        # the markdown panel after inline exit.
-                        status.update("")
-                        status.display = False
+                        # Plain text (no Rich markup) — markup on this Label was
+                        # clipping "Thought for…" to "Thou" on inline exit.
+                        status.update("Thinking...")
                     # Avoid trailing blank paragraphs from model newlines.
                     tw.extend_target(str(payload).rstrip() + "\n")
                 elif kind == _TOOL_START:
@@ -350,8 +349,6 @@ class AskApp(App[str]):
                         card.finish(ok, detail)
                 elif kind == _DONE:
                     self._stop_thinking()
-                    status.update("")
-                    status.display = False
                     # Ensure answer is in the typewriter even if on_delta was skipped.
                     if payload and not tw.target:
                         tw.extend_target(str(payload).rstrip() + "\n")
@@ -380,8 +377,12 @@ class AskApp(App[str]):
             if remaining:
                 await stream.write(remaining)
             await stream.stop()
-            # Timing is printed after the Textual app exits (see run_ask_tui)
-            # so "Thought for Ns" can't be clipped into "Thou" by the panel.
+            # Set timing last, as plain text, so the retained inline frame
+            # keeps a full "Thought for Ns" line at the top (same as
+            # job-tracking's ThinkingApp).
+            elapsed = max(1, int(round(time.monotonic() - self._started)))
+            status.display = True
+            status.update(f"Thought for {elapsed}s")
             self.exit(self._result)
 
 
@@ -441,7 +442,6 @@ def run_ask_turn(
         )
 
     app = AskApp(question, config, verbose=verbose, messages=messages)
-    started = time.monotonic()
     try:
         # mouse=False keeps terminal scrollback + drag-select working.
         answer = app.run(inline=True, inline_no_clear=True, mouse=False) or ""
@@ -450,12 +450,9 @@ def run_ask_turn(
             answer="",
             messages=list(messages or []),
         )
-    elapsed = max(1, int(round(time.monotonic() - started)))
     result = app.agent_result
     if not result.answer and answer:
         result.answer = answer
-    if result.answer and sys.stderr.isatty():
-        print(f"Thought for {elapsed}s", file=sys.stderr)
     return result
 
 
