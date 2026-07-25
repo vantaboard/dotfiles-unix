@@ -35,7 +35,30 @@ from ask.typewriter import AdaptiveTypewriter
 
 
 class HighlightedFence(MarkdownFence):
-    """Fence block that always uses vivid ANSI token colors."""
+    """Fence block with ANSI colors, shrink-wrapped for clean drag-select.
+
+    Upstream MarkdownFence uses ``width: 1fr`` and ``Label(expand=True)``, which
+    pads every line to the panel width — terminal selection then picks up
+    leading gutters and trailing spaces. Shrink-wrap so selection matches code.
+    """
+
+    DEFAULT_CSS = """
+    HighlightedFence {
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        padding: 0;
+        margin: 1 0;
+        overflow-x: auto;
+        background: #1e1e1e;
+        color: #d4d4d4;
+    }
+    HighlightedFence > #code-content {
+        width: auto;
+        height: auto;
+        padding: 0;
+    }
+    """
 
     @classmethod
     def highlight(
@@ -51,6 +74,11 @@ class HighlightedFence(MarkdownFence):
             code,
             language=language or "bash",
             theme=theme,
+        )
+
+    def compose(self) -> ComposeResult:
+        yield Label(
+            self._highlighted_code, id="code-content", expand=False
         )
 
 
@@ -174,7 +202,7 @@ class AskApp(App[str]):
     #body {
         height: auto;
         max-height: 28;
-        margin: 0 1;
+        margin: 0;
         padding: 0;
         background: transparent;
     }
@@ -182,16 +210,6 @@ class AskApp(App[str]):
        row before the inline panel's bottom rule. */
     #body > MarkdownParagraph {
         margin: 0;
-        padding: 0 1;
-    }
-    MarkdownFence {
-        margin: 1 0;
-        background: #1e1e1e;
-        color: #d4d4d4;
-    }
-    /* Minimal padding so drag-select doesn't pick up huge side gutters.
-       Prefer the auto-copied clipboard snippet for clean paste anyway. */
-    MarkdownFence > Label {
         padding: 0 1;
     }
     """
