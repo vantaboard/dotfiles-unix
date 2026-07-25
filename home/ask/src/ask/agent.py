@@ -244,7 +244,11 @@ def run_agent(
                 continue
 
             # Final answer — feed to typewriter / plain stdout.
-            result.answer = content.strip() or "(no response from model)"
+            from ask.markdown_format import tag_code_fences
+
+            result.answer = tag_code_fences(
+                content.strip() or "(no response from model)"
+            )
             if cb.on_delta and result.answer:
                 cb.on_delta(result.answer)
             if cb.on_status:
@@ -279,10 +283,9 @@ def run_agent_plain(
     def on_delta(text: str) -> None:
         nonlocal streamed
         streamed = True
-        sys.stdout.write(text)
-        if not text.endswith("\n"):
-            sys.stdout.write("\n")
-        sys.stdout.flush()
+        from ask.markdown_format import print_rich_markdown
+
+        print_rich_markdown(text)
 
     def on_tool_start(call_id: str, name: str, args: dict[str, Any]) -> None:
         tool_meta[call_id] = (name, args)
@@ -306,8 +309,7 @@ def run_agent_plain(
         ),
     )
     if not streamed and result.answer:
-        sys.stdout.write(result.answer)
-        if not result.answer.endswith("\n"):
-            sys.stdout.write("\n")
-        sys.stdout.flush()
+        from ask.markdown_format import print_rich_markdown
+
+        print_rich_markdown(result.answer)
     return result

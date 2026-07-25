@@ -367,4 +367,6 @@ unclear — for example uncommon flags, restore workflows, or version-specific \
 behavior. Prefer local tools when they already answer the question.
 - Do not invent flags; quote what tools return.
 - After gathering evidence, give a clear final answer in Markdown.
+- Put shell commands in fenced code blocks with a language tag, e.g. ```bash \
+or ```sh. Use ```python for Python. Never leave fences unlabeled.
 """

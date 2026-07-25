@@ -11,13 +11,50 @@ from typing import Any
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.content import Content
+from textual.highlight import (
+    ANSIDarkHighlightTheme,
+    ANSILightHighlightTheme,
+    highlight,
+)
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Input, Label, Markdown, Static
+from textual.widgets._markdown import MarkdownFence
 
 from ask.agent import AgentCallbacks, AgentConfig, AgentResult, run_agent
 from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
+
+
+class HighlightedFence(MarkdownFence):
+    """Fence block that always uses vivid ANSI token colors."""
+
+    @classmethod
+    def highlight(
+        cls,
+        code: str,
+        language: str,
+        ansi: bool = False,
+        dark: bool = True,
+    ) -> Content:
+        del ansi  # always prefer true ANSI token colors in the terminal
+        theme = ANSIDarkHighlightTheme if dark else ANSILightHighlightTheme
+        return highlight(
+            code,
+            language=language or "bash",
+            theme=theme,
+        )
+
+
+class AskMarkdown(Markdown):
+    """Markdown widget with ANSI-highlighted code fences."""
+
+    BLOCKS = {
+        **Markdown.BLOCKS,
+        "fence": HighlightedFence,
+        "code_block": HighlightedFence,
+    }
 
 _SPINNER_FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 _TICK_S = 1.0 / 60.0
@@ -132,6 +169,14 @@ class AskApp(App[str]):
         padding: 0;
         background: transparent;
     }
+    MarkdownFence {
+        margin: 1 0;
+        background: #1e1e1e;
+        color: #d4d4d4;
+    }
+    MarkdownFence > Label {
+        padding: 1 2;
+    }
     """
 
     def __init__(
@@ -157,7 +202,7 @@ class AskApp(App[str]):
     def compose(self) -> ComposeResult:
         yield Label(self._status_base, id="status")
         yield Vertical(id="tools")
-        markdown = Markdown(id="body")
+        markdown = AskMarkdown(id="body")
         markdown.code_indent_guides = False
         yield markdown
 
@@ -219,7 +264,7 @@ class AskApp(App[str]):
     async def _drive_ui(self) -> None:
         status = self.query_one("#status", Label)
         tools = self.query_one("#tools", Vertical)
-        markdown = self.query_one("#body", Markdown)
+        markdown = self.query_one("#body", AskMarkdown)
         stream = Markdown.get_stream(markdown)
         tw = self._typewriter
 
