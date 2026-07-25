@@ -278,6 +278,16 @@ def run_agent(
             messages.append({"role": "user", "content": question})
 
     result = AgentResult(messages=messages)
+    # Identical (name, args) tool calls reuse the prior result so the model
+    # can't spam the same command_help twice in one session.
+    tool_cache: dict[str, tuple[bool, str]] = {}
+
+    def _tool_cache_key(name: str, args_obj: dict[str, Any]) -> str:
+        try:
+            args_key = json.dumps(args_obj, sort_keys=True, default=str)
+        except TypeError:
+            args_key = repr(args_obj)
+        return f"{name}\0{args_key}"
 
     _dbg(
         config,
@@ -360,28 +370,45 @@ def run_agent(
                         )
                     except json.JSONDecodeError:
                         args_obj = {"_raw": raw_args}
+                    cache_key = _tool_cache_key(name, args_obj)
+                    cached = tool_cache.get(cache_key)
                     _dbg(
                         config,
                         "tool_start",
                         call_id=call_id,
                         name=name,
                         arguments=args_obj,
+                        cache_hit=cached is not None,
                     )
-                    if cb.on_status:
-                        cb.on_status(f"Running {name}...")
-                    if cb.on_tool_start:
-                        cb.on_tool_start(call_id, name, args_obj)
-                    ok, tool_out = run_tool(name, raw_args)
-                    _dbg(
-                        config,
-                        "tool_end",
-                        call_id=call_id,
-                        name=name,
-                        ok=ok,
-                        result=truncate(tool_out, 4000),
-                    )
-                    if cb.on_tool_end:
-                        cb.on_tool_end(call_id, ok, tool_out)
+                    if cached is not None:
+                        ok, tool_out = cached
+                        _dbg(
+                            config,
+                            "tool_end",
+                            call_id=call_id,
+                            name=name,
+                            ok=ok,
+                            result=truncate(tool_out, 4000),
+                            cache_hit=True,
+                        )
+                    else:
+                        if cb.on_status:
+                            cb.on_status(f"Running {name}...")
+                        if cb.on_tool_start:
+                            cb.on_tool_start(call_id, name, args_obj)
+                        ok, tool_out = run_tool(name, raw_args)
+                        tool_cache[cache_key] = (ok, tool_out)
+                        _dbg(
+                            config,
+                            "tool_end",
+                            call_id=call_id,
+                            name=name,
+                            ok=ok,
+                            result=truncate(tool_out, 4000),
+                            cache_hit=False,
+                        )
+                        if cb.on_tool_end:
+                            cb.on_tool_end(call_id, ok, tool_out)
                     messages.append(
                         {
                             "role": "tool",

@@ -189,8 +189,10 @@ class AskApp(App[str]):
         background: #1e1e1e;
         color: #d4d4d4;
     }
+    /* Minimal padding so drag-select doesn't pick up huge side gutters.
+       Prefer the auto-copied clipboard snippet for clean paste anyway. */
     MarkdownFence > Label {
-        padding: 1 2;
+        padding: 0 1;
     }
     """
 
