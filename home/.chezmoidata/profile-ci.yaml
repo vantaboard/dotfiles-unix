@@ -52,6 +52,7 @@ profile_ci:
     clang: true
     ffmpeg: false
     yt_dlp: false
+    doctl: false
     diff_so_fancy: false
     flatpak: false
     ssh_hardening: false

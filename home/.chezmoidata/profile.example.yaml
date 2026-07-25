@@ -41,6 +41,7 @@ profile_example:
     mise: true
     neovim: true
     ngrok: true
+    doctl: true
     oh_my_zsh: true
     llama: true
     omz_codeclimate: false

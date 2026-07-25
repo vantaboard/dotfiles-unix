@@ -1,0 +1,91 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "doctl" -}}
+{{ if eq .chezmoi.os "android" -}}
+#!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
+set -euo pipefail
+{{ else -}}
+#!/bin/bash
+set -euo pipefail
+{{ end -}}
+
+# hash: doctl-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping doctl install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+DOCTL_BIN="$HOME_DIR/.local/bin/doctl"
+RELEASE_API="https://api.github.com/repos/digitalocean/doctl/releases/latest"
+
+doctl_usable() {
+  command -v doctl >/dev/null 2>&1 && doctl version >/dev/null 2>&1
+}
+
+if doctl_usable; then
+  echo "doctl already installed: $(doctl version | head -1)"
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping doctl install"
+  exit 0
+fi
+
+case "$(uname -m)" in
+  x86_64|amd64)
+    arch=amd64
+    ;;
+  aarch64|arm64)
+    arch=arm64
+    ;;
+  *)
+    echo "WARN: unsupported arch for doctl: $(uname -m)"
+    exit 0
+    ;;
+esac
+
+tmpdir="$(mktemp -d)"
+cleanup() { rm -rf "$tmpdir"; }
+trap cleanup EXIT
+
+echo "Resolving latest doctl release..."
+tag="$(curl -fsSL "$RELEASE_API" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
+if [[ -z "$tag" ]]; then
+  echo "WARN: could not resolve doctl latest release tag"
+  exit 0
+fi
+
+version="${tag#v}"
+asset="doctl-${version}-linux-${arch}.tar.gz"
+url="https://github.com/digitalocean/doctl/releases/download/${tag}/${asset}"
+
+echo "Installing doctl ${tag} (${arch})..."
+curl -fsSL "$url" -o "$tmpdir/$asset"
+tar -xzf "$tmpdir/$asset" -C "$tmpdir" doctl
+mkdir -p "$(dirname "$DOCTL_BIN")"
+install -m 755 "$tmpdir/doctl" "$DOCTL_BIN"
+
+if doctl_usable; then
+  echo "doctl installed: $(doctl version | head -1)"
+else
+  echo "WARN: doctl install failed"
+  rm -f "$DOCTL_BIN"
+  exit 0
+fi
+{{- end -}}
+{{ end -}}

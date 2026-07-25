@@ -20,7 +20,7 @@ setup_catalog:
       default: true
     - id: dev
       label: Development
-      description: Neovim, gh, glab, docker, clang
+      description: Neovim, gh, glab, doctl, docker, clang
       default: true
     - id: system
       label: System services
@@ -463,6 +463,11 @@ setup_catalog:
       label: yt-dlp
       default: true
       description: Video/audio downloader; latest GitHub release binary in ~/.local/bin (enable ffmpeg for merge/post-process)
+    doctl:
+      category: dev
+      label: doctl
+      default: true
+      description: DigitalOcean CLI; latest GitHub release binary in ~/.local/bin
     diff_so_fancy:
       category: dev
       label: diff-so-fancy
