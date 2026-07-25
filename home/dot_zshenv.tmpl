@@ -15,6 +15,11 @@ function webcam() {
 
 DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
 [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+# rustup prepends ~/.cargo/bin; keep ~/.local/bin ahead so chezmoi wrappers
+# (e.g. aichat session picker) shadow same-named cargo binaries.
+if [[ -d "$HOME/.local/bin" ]]; then
+  export PATH="$HOME/.local/bin${PATH:+:$PATH}"
+fi
 
 {{- $p := .profile_example -}}
 {{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
