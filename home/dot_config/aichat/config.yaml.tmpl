@@ -4,7 +4,8 @@
 # REPL:  aichat                 (fzf session picker via ~/.local/bin/aichat)
 # One-shot: aichat "hello"
 # Sessions: aichat -s name
-# Tools: DuckDuckGo web_search via llm-functions (~/.config/aichat/functions)
+# Tools via llm-functions (~/.config/aichat/functions):
+#   web_search (DuckDuckGo), locate_binary, command_help, man_page
 
 model: llama-swap:chat
 stream: true
@@ -14,7 +15,7 @@ keybindings: emacs
 highlight: true
 wrap: auto
 function_calling: true
-use_tools: web_search
+use_tools: web_search,locate_binary,command_help,man_page
 compress_threshold: 8000
 
 clients:

@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v32-aichat-llm-functions
+# hash: tools-v33-aichat-cli-tools
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -512,18 +512,32 @@ install_llm_functions() {
     git -C "$LLM_FUNCTIONS_DIR" pull --ff-only 2>/dev/null || true
   fi
 
-  local tool_src="$AICHAT_TOOLS_SRC/web_search_duckduckgo.py"
-  if [[ ! -f "$tool_src" ]]; then
-    echo "WARN: missing $tool_src (chezmoi apply first); skipping web_search tool"
-    return 0
-  fi
+  local -a tool_files=(
+    web_search_duckduckgo.py
+    locate_binary.py
+    command_help.py
+    man_page.py
+  )
   mkdir -p "$LLM_FUNCTIONS_DIR/tools"
-  cp -f "$tool_src" "$LLM_FUNCTIONS_DIR/tools/web_search_duckduckgo.py"
+  local f
+  for f in "${tool_files[@]}"; do
+    if [[ ! -f "$AICHAT_TOOLS_SRC/$f" ]]; then
+      echo "WARN: missing $AICHAT_TOOLS_SRC/$f (chezmoi apply first); skipping llm-functions tools"
+      return 0
+    fi
+    cp -f "$AICHAT_TOOLS_SRC/$f" "$LLM_FUNCTIONS_DIR/tools/$f"
+  done
 
   if ! (
     cd "$LLM_FUNCTIONS_DIR"
     argc link-web-search web_search_duckduckgo.py
-    printf '%s\n' 'web_search.py' > tools.txt
+    # web_search.py is the linked alias; others are first-class tools.
+    printf '%s\n' \
+      'web_search.py' \
+      'locate_binary.py' \
+      'command_help.py' \
+      'man_page.py' \
+      > tools.txt
     argc build
   ); then
     echo "WARN: argc build failed for llm-functions"
