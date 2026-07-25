@@ -516,7 +516,7 @@ setup_catalog:
       category: system
       label: llama.cpp + llama-swap LLM service
       default: true
-      description: systemd unit + pinned Hugging Face GGUF downloads on chezmoi apply
+      description: systemd unit + pinned Hugging Face GGUF downloads + Textual ask CLI (~/ask venv)
       system_deploy: llama
       systemd_unit: llama-swap.service
     earlyoom:

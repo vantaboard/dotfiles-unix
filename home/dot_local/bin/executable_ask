@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Launch the ask CLI from the chezmoi-managed ~/ask package venv.
+set -euo pipefail
+
+ASK_DIR="${ASK_DIR:-$HOME/ask}"
+ASK_VENV="${ASK_VENV:-$ASK_DIR/.venv}"
+
+if [[ -x "$ASK_VENV/bin/ask" ]]; then
+  exec "$ASK_VENV/bin/ask" "$@"
+fi
+
+if [[ -x "$ASK_VENV/bin/python" ]]; then
+  exec "$ASK_VENV/bin/python" -m ask "$@"
+fi
+
+# Fallback: editable tree next to this script (dev / pre-install).
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for candidate in \
+  "$ASK_DIR/src" \
+  "$HERE/../../../ask/src" \
+  "$HOME/Code/dotfiles-unix/home/ask/src"
+do
+  if [[ -d "$candidate/ask" ]]; then
+    export PYTHONPATH="$candidate${PYTHONPATH:+:$PYTHONPATH}"
+    exec python3 -m ask "$@"
+  fi
+done
+
+echo "ask: not installed. Run chezmoi apply (llama feature) to create $ASK_VENV" >&2
+exit 127

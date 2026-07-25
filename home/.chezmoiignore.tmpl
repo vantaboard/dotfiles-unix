@@ -51,3 +51,7 @@ dot_local/bin/executable_godotdev
 dot_local/bin/executable_godot-nvr
 dot_local/share/applications/godot.desktop
 {{- end }}
+{{- if not (index $f "llama") }}
+ask/**
+dot_local/bin/executable_ask
+{{- end }}

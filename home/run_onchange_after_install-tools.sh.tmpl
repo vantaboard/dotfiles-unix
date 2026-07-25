@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v28
+# hash: tools-v29-ask
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -37,6 +37,8 @@ ZSH_ABBR_VERSION="v6.3.3"
 ZSH_ABBR_JOB_QUEUE="$ZSH_ABBR_DIR/zsh-job-queue/zsh-job-queue.zsh"
 TRASH_CLI_DIR="$HOME_DIR/trash-cli"
 TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
+ASK_DIR="$HOME_DIR/ask"
+ASK_VENV="$ASK_DIR/.venv"
 LOCAL_BIN="$HOME_DIR/.local/bin"
 LOCAL_PREFIX="$HOME_DIR/.local"
 TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-rm)
@@ -367,6 +369,49 @@ install_trash_cli() {
     fi
   done
   echo "trash-cli ready (~/.local/bin -> $TRASH_CLI_VENV/bin/*)"
+}
+
+install_ask() {
+  if [[ ! -f "$ASK_DIR/pyproject.toml" ]]; then
+    echo "WARN: ask package missing at $ASK_DIR (chezmoi apply source first)"
+    return 0
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARN: python3 not found; skipping ask install"
+    return 0
+  fi
+  if [[ -d "$ASK_VENV" ]] && [[ ! -x "$ASK_VENV/bin/python" ]]; then
+    echo "Removing broken ask venv..."
+    rm -rf "$ASK_VENV"
+  fi
+  if [[ ! -d "$ASK_VENV" ]]; then
+    echo "Creating ask virtualenv..."
+{{- if eq .chezmoi.os "linux" }}
+    if ! ensure_python3_venv || ! python3 -m venv "$ASK_VENV"; then
+      echo "WARN: could not create ask virtualenv; install python3-venv and re-run chezmoi apply"
+      return 0
+    fi
+{{- else }}
+    if ! python3 -m venv "$ASK_VENV"; then
+      echo "WARN: could not create ask virtualenv"
+      return 0
+    fi
+{{- end }}
+  fi
+  echo "Installing ask (textual) into venv..."
+  "$ASK_VENV/bin/pip" install -q -U pip
+  "$ASK_VENV/bin/pip" install -q -e "$ASK_DIR"
+  if ! "$ASK_VENV/bin/python" -c "import ask, textual" 2>/dev/null; then
+    echo "WARN: ask install verification failed"
+    return 0
+  fi
+  mkdir -p "$LOCAL_BIN"
+  # Prefer the chezmoi-managed wrapper (home/dot_local/bin/executable_ask).
+  # If missing, fall back to a symlink into the venv entrypoint.
+  if [[ ! -x "$LOCAL_BIN/ask" ]] && [[ -x "$ASK_VENV/bin/ask" ]]; then
+    ln -sf "$ASK_VENV/bin/ask" "$LOCAL_BIN/ask"
+  fi
+  echo "ask ready ($ASK_VENV)"
 }
 
 install_vivid_linux() {
@@ -1115,6 +1160,10 @@ install_zsh_abbr
 
 {{- if index $f "trash_cli" }}
 install_trash_cli
+{{- end }}
+
+{{- if index $f "llama" }}
+install_ask
 {{- end }}
 
 {{- if index $f "vivid" }}
