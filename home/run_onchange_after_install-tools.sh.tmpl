@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v31-aichat
+# hash: tools-v32-aichat-llm-functions
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -37,10 +37,11 @@ ZSH_ABBR_VERSION="v6.3.3"
 ZSH_ABBR_JOB_QUEUE="$ZSH_ABBR_DIR/zsh-job-queue/zsh-job-queue.zsh"
 TRASH_CLI_DIR="$HOME_DIR/trash-cli"
 TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
-PROMPT_DIR="$HOME_DIR/prompt"
-PROMPT_VENV="$PROMPT_DIR/.venv"
+LLM_FUNCTIONS_DIR="$HOME_DIR/.local/share/llm-functions"
+AICHAT_TOOLS_SRC="$HOME_DIR/.local/share/aichat/tools"
 LOCAL_BIN="$HOME_DIR/.local/bin"
 LOCAL_PREFIX="$HOME_DIR/.local"
+CARGO_BIN="$HOME_DIR/.cargo/bin"
 TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-rm)
 VIVID_VERSION="0.10.1"
 HYPRPICKER_VERSION="v0.3.0"
@@ -371,67 +372,6 @@ install_trash_cli() {
   echo "trash-cli ready (~/.local/bin -> $TRASH_CLI_VENV/bin/*)"
 }
 
-install_prompt() {
-  # Migrate legacy ~/ask install if present.
-  if [[ -d "$HOME_DIR/ask" && ! -e "$PROMPT_DIR" ]]; then
-    echo "Migrating ~/ask -> ~/prompt..."
-    mv "$HOME_DIR/ask" "$PROMPT_DIR"
-  fi
-  mkdir -p "$HOME_DIR/.local/share/prompt" "$HOME_DIR/.cache/prompt"
-  if [[ -f "$HOME_DIR/.local/share/ask/history.jsonl" && ! -f "$HOME_DIR/.local/share/prompt/history.jsonl" ]]; then
-    mv "$HOME_DIR/.local/share/ask/history.jsonl" "$HOME_DIR/.local/share/prompt/history.jsonl"
-  fi
-  if [[ -f "$HOME_DIR/.local/share/ask/input_history" && ! -f "$HOME_DIR/.local/share/prompt/input_history" ]]; then
-    mv "$HOME_DIR/.local/share/ask/input_history" "$HOME_DIR/.local/share/prompt/input_history"
-  fi
-  rm -f "$LOCAL_BIN/ask"
-
-  if [[ ! -f "$PROMPT_DIR/pyproject.toml" ]]; then
-    echo "WARN: prompt package missing at $PROMPT_DIR (chezmoi apply source first)"
-    return 0
-  fi
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "WARN: python3 not found; skipping prompt install"
-    return 0
-  fi
-  if [[ -d "$PROMPT_VENV" ]] && [[ ! -x "$PROMPT_VENV/bin/python" ]]; then
-    echo "Removing broken prompt venv..."
-    rm -rf "$PROMPT_VENV"
-  fi
-  if [[ -d "$PROMPT_VENV" ]] && ! "$PROMPT_VENV/bin/python" -c "import prompt" 2>/dev/null; then
-    echo "Recreating prompt venv (package renamed from ask)..."
-    rm -rf "$PROMPT_VENV"
-  fi
-  if [[ ! -d "$PROMPT_VENV" ]]; then
-    echo "Creating prompt virtualenv..."
-{{- if eq .chezmoi.os "linux" }}
-    if ! ensure_python3_venv || ! python3 -m venv "$PROMPT_VENV"; then
-      echo "WARN: could not create prompt virtualenv; install python3-venv and re-run chezmoi apply"
-      return 0
-    fi
-{{- else }}
-    if ! python3 -m venv "$PROMPT_VENV"; then
-      echo "WARN: could not create prompt virtualenv"
-      return 0
-    fi
-{{- end }}
-  fi
-  echo "Installing prompt (textual) into venv..."
-  "$PROMPT_VENV/bin/pip" install -q -U pip
-  "$PROMPT_VENV/bin/pip" install -q -e "$PROMPT_DIR"
-  if ! "$PROMPT_VENV/bin/python" -c "import prompt, textual" 2>/dev/null; then
-    echo "WARN: prompt install verification failed"
-    return 0
-  fi
-  mkdir -p "$LOCAL_BIN"
-  # Prefer the chezmoi-managed wrapper (home/dot_local/bin/executable_prompt).
-  # If missing, fall back to a symlink into the venv entrypoint.
-  if [[ ! -x "$LOCAL_BIN/prompt" ]] && [[ -x "$PROMPT_VENV/bin/prompt" ]]; then
-    ln -sf "$PROMPT_VENV/bin/prompt" "$LOCAL_BIN/prompt"
-  fi
-  echo "prompt ready ($PROMPT_VENV)"
-}
-
 install_vivid_linux() {
   if command -v vivid >/dev/null 2>&1; then
     echo "vivid already installed"
@@ -498,20 +438,125 @@ install_eza() {
 install_aichat() {
   # shellcheck disable=SC1091
   [[ -f "$HOME_DIR/.cargo/env" ]] && source "$HOME_DIR/.cargo/env"
-  if command -v aichat >/dev/null 2>&1; then
-    echo "aichat already installed ($(aichat --version 2>/dev/null || echo ok))"
+  # Prefer cargo binary; ~/.local/bin/aichat is the session-picker wrapper.
+  local real="$CARGO_BIN/aichat"
+  if [[ -x "$real" ]]; then
+    echo "aichat already installed ($("$real" --version 2>/dev/null || echo ok))"
+  else
+    if ! command -v cargo >/dev/null 2>&1; then
+      echo "WARN: cargo not found; skipping aichat (need rust/cargo for install)"
+      return 0
+    fi
+    echo "Installing aichat (cargo)..."
+    if ! cargo install aichat; then
+      echo "WARN: cargo install aichat failed"
+      return 0
+    fi
+  fi
+  # Retire legacy Textual prompt CLI wrapper (replaced by aichat).
+  rm -f "$LOCAL_BIN/prompt" "$LOCAL_BIN/ask"
+  echo "aichat ready — config at ~/.config/aichat/config.yaml (llama-swap:chat)"
+}
+
+install_argc() {
+  # shellcheck disable=SC1091
+  [[ -f "$HOME_DIR/.cargo/env" ]] && source "$HOME_DIR/.cargo/env"
+  if command -v argc >/dev/null 2>&1 || [[ -x "$CARGO_BIN/argc" ]]; then
+    echo "argc already installed"
     return 0
   fi
   if ! command -v cargo >/dev/null 2>&1; then
-    echo "WARN: cargo not found; skipping aichat (need rust/cargo for install)"
+    echo "WARN: cargo not found; skipping argc"
     return 0
   fi
-  echo "Installing aichat (cargo)..."
-  if ! cargo install aichat; then
-    echo "WARN: cargo install aichat failed"
+  echo "Installing argc (cargo)..."
+  if ! cargo install argc; then
+    echo "WARN: cargo install argc failed"
     return 0
   fi
-  echo "aichat ready — config at ~/.config/aichat/config.yaml (llama-swap:chat)"
+  echo "argc ready"
+}
+
+install_llm_functions() {
+  # shellcheck disable=SC1091
+  [[ -f "$HOME_DIR/.cargo/env" ]] && source "$HOME_DIR/.cargo/env"
+  export PATH="$CARGO_BIN:$PATH"
+
+  local real="$CARGO_BIN/aichat"
+  if [[ ! -x "$real" ]]; then
+    echo "WARN: aichat binary missing; skipping llm-functions setup"
+    return 0
+  fi
+  if ! command -v argc >/dev/null 2>&1 && [[ ! -x "$CARGO_BIN/argc" ]]; then
+    echo "WARN: argc not found; skipping llm-functions setup"
+    return 0
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "WARN: jq not found; llm-functions build needs jq"
+    return 0
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARN: python3 not found; skipping DuckDuckGo web_search tool"
+    return 0
+  fi
+
+  if [[ ! -d "$LLM_FUNCTIONS_DIR/.git" ]]; then
+    echo "Cloning llm-functions → $LLM_FUNCTIONS_DIR..."
+    mkdir -p "$(dirname "$LLM_FUNCTIONS_DIR")"
+    if ! git clone --depth 1 https://github.com/sigoden/llm-functions.git "$LLM_FUNCTIONS_DIR"; then
+      echo "WARN: failed to clone llm-functions"
+      return 0
+    fi
+  else
+    echo "Updating llm-functions..."
+    git -C "$LLM_FUNCTIONS_DIR" pull --ff-only 2>/dev/null || true
+  fi
+
+  local tool_src="$AICHAT_TOOLS_SRC/web_search_duckduckgo.py"
+  if [[ ! -f "$tool_src" ]]; then
+    echo "WARN: missing $tool_src (chezmoi apply first); skipping web_search tool"
+    return 0
+  fi
+  mkdir -p "$LLM_FUNCTIONS_DIR/tools"
+  cp -f "$tool_src" "$LLM_FUNCTIONS_DIR/tools/web_search_duckduckgo.py"
+
+  if ! (
+    cd "$LLM_FUNCTIONS_DIR"
+    argc link-web-search web_search_duckduckgo.py
+    printf '%s\n' 'web_search.py' > tools.txt
+    argc build
+  ); then
+    echo "WARN: argc build failed for llm-functions"
+    return 0
+  fi
+
+  local functions_dir
+  functions_dir="$("$real" --info 2>/dev/null | awk '/^functions_dir[[:space:]]+/ { $1=""; sub(/^ /,""); print; exit }')"
+  if [[ -z "$functions_dir" ]]; then
+    functions_dir="$HOME_DIR/.config/aichat/functions"
+  fi
+  mkdir -p "$(dirname "$functions_dir")"
+  if [[ -L "$functions_dir" ]]; then
+    local current
+    current="$(readlink -f "$functions_dir" 2>/dev/null || true)"
+    local want
+    want="$(readlink -f "$LLM_FUNCTIONS_DIR")"
+    if [[ "$current" != "$want" ]]; then
+      rm -f "$functions_dir"
+      ln -s "$LLM_FUNCTIONS_DIR" "$functions_dir"
+      echo "functions_dir → $LLM_FUNCTIONS_DIR"
+    else
+      echo "functions_dir already linked"
+    fi
+  elif [[ -e "$functions_dir" ]]; then
+    rm -rf "$functions_dir"
+    ln -s "$LLM_FUNCTIONS_DIR" "$functions_dir"
+    echo "functions_dir → $LLM_FUNCTIONS_DIR"
+  else
+    ln -s "$LLM_FUNCTIONS_DIR" "$functions_dir"
+    echo "functions_dir → $LLM_FUNCTIONS_DIR"
+  fi
+  echo "llm-functions ready (web_search via DuckDuckGo)"
 }
 
 install_fastfetch() {
@@ -1199,10 +1244,6 @@ install_zsh_abbr
 install_trash_cli
 {{- end }}
 
-{{- if index $f "llama" }}
-install_prompt
-{{- end }}
-
 {{- if index $f "vivid" }}
 {{- if eq .chezmoi.os "android" }}
 install_vivid_termux
@@ -1225,6 +1266,8 @@ install_eza
 
 {{- if index $f "llama" }}
 install_aichat
+install_argc
+install_llm_functions
 {{- end }}
 
 {{- if and (index $f "fastfetch") (eq .chezmoi.os "linux") }}

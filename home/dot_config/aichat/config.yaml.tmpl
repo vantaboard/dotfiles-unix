@@ -1,9 +1,10 @@
 # aichat → local llama-swap (OpenAI-compatible)
 # Docs: https://github.com/sigoden/aichat/wiki/Configuration-Guide
 #
-# REPL:  aichat
-# One-shot: aichat -s "hello"   or   aichat "hello"
-# Sessions: .session / .session list / .session <name>
+# REPL:  aichat                 (fzf session picker via ~/.local/bin/aichat)
+# One-shot: aichat "hello"
+# Sessions: aichat -s name
+# Tools: DuckDuckGo web_search via llm-functions (~/.config/aichat/functions)
 
 model: llama-swap:chat
 stream: true
@@ -12,7 +13,8 @@ save_session: true
 keybindings: emacs
 highlight: true
 wrap: auto
-function_calling: false
+function_calling: true
+use_tools: web_search
 compress_threshold: 8000
 
 clients:
@@ -24,5 +26,6 @@ clients:
     models:
       - name: chat
         max_input_tokens: 16384
+        supports_function_calling: true
       - name: coder
         max_input_tokens: 8192

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Session picker wrapper around cargo-installed aichat.
+# Bare TTY: fzf list of sessions (+ New session). Any argv / non-TTY: passthrough.
+set -euo pipefail
+
+resolve_aichat() {
+  if [[ -n "${AICHAT_BIN:-}" && -x "${AICHAT_BIN}" ]]; then
+    printf '%s\n' "$AICHAT_BIN"
+    return 0
+  fi
+  if [[ -x "${HOME}/.cargo/bin/aichat" ]]; then
+    printf '%s\n' "${HOME}/.cargo/bin/aichat"
+    return 0
+  fi
+  local self cand
+  self="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || printf '%s\n' "${BASH_SOURCE[0]}")"
+  while IFS= read -r cand; do
+    [[ -n "$cand" ]] || continue
+    local resolved
+    resolved="$(readlink -f "$cand" 2>/dev/null || printf '%s\n' "$cand")"
+    if [[ "$resolved" != "$self" && -x "$resolved" ]]; then
+      printf '%s\n' "$resolved"
+      return 0
+    fi
+  done < <(type -aP aichat 2>/dev/null || true)
+  return 1
+}
+
+REAL="$(resolve_aichat)" || {
+  echo "aichat: real binary not found (expected ~/.cargo/bin/aichat)" >&2
+  exit 127
+}
+
+# Passthrough: any args, or non-interactive stdin/stdout.
+if [[ $# -gt 0 ]] || [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
+  exec "$REAL" "$@"
+fi
+
+if ! command -v fzf >/dev/null 2>&1; then
+  echo "aichat: fzf not found; launching without session picker" >&2
+  exec "$REAL"
+fi
+
+NEW="+ New session"
+mapfile -t sessions < <("$REAL" --list-sessions 2>/dev/null | sed '/^[[:space:]]*$/d' || true)
+
+choice="$(
+  {
+    printf '%s\n' "$NEW"
+    if ((${#sessions[@]})); then
+      printf '%s\n' "${sessions[@]}"
+    fi
+  } | fzf --prompt='aichat session> ' --height=40% --reverse --border
+)" || exit 0
+
+[[ -n "${choice:-}" ]] || exit 0
+
+if [[ "$choice" == "$NEW" ]]; then
+  # --print-query: first line is what the user typed (empty = cancel).
+  name="$(
+    printf '' | fzf --print-query --prompt='new session name> ' --height=20% --info=hidden \
+      | head -n1
+  )" || true
+  name="${name#"${name%%[![:space:]]*}"}"
+  name="${name%"${name##*[![:space:]]}"}"
+  [[ -n "$name" ]] || exit 0
+  exec "$REAL" -s "$name" --empty-session --save-session
+fi
+
+exec "$REAL" -s "$choice"
