@@ -453,6 +453,14 @@ setup_catalog:
       requires: [neovim, clang]
       packages: [clangd]
       config_paths: [dot_config/nvim/lua/plugins/unreal.lua, dot_config/environment.d/unreal.conf, dot_local/bin/unreal-editor, dot_local/bin/install-unreal-neovim-plugin]
+    godot:
+      category: dev
+      label: Godot Engine
+      description: Linux installs the latest stable editor from GitHub Releases into ~/.local/opt/godot via run_after_install-godot on each chezmoi apply; configures NeoVim (godotdev.nvim) external-editor helpers and Godot editor settings for LSP/DAP
+      default: false
+      requires: [neovim]
+      packages: [jq, unzip]
+      config_paths: [dot_config/nvim/lua/plugins/godot.lua, dot_local/bin/godotdev, dot_local/bin/godot-nvr, dot_local/share/applications/godot.desktop]
     ffmpeg:
       category: dev
       label: ffmpeg

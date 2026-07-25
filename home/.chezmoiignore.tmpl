@@ -46,3 +46,8 @@ dot_config/systemd/user/dropbox.service.tmpl
 {{- if not (index $f "unreal") }}
 dot_config/nvim/lua/plugins/unreal.lua
 {{- end }}
+{{- if not (index $f "godot") }}
+dot_local/bin/executable_godotdev
+dot_local/bin/executable_godot-nvr
+dot_local/share/applications/godot.desktop
+{{- end }}

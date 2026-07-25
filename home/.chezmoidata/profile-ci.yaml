@@ -46,6 +46,8 @@ profile_ci:
     desktop_utils: false
     cursor: false
     neovim: true
+    godot: false
+    unreal: false
     gh_cli: false
     glab: false
     docker: false

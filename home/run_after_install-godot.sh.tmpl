@@ -1,0 +1,191 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "godot" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: godot-stable-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Godot install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+LOCAL_BIN="$HOME_DIR/.local/bin"
+INSTALL_DIR="$HOME_DIR/.local/opt/godot"
+CACHE_DIR="$HOME_DIR/.cache/godot-install"
+VERSION_FILE="$INSTALL_DIR/version"
+GODOT_BIN="$INSTALL_DIR/godot"
+RELEASE_API="https://api.github.com/repos/godotengine/godot/releases/latest"
+NVIM_VENV="$HOME_DIR/.local/share/nvim/venv"
+GODOT_NVR="$LOCAL_BIN/godot-nvr"
+
+case "$(uname -m)" in
+  x86_64) GODOT_ARCH="x86_64" ;;
+  aarch64|arm64) GODOT_ARCH="arm64" ;;
+  *)
+    echo "WARN: unsupported architecture $(uname -m); skipping Godot install"
+    exit 0
+    ;;
+esac
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping Godot install"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: jq not found; skipping Godot install"
+  exit 0
+fi
+
+if ! command -v unzip >/dev/null 2>&1; then
+  echo "WARN: unzip not found; skipping Godot install"
+  exit 0
+fi
+
+metadata="$(curl -fsSL "$RELEASE_API")"
+target_tag="$(jq -r '.tag_name // empty' <<<"$metadata")"
+asset_name="Godot_v${target_tag}_linux.${GODOT_ARCH}.zip"
+download_url="$(jq -r --arg name "$asset_name" '.assets[]? | select(.name == $name) | .browser_download_url // empty' <<<"$metadata")"
+
+if [[ -z "$target_tag" || -z "$download_url" ]]; then
+  echo "WARN: Godot latest release API did not return a Linux ${GODOT_ARCH} asset"
+  exit 0
+fi
+
+link_godot() {
+  mkdir -p "$LOCAL_BIN"
+  ln -sf "$GODOT_BIN" "$LOCAL_BIN/godot"
+}
+
+godot_current() {
+  local version_stem="${target_tag%-stable}"
+  [[ -x "$GODOT_BIN" ]] || return 1
+  [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$target_tag" ]] || return 1
+  "$GODOT_BIN" --version 2>/dev/null | grep -Eq "^${version_stem}(\\.|$)"
+}
+
+install_nvr() {
+  if command -v nvr >/dev/null 2>&1; then
+    return 0
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "WARN: python3 not found; nvr (neovim-remote) required for Godot→NeoVim file open"
+    return 0
+  fi
+  mkdir -p "$(dirname "$NVIM_VENV")"
+  if [[ ! -x "$NVIM_VENV/bin/python" ]]; then
+    python3 -m venv "$NVIM_VENV"
+  fi
+  echo "Installing neovim-remote into $NVIM_VENV..."
+  "$NVIM_VENV/bin/python" -m pip install --upgrade pip neovim-remote >/dev/null
+  if [[ -x "$NVIM_VENV/bin/nvr" ]]; then
+    ln -sf "$NVIM_VENV/bin/nvr" "$LOCAL_BIN/nvr"
+  fi
+}
+
+# Upsert a key = value line in Godot editor_settings-*.tres (format=3).
+upsert_editor_setting() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+  local tmp
+
+  [[ -f "$file" ]] || return 0
+
+  tmp="$(mktemp)"
+  if grep -q "^${key} = " "$file"; then
+    sed "s|^${key} = .*|${key} = ${value}|" "$file" > "$tmp"
+  else
+    # Insert before the final blank/EOF after [resource] entries.
+    awk -v k="$key" -v v="$value" '
+      BEGIN { inserted = 0 }
+      /^\[resource\]/ { print; in_res = 1; next }
+      in_res && NF == 0 && !inserted {
+        print k " = " v
+        inserted = 1
+      }
+      { print }
+      END {
+        if (in_res && !inserted) print k " = " v
+      }
+    ' "$file" > "$tmp"
+  fi
+  mv "$tmp" "$file"
+}
+
+configure_editor_settings() {
+  local settings_dir="$HOME_DIR/.config/godot"
+  local f
+
+  mkdir -p "$settings_dir"
+  shopt -s nullglob
+  local files=("$settings_dir"/editor_settings-*.tres)
+  shopt -u nullglob
+
+  if [[ ${#files[@]} -eq 0 ]]; then
+    # Seed a minimal settings file for the current major; Godot will merge on first launch.
+    cat > "$settings_dir/editor_settings-4.tres" <<'EOF'
+[gd_resource type="EditorSettings" format=3]
+
+[resource]
+EOF
+    files=("$settings_dir/editor_settings-4.tres")
+  fi
+
+  for f in "${files[@]}"; do
+    upsert_editor_setting "$f" "text_editor/external/use_external_editor" "true"
+    upsert_editor_setting "$f" "text_editor/external/exec_path" "\"$GODOT_NVR\""
+    upsert_editor_setting "$f" "text_editor/external/exec_flags" "\"+{line} {file}\""
+    upsert_editor_setting "$f" "text_editor/behavior/files/auto_reload_scripts_on_external_change" "true"
+    upsert_editor_setting "$f" "interface/editor/save_on_focus_loss" "true"
+    upsert_editor_setting "$f" "interface/editor/import_resources_when_unfocused" "true"
+    upsert_editor_setting "$f" "network/language_server/remote_port" "6005"
+    upsert_editor_setting "$f" "network/debug_adapter/remote_port" "6006"
+    echo "Configured Godot editor settings in $f for NeoVim"
+  done
+}
+
+install_nvr
+
+if godot_current; then
+  echo "Godot ${target_tag} already installed at $GODOT_BIN"
+  link_godot
+  configure_editor_settings
+  exit 0
+fi
+
+mkdir -p "$INSTALL_DIR" "$CACHE_DIR"
+TMP_DIR="$(mktemp -d "${CACHE_DIR}/extract.XXXXXX")"
+cleanup() { rm -rf "$TMP_DIR"; }
+trap cleanup EXIT
+
+echo "Installing Godot ${target_tag} (${GODOT_ARCH})..."
+curl -fsSL "$download_url" -o "$TMP_DIR/$asset_name"
+unzip -qo "$TMP_DIR/$asset_name" -d "$TMP_DIR"
+
+extracted="$(find "$TMP_DIR" -type f -name "Godot_v*_linux.${GODOT_ARCH}" | head -1)"
+if [[ -z "$extracted" ]]; then
+  echo "WARN: Godot binary not found inside $asset_name"
+  exit 0
+fi
+
+install -m 755 "$extracted" "$GODOT_BIN"
+printf '%s\n' "$target_tag" > "$VERSION_FILE"
+
+if godot_current; then
+  link_godot
+  configure_editor_settings
+  echo "Godot ${target_tag} installed; godot -> $GODOT_BIN"
+else
+  echo "WARN: Godot install failed ($GODOT_BIN missing or wrong version)"
+  exit 0
+fi
+{{- end -}}
+{{ end -}}

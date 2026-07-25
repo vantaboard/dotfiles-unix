@@ -60,6 +60,7 @@ profile_example:
     tmux: true
     trash_cli: true
     unreal: false
+    godot: false
     wl_clipboard: true
     zoxide: true
     zsh: true

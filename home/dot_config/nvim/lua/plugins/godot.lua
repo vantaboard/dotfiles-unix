@@ -2,6 +2,8 @@ require("godotdev").setup({
   editor_host = "127.0.0.1", -- Godot editor host
   editor_port = 6005,        -- Godot LSP port
   debug_port = 6006,         -- Godot debugger port
+  -- Prefer chezmoi-managed binary (~/.local/bin/godot from run_after_install-godot).
+  godot_path = vim.fn.exepath("godot") ~= "" and vim.fn.exepath("godot") or "godot",
   csharp = true,             -- Enable C# Installation Support
   -- Leave false: autostart notifies on every .gd/.cs buffer when a listen
   -- server is already up. Use :GodotStartEditorServer once if needed.
