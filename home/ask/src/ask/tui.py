@@ -214,12 +214,21 @@ class AskApp(App[str]):
         yield markdown
 
     def on_mount(self) -> None:
-        self.set_interval(_THINK_INTERVAL_S, self._tick_spinner)
+        self._think_timer = self.set_interval(
+            _THINK_INTERVAL_S, self._tick_spinner
+        )
         self.run_worker(self._run_agent, thread=True)
         self.run_worker(self._drive_ui)
 
     def action_quit_ask(self) -> None:
         self.exit("")
+
+    def _stop_thinking(self) -> None:
+        self._has_text = True
+        timer = getattr(self, "_think_timer", None)
+        if timer is not None:
+            timer.stop()
+            self._think_timer = None
 
     def _status_markup(self, frame: str | None = None) -> str:
         glyph = frame if frame is not None else think_frame(self._spin_index)
@@ -298,8 +307,11 @@ class AskApp(App[str]):
                     status.update(self._status_markup())
                 elif kind == _DELTA:
                     if not self._has_text:
-                        self._has_text = True
-                        status.update("[dim]Writing...[/]")
+                        self._stop_thinking()
+                        # Clear status so it can't leave a clipped "Thou…" over
+                        # the markdown panel after inline exit.
+                        status.update("")
+                        status.display = False
                     tw.extend_target(str(payload))
                 elif kind == _TOOL_START:
                     call_id, name, args = payload
@@ -314,10 +326,12 @@ class AskApp(App[str]):
                     if card is not None:
                         card.finish(ok, detail)
                 elif kind == _DONE:
+                    self._stop_thinking()
+                    status.update("")
+                    status.display = False
                     # Ensure answer is in the typewriter even if on_delta was skipped.
                     if payload and not tw.target:
                         tw.extend_target(str(payload))
-                        self._has_text = True
                     tw.mark_done()
                     return
 
@@ -334,14 +348,13 @@ class AskApp(App[str]):
         try:
             await asyncio.gather(ingest(), drip())
         finally:
+            self._stop_thinking()
             remaining = tw.snap()
             if remaining:
                 await stream.write(remaining)
             await stream.stop()
-            elapsed = max(1, int(round(time.monotonic() - self._started)))
-            status.update(
-                f"[dim]Thought for {elapsed}s · {self._config.model}[/]"
-            )
+            # Timing is printed after the Textual app exits (see run_ask_tui)
+            # so "Thought for Ns" can't be clipped into "Thou" by the panel.
             self.exit(self._result)
 
 
@@ -399,11 +412,16 @@ def run_ask_tui(
         return result.answer or ""
 
     app = AskApp(question, config, verbose=verbose)
+    started = time.monotonic()
     try:
         # mouse=False keeps terminal scrollback + drag-select working.
-        return app.run(inline=True, inline_no_clear=True, mouse=False) or ""
+        result = app.run(inline=True, inline_no_clear=True, mouse=False) or ""
     except KeyboardInterrupt:
         return ""
+    elapsed = max(1, int(round(time.monotonic() - started)))
+    if result and sys.stderr.isatty():
+        print(f"Thought for {elapsed}s", file=sys.stderr)
+    return result
 
 
 __all__ = ["AskApp", "prompt_for_question", "run_ask_tui"]
