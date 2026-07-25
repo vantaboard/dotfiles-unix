@@ -22,7 +22,7 @@ from ask.agent import (
     answer_awaits_reply,
     run_agent,
 )
-from ask.clipboard import AnswerSegment, split_answer_segments
+from ask.fences import AnswerSegment, split_answer_segments
 from ask.think_anim import think_frame
 from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
@@ -428,15 +428,17 @@ class ProseApp(App[None]):
 
 
 def _emit_answer_tail(segments: list[AnswerSegment]) -> None:
-    """Print code plain and show later prose panels after the agent UI."""
-    from ask.clipboard import print_code_segment
+    """Print code (via bat) and show later prose panels after the agent UI."""
+    from ask.fences import print_code_segment
 
     start = 0
     if segments and segments[0].kind == "prose":
         start = 1  # already shown inside AskApp
     for seg in segments[start:]:
         if seg.kind == "code":
-            print_code_segment(seg.text, leading_blank=True)
+            print_code_segment(
+                seg.text, language=seg.language, leading_blank=True
+            )
         else:
             try:
                 ProseApp(seg.text).run(

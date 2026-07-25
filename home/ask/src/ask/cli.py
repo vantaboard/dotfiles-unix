@@ -131,11 +131,6 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not append this exchange to history",
     )
-    p.add_argument(
-        "--no-copy",
-        action="store_true",
-        help="Do not copy code fences from the answer to the clipboard",
-    )
     return p
 
 
@@ -217,17 +212,6 @@ def main(argv: list[str] | None = None) -> int:
                         f"ask: failed to write history: {exc}",
                         file=sys.stderr,
                     )
-            if (
-                not is_error
-                and not args.no_copy
-                and answer
-                and sys.stderr.isatty()
-            ):
-                from ask.clipboard import copy_primary_fence, report_copied
-
-                fence = copy_primary_fence(answer)
-                if fence is not None:
-                    report_copied(fence)
             if is_error:
                 exit_code = 1
                 break
