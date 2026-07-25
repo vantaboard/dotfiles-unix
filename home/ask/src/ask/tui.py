@@ -366,8 +366,12 @@ def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
     except Exception:  # noqa: BLE001 — prompt must still work without history
         pass
     try:
-        print("Ask (Enter to submit, Ctrl+C to cancel)", file=sys.stderr)
-        return input("ask> ").strip() or None
+        # Cyan "ask>" when stderr is a TTY; plain otherwise (still readable).
+        if sys.stderr.isatty():
+            prompt = "\033[36mask>\033[0m "
+        else:
+            prompt = "ask> "
+        return input(prompt).strip() or None
     except (EOFError, KeyboardInterrupt):
         print(file=sys.stderr)
         return None
