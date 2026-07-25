@@ -1,4 +1,4 @@
-"""Allowlisted tools for the ask agent (no arbitrary shell)."""
+"""Allowlisted tools for the prompt agent (no arbitrary shell)."""
 
 from __future__ import annotations
 

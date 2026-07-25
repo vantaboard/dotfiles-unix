@@ -1,4 +1,4 @@
-"""Thread-safe debug trace log for ask runs."""
+"""Thread-safe debug trace log for prompt runs."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from typing import Any
 
 
 DEFAULT_DEBUG_LOG = Path(
-    os.environ.get("ASK_DEBUG_LOG", "")
-    or (Path.home() / ".cache" / "ask" / "debug.log")
+    os.environ.get("PROMPT_DEBUG_LOG", "")
+    or (Path.home() / ".cache" / "prompt" / "debug.log")
 )
 
 

@@ -9,8 +9,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from ask.debug import DebugLog, truncate
-from ask.tools import SYSTEM_PROMPT, openai_tool_schemas, run_tool
+from prompt.debug import DebugLog, truncate
+from prompt.tools import SYSTEM_PROMPT, openai_tool_schemas, run_tool
 
 DEFAULT_BASE_URL = "http://127.0.0.1:9292/v1"
 DEFAULT_MODEL = "chat"
@@ -418,7 +418,7 @@ def run_agent(
                     )
                 continue
 
-            from ask.markdown_format import tag_code_fences
+            from prompt.markdown_format import tag_code_fences
 
             result.answer = tag_code_fences(
                 content.strip() or "(no response from model)"
@@ -465,7 +465,7 @@ def run_agent_plain(
     """Run without Textual; print answer to stdout."""
     import sys
 
-    from ask.tool_labels import done_label, running_label
+    from prompt.tool_labels import done_label, running_label
 
     streamed = False
     tool_meta: dict[str, tuple[str, dict[str, Any]]] = {}
@@ -473,7 +473,7 @@ def run_agent_plain(
     def on_delta(text: str) -> None:
         nonlocal streamed
         streamed = True
-        from ask.markdown_format import print_rich_markdown
+        from prompt.markdown_format import print_rich_markdown
 
         print_rich_markdown(text)
 
@@ -506,7 +506,7 @@ def run_agent_plain(
         ),
     )
     if not streamed and result.answer:
-        from ask.markdown_format import print_rich_markdown
+        from prompt.markdown_format import print_rich_markdown
 
         print_rich_markdown(result.answer)
     return result

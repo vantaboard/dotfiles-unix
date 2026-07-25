@@ -1,4 +1,4 @@
-"""ask CLI entrypoint."""
+"""prompt CLI entrypoint."""
 
 from __future__ import annotations
 
@@ -6,14 +6,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from ask.agent import (
+from prompt.agent import (
     DEFAULT_BASE_URL,
     DEFAULT_MAX_ROUNDS,
     DEFAULT_MODEL,
     AgentConfig,
 )
-from ask.debug import DEFAULT_DEBUG_LOG, DebugLog
-from ask.history import (
+from prompt.debug import DEFAULT_DEBUG_LOG, DebugLog
+from prompt.history import (
     HISTORY_PATH,
     HistoryError,
     append_exchange,
@@ -39,17 +39,17 @@ def _read_question(args: argparse.Namespace) -> str | None:
     if not sys.stdin.isatty():
         return sys.stdin.read().strip() or None
 
-    from ask.tui import prompt_for_question
+    from prompt.tui import prompt_for_question
 
     return prompt_for_question(use_textual=False if args.plain else None)
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="ask",
+        prog="prompt",
         description=(
-            "Ask your local LLM (llama-swap) a question. Uses allowlisted "
-            "tools (which/type, man, --help) and DuckDuckGo when helpful. "
+            "Prompt your local LLM (llama-swap). Uses allowlisted tools "
+            "(which/type, man, --help) and DuckDuckGo when helpful. "
             "Run with no arguments to type the question interactively."
         ),
     )
@@ -111,7 +111,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help=(
             "Debug log path (implies --debug). "
-            "Also set via ASK_DEBUG_LOG."
+            "Also set via PROMPT_DEBUG_LOG."
         ),
     )
     p.add_argument(
@@ -143,7 +143,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         metavar="REF",
         help=(
-            "Continue a prior ask: index (#N from --history), UUID / unique "
+            "Continue a prior prompt: index (#N from --history), UUID / unique "
             "prefix, or omit REF to follow up on the latest entry"
         ),
     )
@@ -155,9 +155,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.history_clear:
         if clear_history():
-            print(f"ask: cleared {HISTORY_PATH}", file=sys.stderr)
+            print(f"prompt: cleared {HISTORY_PATH}", file=sys.stderr)
         else:
-            print(f"ask: no history at {HISTORY_PATH}", file=sys.stderr)
+            print(f"prompt: no history at {HISTORY_PATH}", file=sys.stderr)
         return 0
 
     if args.history is not None:
@@ -172,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.follow_up if args.follow_up != "" else None
             )
         except HistoryError as exc:
-            print(f"ask: {exc}", file=sys.stderr)
+            print(f"prompt: {exc}", file=sys.stderr)
             return 2
         messages = messages_from_entry(entry)
         parent_id = str(entry.get("id") or "") or None
@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         label = f"#{idx}"
         if eid:
             label += f" {eid}"
-        print(f"ask: following up on {label}", file=sys.stderr)
+        print(f"prompt: following up on {label}", file=sys.stderr)
 
     try:
         question = _read_question(args)
@@ -191,14 +191,14 @@ def main(argv: list[str] | None = None) -> int:
         # None → cancelled interactive prompt; "" → empty stdin/submit.
         if question is None and sys.stdin.isatty() and not args.question:
             return 130
-        print("ask: missing question", file=sys.stderr)
+        print("prompt: missing question", file=sys.stderr)
         return 2
 
     debug: DebugLog | None = None
     if args.debug or args.debug_log:
         path = Path(args.debug_log) if args.debug_log else DEFAULT_DEBUG_LOG
         debug = DebugLog(path)
-        print(f"ask: debug log -> {debug.path}", file=sys.stderr)
+        print(f"prompt: debug log -> {debug.path}", file=sys.stderr)
 
     config = AgentConfig(
         base_url=args.base_url,
@@ -208,14 +208,14 @@ def main(argv: list[str] | None = None) -> int:
         debug=debug,
     )
 
-    from ask.agent import answer_awaits_reply
-    from ask.tui import prompt_for_question, run_ask_turn
+    from prompt.agent import answer_awaits_reply
+    from prompt.tui import prompt_for_question, run_prompt_turn
 
     current: str | None = question
     exit_code = 0
     try:
         while current:
-            result = run_ask_turn(
+            result = run_prompt_turn(
                 current,
                 config,
                 messages=messages,
@@ -244,12 +244,12 @@ def main(argv: list[str] | None = None) -> int:
                     parent_id = new_id
                     if sys.stderr.isatty():
                         print(
-                            f"ask: saved {short_id(new_id)}",
+                            f"prompt: saved {short_id(new_id)}",
                             file=sys.stderr,
                         )
                 except OSError as exc:
                     print(
-                        f"ask: failed to write history: {exc}",
+                        f"prompt: failed to write history: {exc}",
                         file=sys.stderr,
                     )
             if is_error:

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Launch the prompt CLI from the chezmoi-managed ~/prompt package venv.
+set -euo pipefail
+
+PROMPT_DIR="${PROMPT_DIR:-$HOME/prompt}"
+PROMPT_VENV="${PROMPT_VENV:-$PROMPT_DIR/.venv}"
+
+if [[ -x "$PROMPT_VENV/bin/prompt" ]]; then
+  exec "$PROMPT_VENV/bin/prompt" "$@"
+fi
+
+if [[ -x "$PROMPT_VENV/bin/python" ]]; then
+  exec "$PROMPT_VENV/bin/python" -m prompt "$@"
+fi
+
+# Fallback: editable tree next to this script (dev / pre-install).
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for candidate in \
+  "$PROMPT_DIR/src" \
+  "$HERE/../../../prompt/src" \
+  "$HOME/Code/dotfiles-unix/home/prompt/src"
+do
+  if [[ -d "$candidate/prompt" ]]; then
+    export PYTHONPATH="$candidate${PYTHONPATH:+:$PYTHONPATH}"
+    exec python3 -m prompt "$@"
+  fi
+done
+
+echo "prompt: not installed. Run chezmoi apply (llama feature) to create $PROMPT_VENV" >&2
+exit 127

@@ -1,4 +1,4 @@
-"""Persistent ask Q&A history (JSONL) and interactive input history."""
+"""Persistent prompt Q&A history (JSONL) and interactive input history."""
 
 from __future__ import annotations
 
@@ -13,21 +13,21 @@ from typing import Any, Iterator
 
 
 def _data_dir() -> Path:
-    override = os.environ.get("ASK_DATA_DIR", "").strip()
+    override = os.environ.get("PROMPT_DATA_DIR", "").strip()
     if override:
         return Path(override).expanduser()
     xdg = os.environ.get("XDG_DATA_HOME", "").strip()
     if xdg:
-        return Path(xdg).expanduser() / "ask"
-    return Path.home() / ".local" / "share" / "ask"
+        return Path(xdg).expanduser() / "prompt"
+    return Path.home() / ".local" / "share" / "prompt"
 
 
 DATA_DIR = _data_dir()
 HISTORY_PATH = Path(
-    os.environ.get("ASK_HISTORY", "") or (DATA_DIR / "history.jsonl")
+    os.environ.get("PROMPT_HISTORY", "") or (DATA_DIR / "history.jsonl")
 )
 INPUT_HISTORY_PATH = Path(
-    os.environ.get("ASK_INPUT_HISTORY", "") or (DATA_DIR / "input_history")
+    os.environ.get("PROMPT_INPUT_HISTORY", "") or (DATA_DIR / "input_history")
 )
 
 _lock = threading.Lock()
@@ -59,7 +59,7 @@ def append_exchange(
 ) -> str:
     """Append one Q&A exchange; return its UUID.
 
-    Uses an exclusive file lock so concurrent ``ask`` processes can append
+    Uses an exclusive file lock so concurrent ``prompt`` processes can append
     safely to the same JSONL file.
     """
     _ensure_parent(HISTORY_PATH)
@@ -208,7 +208,7 @@ def followup_chain(entry: dict[str, Any]) -> list[dict[str, Any]]:
 
 def messages_from_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
     """Build chat messages to continue from ``entry`` (including parents)."""
-    from ask.tools import SYSTEM_PROMPT
+    from prompt.tools import SYSTEM_PROMPT
 
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM_PROMPT}
@@ -263,7 +263,7 @@ def print_history(limit: int = 20, *, file: Any = None) -> int:
 
 
 def setup_readline_history() -> None:
-    """Load/save interactive ``ask>`` line history via readline."""
+    """Load/save interactive ``prompt>`` line history via readline."""
     try:
         import readline
     except ImportError:

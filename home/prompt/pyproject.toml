@@ -1,14 +1,14 @@
 [project]
-name = "ask"
+name = "prompt"
 version = "0.1.0"
-description = "Terminal ask CLI for local llama-swap with Textual streaming UI"
+description = "Terminal prompt CLI for local llama-swap with Textual streaming UI"
 requires-python = ">=3.11"
 dependencies = [
     "textual>=8.2.8",
 ]
 
 [project.scripts]
-ask = "ask.cli:main"
+prompt = "prompt.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

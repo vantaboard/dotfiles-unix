@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v29-ask
+# hash: tools-v30-prompt
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -37,8 +37,8 @@ ZSH_ABBR_VERSION="v6.3.3"
 ZSH_ABBR_JOB_QUEUE="$ZSH_ABBR_DIR/zsh-job-queue/zsh-job-queue.zsh"
 TRASH_CLI_DIR="$HOME_DIR/trash-cli"
 TRASH_CLI_VENV="$TRASH_CLI_DIR/.venv"
-ASK_DIR="$HOME_DIR/ask"
-ASK_VENV="$ASK_DIR/.venv"
+PROMPT_DIR="$HOME_DIR/prompt"
+PROMPT_VENV="$PROMPT_DIR/.venv"
 LOCAL_BIN="$HOME_DIR/.local/bin"
 LOCAL_PREFIX="$HOME_DIR/.local"
 TRASH_CLI_COMMANDS=(trash trash-put trash-empty trash-list trash-restore trash-rm)
@@ -371,47 +371,65 @@ install_trash_cli() {
   echo "trash-cli ready (~/.local/bin -> $TRASH_CLI_VENV/bin/*)"
 }
 
-install_ask() {
-  if [[ ! -f "$ASK_DIR/pyproject.toml" ]]; then
-    echo "WARN: ask package missing at $ASK_DIR (chezmoi apply source first)"
+install_prompt() {
+  # Migrate legacy ~/ask install if present.
+  if [[ -d "$HOME_DIR/ask" && ! -e "$PROMPT_DIR" ]]; then
+    echo "Migrating ~/ask -> ~/prompt..."
+    mv "$HOME_DIR/ask" "$PROMPT_DIR"
+  fi
+  mkdir -p "$HOME_DIR/.local/share/prompt" "$HOME_DIR/.cache/prompt"
+  if [[ -f "$HOME_DIR/.local/share/ask/history.jsonl" && ! -f "$HOME_DIR/.local/share/prompt/history.jsonl" ]]; then
+    mv "$HOME_DIR/.local/share/ask/history.jsonl" "$HOME_DIR/.local/share/prompt/history.jsonl"
+  fi
+  if [[ -f "$HOME_DIR/.local/share/ask/input_history" && ! -f "$HOME_DIR/.local/share/prompt/input_history" ]]; then
+    mv "$HOME_DIR/.local/share/ask/input_history" "$HOME_DIR/.local/share/prompt/input_history"
+  fi
+  rm -f "$LOCAL_BIN/ask"
+
+  if [[ ! -f "$PROMPT_DIR/pyproject.toml" ]]; then
+    echo "WARN: prompt package missing at $PROMPT_DIR (chezmoi apply source first)"
     return 0
   fi
   if ! command -v python3 >/dev/null 2>&1; then
-    echo "WARN: python3 not found; skipping ask install"
+    echo "WARN: python3 not found; skipping prompt install"
     return 0
   fi
-  if [[ -d "$ASK_VENV" ]] && [[ ! -x "$ASK_VENV/bin/python" ]]; then
-    echo "Removing broken ask venv..."
-    rm -rf "$ASK_VENV"
+  if [[ -d "$PROMPT_VENV" ]] && [[ ! -x "$PROMPT_VENV/bin/python" ]]; then
+    echo "Removing broken prompt venv..."
+    rm -rf "$PROMPT_VENV"
   fi
-  if [[ ! -d "$ASK_VENV" ]]; then
-    echo "Creating ask virtualenv..."
+  if [[ -d "$PROMPT_VENV" ]] && ! "$PROMPT_VENV/bin/python" -c "import prompt" 2>/dev/null; then
+    echo "Recreating prompt venv (package renamed from ask)..."
+    rm -rf "$PROMPT_VENV"
+  fi
+  if [[ ! -d "$PROMPT_VENV" ]]; then
+    echo "Creating prompt virtualenv..."
 {{- if eq .chezmoi.os "linux" }}
-    if ! ensure_python3_venv || ! python3 -m venv "$ASK_VENV"; then
-      echo "WARN: could not create ask virtualenv; install python3-venv and re-run chezmoi apply"
+    if ! ensure_python3_venv || ! python3 -m venv "$PROMPT_VENV"; then
+      echo "WARN: could not create prompt virtualenv; install python3-venv and re-run chezmoi apply"
       return 0
     fi
 {{- else }}
-    if ! python3 -m venv "$ASK_VENV"; then
-      echo "WARN: could not create ask virtualenv"
+    if ! python3 -m venv "$PROMPT_VENV"; then
+      echo "WARN: could not create prompt virtualenv"
       return 0
     fi
 {{- end }}
   fi
-  echo "Installing ask (textual) into venv..."
-  "$ASK_VENV/bin/pip" install -q -U pip
-  "$ASK_VENV/bin/pip" install -q -e "$ASK_DIR"
-  if ! "$ASK_VENV/bin/python" -c "import ask, textual" 2>/dev/null; then
-    echo "WARN: ask install verification failed"
+  echo "Installing prompt (textual) into venv..."
+  "$PROMPT_VENV/bin/pip" install -q -U pip
+  "$PROMPT_VENV/bin/pip" install -q -e "$PROMPT_DIR"
+  if ! "$PROMPT_VENV/bin/python" -c "import prompt, textual" 2>/dev/null; then
+    echo "WARN: prompt install verification failed"
     return 0
   fi
   mkdir -p "$LOCAL_BIN"
-  # Prefer the chezmoi-managed wrapper (home/dot_local/bin/executable_ask).
+  # Prefer the chezmoi-managed wrapper (home/dot_local/bin/executable_prompt).
   # If missing, fall back to a symlink into the venv entrypoint.
-  if [[ ! -x "$LOCAL_BIN/ask" ]] && [[ -x "$ASK_VENV/bin/ask" ]]; then
-    ln -sf "$ASK_VENV/bin/ask" "$LOCAL_BIN/ask"
+  if [[ ! -x "$LOCAL_BIN/prompt" ]] && [[ -x "$PROMPT_VENV/bin/prompt" ]]; then
+    ln -sf "$PROMPT_VENV/bin/prompt" "$LOCAL_BIN/prompt"
   fi
-  echo "ask ready ($ASK_VENV)"
+  echo "prompt ready ($PROMPT_VENV)"
 }
 
 install_vivid_linux() {
@@ -1163,7 +1181,7 @@ install_trash_cli
 {{- end }}
 
 {{- if index $f "llama" }}
-install_ask
+install_prompt
 {{- end }}
 
 {{- if index $f "vivid" }}

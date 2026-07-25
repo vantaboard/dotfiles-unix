@@ -15,20 +15,20 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Label, Markdown, Static
 
-from ask.agent import (
+from prompt.agent import (
     AgentCallbacks,
     AgentConfig,
     AgentResult,
     answer_awaits_reply,
     run_agent,
 )
-from ask.fences import AnswerSegment, split_answer_segments
-from ask.think_anim import think_frame
-from ask.tool_labels import done_markup, running_markup
-from ask.typewriter import AdaptiveTypewriter
+from prompt.fences import AnswerSegment, split_answer_segments
+from prompt.think_anim import think_frame
+from prompt.tool_labels import done_markup, running_markup
+from prompt.typewriter import AdaptiveTypewriter
 
 
-class AskMarkdown(Markdown):
+class PromptMarkdown(Markdown):
     """Markdown for prose segments (code fences are rendered outside Textual)."""
 
 
@@ -116,16 +116,16 @@ class ToolCard(Widget):
                 pass
 
 
-class AskApp(App[str]):
+class PromptApp(App[str]):
     """Inline app: status + tool cards + streamed Markdown answer."""
 
     BINDINGS = [
-        Binding("ctrl+c", "quit_ask", "Quit", show=False, priority=True),
-        Binding("ctrl+q", "quit_ask", "Quit", show=False),
+        Binding("ctrl+c", "quit_prompt", "Quit", show=False, priority=True),
+        Binding("ctrl+q", "quit_prompt", "Quit", show=False),
     ]
 
     CSS = """
-    AskApp {
+    PromptApp {
         height: auto;
         max-height: 36;
         background: transparent;
@@ -185,7 +185,7 @@ class AskApp(App[str]):
             markup=True,
         )
         yield Vertical(id="tools")
-        markdown = AskMarkdown(id="body")
+        markdown = PromptMarkdown(id="body")
         markdown.code_indent_guides = False
         yield markdown
 
@@ -196,7 +196,7 @@ class AskApp(App[str]):
         self.run_worker(self._run_agent, thread=True)
         self.run_worker(self._drive_ui)
 
-    def action_quit_ask(self) -> None:
+    def action_quit_prompt(self) -> None:
         self.exit("")
 
     def _stop_thinking(self) -> None:
@@ -268,7 +268,7 @@ class AskApp(App[str]):
     async def _drive_ui(self) -> None:
         status = self.query_one("#status", Label)
         tools = self.query_one("#tools", Vertical)
-        markdown = self.query_one("#body", AskMarkdown)
+        markdown = self.query_one("#body", PromptMarkdown)
         stream = Markdown.get_stream(markdown)
         tw = self._typewriter
 
@@ -395,7 +395,7 @@ class ProseApp(App[None]):
         self._text = text
 
     def compose(self) -> ComposeResult:
-        markdown = AskMarkdown(id="body")
+        markdown = PromptMarkdown(id="body")
         markdown.code_indent_guides = False
         yield markdown
 
@@ -406,7 +406,7 @@ class ProseApp(App[None]):
         self.exit(None)
 
     async def _drive(self) -> None:
-        markdown = self.query_one("#body", AskMarkdown)
+        markdown = self.query_one("#body", PromptMarkdown)
         stream = Markdown.get_stream(markdown)
         tw = AdaptiveTypewriter()
         tw.extend_target(self._text.rstrip() + "\n")
@@ -429,11 +429,11 @@ class ProseApp(App[None]):
 
 def _emit_answer_tail(segments: list[AnswerSegment]) -> None:
     """Print code (via bat) and show later prose panels after the agent UI."""
-    from ask.fences import print_code_segment
+    from prompt.fences import print_code_segment
 
     start = 0
     if segments and segments[0].kind == "prose":
-        start = 1  # already shown inside AskApp
+        start = 1  # already shown inside PromptApp
     for seg in segments[start:]:
         if seg.kind == "code":
             print_code_segment(
@@ -463,7 +463,7 @@ def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
     if not interactive:
         return None
     try:
-        from ask.history import setup_readline_history
+        from prompt.history import setup_readline_history
 
         setup_readline_history()
     except Exception:  # noqa: BLE001 — prompt must still work without history
@@ -471,18 +471,18 @@ def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
     try:
         # Readline treats ESC specially; wrap non-printing ANSI in \001...\002
         # (RL_PROMPT_START_IGNORE / RL_PROMPT_END_IGNORE) so the prompt is
-        # cyan instead of showing raw "[36mask>[0m".
+        # cyan instead of showing raw "[36mprompt>[0m".
         if sys.stdin.isatty() and sys.stdout.isatty():
-            prompt = "\001\033[36m\002ask>\001\033[0m\002 "
+            prompt = "\001\033[36m\002prompt>\001\033[0m\002 "
         else:
-            prompt = "ask> "
+            prompt = "prompt> "
         return input(prompt).strip() or None
     except (EOFError, KeyboardInterrupt):
         print(file=sys.stderr)
         return None
 
 
-def run_ask_turn(
+def run_prompt_turn(
     question: str | None,
     config: AgentConfig,
     *,
@@ -490,8 +490,8 @@ def run_ask_turn(
     verbose: bool = False,
     use_textual: bool | None = None,
 ) -> AgentResult:
-    """Run a single ask turn with Textual when on a TTY; else plain stdout."""
-    from ask.agent import run_agent_plain
+    """Run a single prompt turn with Textual when on a TTY; else plain stdout."""
+    from prompt.agent import run_agent_plain
 
     interactive = bool(
         getattr(sys.stdout, "isatty", lambda: False)()
@@ -503,7 +503,7 @@ def run_ask_turn(
             question, config=config, verbose=verbose, messages=messages
         )
 
-    app = AskApp(question, config, verbose=verbose, messages=messages)
+    app = PromptApp(question, config, verbose=verbose, messages=messages)
     try:
         # mouse=False keeps terminal scrollback + drag-select working.
         answer = app.run(inline=True, inline_no_clear=True, mouse=False) or ""
@@ -522,7 +522,7 @@ def run_ask_turn(
     return result
 
 
-def run_ask_tui(
+def run_prompt_tui(
     question: str,
     config: AgentConfig,
     *,
@@ -530,13 +530,13 @@ def run_ask_tui(
     use_textual: bool | None = None,
     allow_followup: bool = True,
 ) -> AgentResult:
-    """Run ask, continuing with more ``ask>`` prompts when the model asks."""
+    """Run prompt, continuing with more ``prompt>`` lines when the model asks."""
     messages: list[dict[str, Any]] | None = None
     current: str | None = question
     last = AgentResult()
 
     while current:
-        last = run_ask_turn(
+        last = run_prompt_turn(
             current,
             config,
             messages=messages,
@@ -565,8 +565,8 @@ def run_ask_tui(
 
 
 __all__ = [
-    "AskApp",
+    "PromptApp",
     "prompt_for_question",
-    "run_ask_tui",
-    "run_ask_turn",
+    "run_prompt_tui",
+    "run_prompt_turn",
 ]
