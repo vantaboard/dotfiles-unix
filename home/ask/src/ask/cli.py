@@ -92,12 +92,16 @@ def main(argv: list[str] | None = None) -> int:
 
     from ask.tui import run_ask_tui
 
-    answer = run_ask_tui(
-        question,
-        config,
-        verbose=args.verbose,
-        use_textual=False if args.plain else None,
-    )
+    try:
+        answer = run_ask_tui(
+            question,
+            config,
+            verbose=args.verbose,
+            use_textual=False if args.plain else None,
+        )
+    except KeyboardInterrupt:
+        print(file=sys.stderr)
+        return 130
     # Textual inline mode leaves the answer on screen; plain already printed.
     # Exit 1 on transport/agent errors.
     if answer.startswith("Cannot reach LLM") or answer.startswith("HTTP "):

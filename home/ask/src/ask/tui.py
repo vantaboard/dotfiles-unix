@@ -9,6 +9,7 @@ import time
 from typing import Any
 
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import Vertical
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -104,6 +105,11 @@ class ToolCard(Widget):
 class AskApp(App[str]):
     """Inline app: status + tool cards + streamed Markdown answer."""
 
+    BINDINGS = [
+        Binding("ctrl+c", "quit_ask", "Quit", show=False, priority=True),
+        Binding("ctrl+q", "quit_ask", "Quit", show=False),
+    ]
+
     CSS = """
     AskApp {
         height: auto;
@@ -159,6 +165,9 @@ class AskApp(App[str]):
         self.set_interval(0.1, self._tick_spinner)
         self.run_worker(self._run_agent, thread=True)
         self.run_worker(self._drive_ui)
+
+    def action_quit_ask(self) -> None:
+        self.exit("")
 
     def _tick_spinner(self) -> None:
         if self._has_text:
@@ -297,7 +306,10 @@ def run_ask_tui(
         return result.answer or ""
 
     app = AskApp(question, config, verbose=verbose)
-    return app.run(inline=True, inline_no_clear=True) or ""
+    try:
+        return app.run(inline=True, inline_no_clear=True) or ""
+    except KeyboardInterrupt:
+        return ""
 
 
 __all__ = ["AskApp", "run_ask_tui"]
