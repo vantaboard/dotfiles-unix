@@ -13,6 +13,12 @@ from ask.agent import (
     AgentConfig,
 )
 from ask.debug import DEFAULT_DEBUG_LOG, DebugLog
+from ask.history import (
+    HISTORY_PATH,
+    append_exchange,
+    clear_history,
+    print_history,
+)
 
 
 def _read_question(args: argparse.Namespace) -> str | None:
@@ -104,11 +110,44 @@ def build_parser() -> argparse.ArgumentParser:
             "Also set via ASK_DEBUG_LOG."
         ),
     )
+    p.add_argument(
+        "--history",
+        nargs="?",
+        const=20,
+        type=int,
+        metavar="N",
+        help=(
+            f"Show the last N Q&A exchanges (default 20) from {HISTORY_PATH} "
+            "and exit"
+        ),
+    )
+    p.add_argument(
+        "--history-clear",
+        action="store_true",
+        help="Delete saved Q&A history and exit",
+    )
+    p.add_argument(
+        "--no-history",
+        action="store_true",
+        help="Do not append this exchange to history",
+    )
     return p
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+
+    if args.history_clear:
+        if clear_history():
+            print(f"ask: cleared {HISTORY_PATH}", file=sys.stderr)
+        else:
+            print(f"ask: no history at {HISTORY_PATH}", file=sys.stderr)
+        return 0
+
+    if args.history is not None:
+        print_history(args.history)
+        return 0
+
     try:
         question = _read_question(args)
     except KeyboardInterrupt:
@@ -137,6 +176,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from ask.tui import run_ask_tui
 
+    answer = ""
     try:
         answer = run_ask_tui(
             question,
@@ -153,11 +193,25 @@ def main(argv: list[str] | None = None) -> int:
         if debug is not None:
             debug.close()
 
-    # Textual inline mode leaves the answer on screen; plain already printed.
-    # Exit 1 on transport/agent errors.
-    if answer.startswith("Cannot reach LLM") or answer.startswith("HTTP "):
-        return 1
-    if answer.startswith("error:"):
+    is_error = bool(
+        answer.startswith("Cannot reach LLM")
+        or answer.startswith("HTTP ")
+        or answer.startswith("error:")
+    )
+    if not args.no_history and answer:
+        try:
+            append_exchange(
+                question,
+                answer,
+                model=config.model,
+                base_url=config.base_url,
+                include_web=config.include_web,
+                error=is_error,
+            )
+        except OSError as exc:
+            print(f"ask: failed to write history: {exc}", file=sys.stderr)
+
+    if is_error:
         return 1
     return 0
 

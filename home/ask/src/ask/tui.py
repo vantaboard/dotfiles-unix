@@ -360,8 +360,10 @@ def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
     if not interactive:
         return None
     try:
-        import readline  # noqa: F401 — arrow keys / line editing when available
-    except ImportError:
+        from ask.history import setup_readline_history
+
+        setup_readline_history()
+    except Exception:  # noqa: BLE001 — prompt must still work without history
         pass
     try:
         print("Ask (Enter to submit, Ctrl+C to cancel)", file=sys.stderr)
