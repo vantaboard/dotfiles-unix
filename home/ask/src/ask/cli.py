@@ -174,16 +174,60 @@ def main(argv: list[str] | None = None) -> int:
         debug=debug,
     )
 
-    from ask.tui import run_ask_tui
+    from ask.agent import answer_awaits_reply
+    from ask.tui import prompt_for_question, run_ask_turn
 
-    answer = ""
+    messages = None
+    current: str | None = question
+    exit_code = 0
     try:
-        answer = run_ask_tui(
-            question,
-            config,
-            verbose=args.verbose,
-            use_textual=False if args.plain else None,
-        )
+        while current:
+            result = run_ask_turn(
+                current,
+                config,
+                messages=messages,
+                verbose=args.verbose,
+                use_textual=False if args.plain else None,
+            )
+            messages = result.messages or messages
+            answer = result.answer or ""
+            is_error = bool(
+                result.error
+                or answer.startswith("Cannot reach LLM")
+                or answer.startswith("HTTP ")
+                or answer.startswith("error:")
+            )
+            if not args.no_history and answer:
+                try:
+                    append_exchange(
+                        current,
+                        answer,
+                        model=config.model,
+                        base_url=config.base_url,
+                        include_web=config.include_web,
+                        error=is_error,
+                    )
+                except OSError as exc:
+                    print(
+                        f"ask: failed to write history: {exc}",
+                        file=sys.stderr,
+                    )
+            if is_error:
+                exit_code = 1
+                break
+            if not answer_awaits_reply(answer):
+                break
+            if not (
+                sys.stdin.isatty()
+                and sys.stdout.isatty()
+            ):
+                break
+            follow = prompt_for_question(
+                use_textual=False if args.plain else None
+            )
+            if not follow:
+                break
+            current = follow
     except KeyboardInterrupt:
         print(file=sys.stderr)
         if debug is not None:
@@ -193,27 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         if debug is not None:
             debug.close()
 
-    is_error = bool(
-        answer.startswith("Cannot reach LLM")
-        or answer.startswith("HTTP ")
-        or answer.startswith("error:")
-    )
-    if not args.no_history and answer:
-        try:
-            append_exchange(
-                question,
-                answer,
-                model=config.model,
-                base_url=config.base_url,
-                include_web=config.include_web,
-                error=is_error,
-            )
-        except OSError as exc:
-            print(f"ask: failed to write history: {exc}", file=sys.stderr)
-
-    if is_error:
-        return 1
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

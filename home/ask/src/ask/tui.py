@@ -22,7 +22,13 @@ from textual.widget import Widget
 from textual.widgets import Label, Markdown, Static
 from textual.widgets._markdown import MarkdownFence
 
-from ask.agent import AgentCallbacks, AgentConfig, AgentResult, run_agent
+from ask.agent import (
+    AgentCallbacks,
+    AgentConfig,
+    AgentResult,
+    answer_awaits_reply,
+    run_agent,
+)
 from ask.think_anim import think_frame
 from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
@@ -190,16 +196,19 @@ class AskApp(App[str]):
 
     def __init__(
         self,
-        question: str,
+        question: str | None,
         config: AgentConfig,
         *,
         verbose: bool = False,
+        messages: list[dict[str, Any]] | None = None,
     ) -> None:
         super().__init__()
         self._question = question
+        self._messages = messages
         self._config = config
         self._verbose = verbose
         self._result = ""
+        self.agent_result = AgentResult()
         self._started = time.monotonic()
         self._events: queue.Queue[tuple[str, Any]] = queue.Queue()
         self._has_text = False
@@ -273,6 +282,7 @@ class AskApp(App[str]):
             result: AgentResult = run_agent(
                 self._question,
                 config=self._config,
+                messages=self._messages,
                 callbacks=AgentCallbacks(
                     on_delta=on_delta,
                     on_preamble=on_preamble,
@@ -281,9 +291,15 @@ class AskApp(App[str]):
                     on_tool_end=on_tool_end,
                 ),
             )
+            self.agent_result = result
             self._result = result.answer or result.error or ""
         except Exception as exc:  # noqa: BLE001
             self._result = f"error: {exc}"
+            self.agent_result = AgentResult(
+                answer=self._result,
+                error=self._result,
+                messages=list(self._messages or []),
+            )
             self._events.put((_STATUS, self._result))
         finally:
             self._events.put((_DONE, self._result))
@@ -403,14 +419,15 @@ def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
         return None
 
 
-def run_ask_tui(
-    question: str,
+def run_ask_turn(
+    question: str | None,
     config: AgentConfig,
     *,
+    messages: list[dict[str, Any]] | None = None,
     verbose: bool = False,
     use_textual: bool | None = None,
-) -> str:
-    """Run ask with Textual when on a TTY; otherwise plain stdout."""
+) -> AgentResult:
+    """Run a single ask turn with Textual when on a TTY; else plain stdout."""
     from ask.agent import run_agent_plain
 
     interactive = bool(
@@ -419,20 +436,74 @@ def run_ask_tui(
     )
     textual_ui = interactive if use_textual is None else use_textual
     if not textual_ui:
-        result = run_agent_plain(question, config=config, verbose=verbose)
-        return result.answer or ""
+        return run_agent_plain(
+            question, config=config, verbose=verbose, messages=messages
+        )
 
-    app = AskApp(question, config, verbose=verbose)
+    app = AskApp(question, config, verbose=verbose, messages=messages)
     started = time.monotonic()
     try:
         # mouse=False keeps terminal scrollback + drag-select working.
-        result = app.run(inline=True, inline_no_clear=True, mouse=False) or ""
+        answer = app.run(inline=True, inline_no_clear=True, mouse=False) or ""
     except KeyboardInterrupt:
-        return ""
+        return AgentResult(
+            answer="",
+            messages=list(messages or []),
+        )
     elapsed = max(1, int(round(time.monotonic() - started)))
-    if result and sys.stderr.isatty():
+    result = app.agent_result
+    if not result.answer and answer:
+        result.answer = answer
+    if result.answer and sys.stderr.isatty():
         print(f"Thought for {elapsed}s", file=sys.stderr)
     return result
 
 
-__all__ = ["AskApp", "prompt_for_question", "run_ask_tui"]
+def run_ask_tui(
+    question: str,
+    config: AgentConfig,
+    *,
+    verbose: bool = False,
+    use_textual: bool | None = None,
+    allow_followup: bool = True,
+) -> AgentResult:
+    """Run ask, continuing with more ``ask>`` prompts when the model asks."""
+    messages: list[dict[str, Any]] | None = None
+    current: str | None = question
+    last = AgentResult()
+
+    while current:
+        last = run_ask_turn(
+            current,
+            config,
+            messages=messages,
+            verbose=verbose,
+            use_textual=use_textual,
+        )
+        messages = last.messages or messages
+        if not allow_followup:
+            break
+        if last.error or not answer_awaits_reply(last.answer):
+            break
+        interactive = bool(
+            getattr(sys.stdin, "isatty", lambda: False)()
+            and getattr(sys.stdout, "isatty", lambda: False)()
+        )
+        if not interactive:
+            break
+        follow = prompt_for_question(
+            use_textual=False if use_textual is False else None
+        )
+        if not follow:
+            break
+        current = follow
+
+    return last
+
+
+__all__ = [
+    "AskApp",
+    "prompt_for_question",
+    "run_ask_tui",
+    "run_ask_turn",
+]

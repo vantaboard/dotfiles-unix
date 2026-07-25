@@ -6,7 +6,7 @@ import json
 import urllib.error
 import urllib.request
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from ask.debug import DebugLog, truncate
@@ -45,6 +45,7 @@ class AgentResult:
     answer: str = ""
     error: str | None = None
     rounds: int = 0
+    messages: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _dbg(config: AgentConfig, event: str, **fields: Any) -> None:
@@ -229,19 +230,54 @@ def _chat_once(
     return content, tool_calls
 
 
+def answer_awaits_reply(text: str) -> bool:
+    """True when the assistant answer looks like it expects a user reply."""
+    text = (text or "").strip()
+    if not text:
+        return False
+    if text.startswith(("Cannot reach LLM", "HTTP ", "error:")):
+        return False
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if not lines:
+        return False
+
+    def _is_question(line: str) -> bool:
+        # Strip common markdown wrappers around a trailing ?
+        cleaned = line.rstrip("*_`\"'”’ ")
+        return cleaned.endswith("?")
+
+    if _is_question(lines[-1]):
+        return True
+    # Question then a short closer on the next line.
+    if len(lines) >= 2 and _is_question(lines[-2]):
+        return True
+    return False
+
+
 def run_agent(
-    question: str,
+    question: str | None = None,
     config: AgentConfig | None = None,
     callbacks: AgentCallbacks | None = None,
+    *,
+    messages: list[dict[str, Any]] | None = None,
 ) -> AgentResult:
     config = config or AgentConfig()
     cb = callbacks or AgentCallbacks()
     tools = openai_tool_schemas(include_web=config.include_web)
-    messages: list[dict[str, Any]] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": question},
-    ]
-    result = AgentResult()
+
+    if messages is None:
+        if not question:
+            raise ValueError("question is required when messages is omitted")
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": question},
+        ]
+    else:
+        messages = list(messages)
+        if question:
+            messages.append({"role": "user", "content": question})
+
+    result = AgentResult(messages=messages)
 
     _dbg(
         config,
@@ -250,7 +286,8 @@ def run_agent(
         base_url=config.base_url,
         include_web=config.include_web,
         max_rounds=config.max_rounds,
-        question=truncate(question, 1000),
+        question=truncate(question or "", 1000),
+        message_count=len(messages),
         tools=[t["function"]["name"] for t in tools],
     )
     if cb.on_status:
@@ -359,11 +396,16 @@ def run_agent(
             result.answer = tag_code_fences(
                 content.strip() or "(no response from model)"
             )
+            messages.append(
+                {"role": "assistant", "content": result.answer}
+            )
+            result.messages = messages
             _dbg(
                 config,
                 "agent_final_answer",
                 chars=len(result.answer),
                 preview=truncate(result.answer, 800),
+                awaits_reply=answer_awaits_reply(result.answer),
             )
             if cb.on_delta and result.answer:
                 cb.on_delta(result.answer)
@@ -373,11 +415,13 @@ def run_agent(
 
         result.error = f"stopped after {config.max_rounds} tool rounds"
         result.answer = result.error
+        result.messages = messages
         _dbg(config, "agent_max_rounds", error=result.error)
         return result
     except RuntimeError as exc:
         result.error = str(exc)
         result.answer = result.error
+        result.messages = messages
         _dbg(config, "agent_error", error=str(exc))
         if cb.on_delta:
             cb.on_delta(result.answer)
@@ -385,10 +429,11 @@ def run_agent(
 
 
 def run_agent_plain(
-    question: str,
+    question: str | None = None,
     config: AgentConfig | None = None,
     *,
     verbose: bool = False,
+    messages: list[dict[str, Any]] | None = None,
 ) -> AgentResult:
     """Run without Textual; print answer to stdout."""
     import sys
@@ -425,6 +470,7 @@ def run_agent_plain(
     result = run_agent(
         question,
         config=config,
+        messages=messages,
         callbacks=AgentCallbacks(
             on_delta=on_delta,
             on_tool_start=on_tool_start,
