@@ -21,7 +21,7 @@ set -euo pipefail
 {{- end -}}
 {{- $f := $p.features }}
 
-# hash: tools-v30-prompt
+# hash: tools-v31-aichat
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -493,6 +493,25 @@ install_eza() {
   fi
   echo "Installing eza..."
   cargo install eza
+}
+
+install_aichat() {
+  # shellcheck disable=SC1091
+  [[ -f "$HOME_DIR/.cargo/env" ]] && source "$HOME_DIR/.cargo/env"
+  if command -v aichat >/dev/null 2>&1; then
+    echo "aichat already installed ($(aichat --version 2>/dev/null || echo ok))"
+    return 0
+  fi
+  if ! command -v cargo >/dev/null 2>&1; then
+    echo "WARN: cargo not found; skipping aichat (need rust/cargo for install)"
+    return 0
+  fi
+  echo "Installing aichat (cargo)..."
+  if ! cargo install aichat; then
+    echo "WARN: cargo install aichat failed"
+    return 0
+  fi
+  echo "aichat ready — config at ~/.config/aichat/config.yaml (llama-swap:chat)"
 }
 
 install_fastfetch() {
@@ -1192,7 +1211,7 @@ install_vivid_linux
 {{- end }}
 {{- end }}
 
-{{- if and (eq .chezmoi.os "linux") (or (index $f "mise") (index $f "zoxide") (index $f "eza")) }}
+{{- if and (eq .chezmoi.os "linux") (or (index $f "mise") (index $f "zoxide") (index $f "eza") (index $f "llama")) }}
 install_rust
 {{- end }}
 
@@ -1202,6 +1221,10 @@ install_zoxide
 
 {{- if and (index $f "eza") (eq .chezmoi.os "linux") }}
 install_eza
+{{- end }}
+
+{{- if index $f "llama" }}
+install_aichat
 {{- end }}
 
 {{- if and (index $f "fastfetch") (eq .chezmoi.os "linux") }}

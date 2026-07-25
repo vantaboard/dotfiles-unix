@@ -1,0 +1,28 @@
+# aichat → local llama-swap (OpenAI-compatible)
+# Docs: https://github.com/sigoden/aichat/wiki/Configuration-Guide
+#
+# REPL:  aichat
+# One-shot: aichat -s "hello"   or   aichat "hello"
+# Sessions: .session / .session list / .session <name>
+
+model: llama-swap:chat
+stream: true
+save: true
+save_session: true
+keybindings: emacs
+highlight: true
+wrap: auto
+function_calling: false
+compress_threshold: 8000
+
+clients:
+  - type: openai-compatible
+    name: llama-swap
+    api_base: http://127.0.0.1:9292/v1
+    # llama-swap ignores auth; aichat wants a non-empty key for some paths
+    api_key: local
+    models:
+      - name: chat
+        max_input_tokens: 16384
+      - name: coder
+        max_input_tokens: 8192
