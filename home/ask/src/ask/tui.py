@@ -366,9 +366,11 @@ def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
     except Exception:  # noqa: BLE001 — prompt must still work without history
         pass
     try:
-        # Cyan "ask>" when stderr is a TTY; plain otherwise (still readable).
-        if sys.stderr.isatty():
-            prompt = "\033[36mask>\033[0m "
+        # Readline treats ESC specially; wrap non-printing ANSI in \001...\002
+        # (RL_PROMPT_START_IGNORE / RL_PROMPT_END_IGNORE) so the prompt is
+        # cyan instead of showing raw "[36mask>[0m".
+        if sys.stdin.isatty() and sys.stdout.isatty():
+            prompt = "\001\033[36m\002ask>\001\033[0m\002 "
         else:
             prompt = "ask> "
         return input(prompt).strip() or None
