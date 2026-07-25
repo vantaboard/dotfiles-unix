@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="ask",
         description=(
             "Ask your local LLM (llama-swap) a question. Uses allowlisted "
-            "tools (which/type, man, --help) and optional DuckDuckGo search."
+            "tools (which/type, man, --help) and DuckDuckGo when helpful."
         ),
     )
     p.add_argument(
@@ -33,10 +33,18 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="*",
         help="Question to ask (use - to read stdin)",
     )
-    p.add_argument(
+    web = p.add_mutually_exclusive_group()
+    web.add_argument(
         "--web",
         action="store_true",
-        help="Enable DuckDuckGo web_search tool",
+        default=True,
+        help="Allow DuckDuckGo web_search when helpful (default)",
+    )
+    web.add_argument(
+        "--no-web",
+        action="store_false",
+        dest="web",
+        help="Disable web_search (local tools only)",
     )
     p.add_argument(
         "--model",
@@ -79,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         base_url=args.base_url,
         model=args.model,
         max_rounds=max(1, args.max_rounds),
-        include_web=args.web,
+        include_web=bool(args.web),
     )
 
     from ask.tui import run_ask_tui

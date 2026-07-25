@@ -32,7 +32,7 @@ class AgentConfig:
     base_url: str = DEFAULT_BASE_URL
     model: str = DEFAULT_MODEL
     max_rounds: int = DEFAULT_MAX_ROUNDS
-    include_web: bool = False
+    include_web: bool = True
     temperature: float = 0.2
     max_tokens: int = 2048
     timeout_s: float = 120.0
