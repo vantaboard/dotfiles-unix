@@ -44,7 +44,7 @@ def done_label(name: str, args: dict[str, Any], *, ok: bool = True) -> str:
         return f"Ran `{cmd} {flag}`"
     if name == "web_search":
         query = _arg(args, "query", default="query")
-        short = query if len(query) <= 48 else query[:45] + "…"
+        short = query if len(query) <= 48 else query[:45] + "..."
         return f"Searched `{short}`"
     return f"Finished `{name}`"
 

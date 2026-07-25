@@ -135,7 +135,7 @@ class ToolCard(Widget):
         if self.verbose:
             preview = detail.replace("\n", " ").strip()
             if len(preview) > 160:
-                preview = preview[:157] + "…"
+                preview = preview[:157] + "..."
             try:
                 self.query_one("#detail", Static).update(preview)
             except Exception:  # noqa: BLE001
@@ -200,7 +200,7 @@ class AskApp(App[str]):
         self._spin_index = 0
         self._typewriter = AdaptiveTypewriter()
         self._cards: dict[str, ToolCard] = {}
-        self._status_base = "Thinking…"
+        self._status_base = "Thinking..."
 
     def compose(self) -> ComposeResult:
         yield Label(
@@ -293,13 +293,13 @@ class AskApp(App[str]):
                 elif kind == _PREAMBLE:
                     preview = str(payload).replace("\n", " ").strip()
                     if len(preview) > 100:
-                        preview = preview[:97] + "…"
-                    self._status_base = f"… {preview}"
+                        preview = preview[:97] + "..."
+                    self._status_base = f"... {preview}"
                     status.update(self._status_markup())
                 elif kind == _DELTA:
                     if not self._has_text:
                         self._has_text = True
-                        status.update("[dim]Writing…[/]")
+                        status.update("[dim]Writing...[/]")
                     tw.extend_target(str(payload))
                 elif kind == _TOOL_START:
                     call_id, name, args = payload

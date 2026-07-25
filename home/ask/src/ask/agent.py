@@ -183,16 +183,16 @@ def run_agent(
     result = AgentResult()
 
     if cb.on_status:
-        cb.on_status("Thinking…")
+        cb.on_status("Thinking...")
 
     try:
         for round_i in range(1, config.max_rounds + 1):
             result.rounds = round_i
             if cb.on_status:
                 if round_i == 1:
-                    cb.on_status("Thinking…")
+                    cb.on_status("Thinking...")
                 else:
-                    cb.on_status(f"Thinking… (step {round_i})")
+                    cb.on_status(f"Thinking... (step {round_i})")
 
             # Buffer the round. Stream live to on_delta only for the final
             # answer (no tool_calls). Tool-round content goes to on_preamble.

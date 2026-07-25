@@ -21,7 +21,7 @@ def _truncate(text: str, limit: int = MAX_OUTPUT) -> str:
     text = text or ""
     if len(text) <= limit:
         return text
-    return text[: limit - 20] + "\n…[truncated]"
+    return text[: limit - 20] + "\n...[truncated]"
 
 
 def _run(
