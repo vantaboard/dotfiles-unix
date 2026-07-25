@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import TextIO
+from typing import Literal, TextIO
 
 
 _FENCE_RE = re.compile(
@@ -29,6 +29,15 @@ class CodeFence:
         return text.count("\n") + 1
 
 
+@dataclass(frozen=True)
+class AnswerSegment:
+    """One prose or code slice of an assistant answer, in order."""
+
+    kind: Literal["prose", "code"]
+    text: str
+    language: str = ""
+
+
 def _normalize_fence_code(code: str) -> str:
     """Strip trailing spaces per line; keep a single final newline."""
     code = code.replace("\r\n", "\n").replace("\r", "\n")
@@ -39,16 +48,53 @@ def _normalize_fence_code(code: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def extract_code_fences(text: str) -> list[CodeFence]:
-    """Return fenced blocks from Markdown (language may be empty)."""
-    fences: list[CodeFence] = []
-    for match in _FENCE_RE.finditer(text or ""):
+def split_answer_segments(text: str) -> list[AnswerSegment]:
+    """Split Markdown into ordered prose / code segments at fenced blocks."""
+    text = text or ""
+    if not text.strip():
+        return []
+    segments: list[AnswerSegment] = []
+    pos = 0
+    for match in _FENCE_RE.finditer(text):
+        if match.start() > pos:
+            prose = text[pos : match.start()].strip()
+            if prose:
+                segments.append(AnswerSegment("prose", prose + "\n"))
         info = (match.group(1) or "").strip()
         lang = info.split()[0] if info else ""
         code = _normalize_fence_code(match.group(2))
         if code.strip():
-            fences.append(CodeFence(language=lang, code=code))
-    return fences
+            segments.append(AnswerSegment("code", code, language=lang))
+        pos = match.end()
+    if pos < len(text):
+        prose = text[pos:].strip()
+        if prose:
+            segments.append(AnswerSegment("prose", prose + "\n"))
+    if not segments and text.strip():
+        segments.append(AnswerSegment("prose", text.strip() + "\n"))
+    return segments
+
+
+def extract_code_fences(text: str) -> list[CodeFence]:
+    """Return fenced blocks from Markdown (language may be empty)."""
+    return [
+        CodeFence(language=seg.language, code=seg.text)
+        for seg in split_answer_segments(text)
+        if seg.kind == "code"
+    ]
+
+
+def print_code_segment(
+    code: str, *, file: TextIO[str] | None = None, leading_blank: bool = True
+) -> None:
+    """Write one code block as plain terminal text."""
+    out = sys.stdout if file is None else file
+    if leading_blank:
+        out.write("\n")
+    out.write(code)
+    if not code.endswith("\n"):
+        out.write("\n")
+    out.flush()
 
 
 def pick_primary_fence(fences: list[CodeFence]) -> CodeFence | None:
@@ -129,32 +175,22 @@ def report_copied(fence: CodeFence) -> None:
 def print_code_fences(
     answer: str, *, file: TextIO[str] | None = None
 ) -> list[CodeFence]:
-    """Print fenced code as plain terminal text (no UI padding).
-
-    Returns the fences that were printed.
-    """
-    out = sys.stdout if file is None else file
+    """Print all fenced code blocks as plain terminal text."""
     fences = extract_code_fences(answer)
-    if not fences:
-        return []
-    # Blank line after the Textual panel so selection starts on real code.
-    out.write("\n")
-    for i, fence in enumerate(fences):
-        if i:
-            out.write("\n")
-        out.write(fence.code)
-        if not fence.code.endswith("\n"):
-            out.write("\n")
-    out.flush()
+    for fence in fences:
+        print_code_segment(fence.code, file=file, leading_blank=True)
     return fences
 
 
 __all__ = [
+    "AnswerSegment",
     "CodeFence",
     "copy_primary_fence",
     "copy_text",
     "extract_code_fences",
     "pick_primary_fence",
     "print_code_fences",
+    "print_code_segment",
     "report_copied",
+    "split_answer_segments",
 ]

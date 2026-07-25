@@ -14,7 +14,6 @@ from textual.containers import Vertical
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Label, Markdown, Static
-from textual.widgets._markdown import MarkdownFence
 
 from ask.agent import (
     AgentCallbacks,
@@ -23,67 +22,14 @@ from ask.agent import (
     answer_awaits_reply,
     run_agent,
 )
+from ask.clipboard import AnswerSegment, split_answer_segments
 from ask.think_anim import think_frame
 from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
 
 
-class PlaceholderFence(MarkdownFence):
-    """Code fence stub — real code is printed plain after the Textual panel.
-
-    Textual fence widgets pad to the panel width, so drag-select always picks up
-    leading/trailing spaces. Show a one-line pointer instead.
-    """
-
-    DEFAULT_CSS = """
-    PlaceholderFence {
-        width: auto;
-        height: 1;
-        margin: 0 1;
-        padding: 0;
-        background: transparent;
-    }
-    PlaceholderFence > #code-content {
-        width: auto;
-        padding: 0;
-        color: $text-muted;
-    }
-    """
-
-    def _placeholder_label(self) -> str:
-        lang = (self.lexer or "code").strip() or "code"
-        raw = self.code or ""
-        lines = len(raw.splitlines()) or (1 if raw.strip() else 0)
-        unit = "line" if lines == 1 else "lines"
-        return f"↓ {lang} ({lines} {unit}) printed below"
-
-    def compose(self) -> ComposeResult:
-        yield Label(
-            self._placeholder_label(),
-            id="code-content",
-            expand=False,
-        )
-
-    def set_content(self, content: object) -> None:
-        # Ignore highlighted Content from streaming updates — keep the stub.
-        del content
-        self._content = self._placeholder_label()
-        try:
-            self.query_one("#code-content", Label).update(
-                self._placeholder_label()
-            )
-        except Exception:  # noqa: BLE001 — widget may not be mounted yet
-            pass
-
-
 class AskMarkdown(Markdown):
-    """Markdown widget; code fences are placeholders (printed plain after)."""
-
-    BLOCKS = {
-        **Markdown.BLOCKS,
-        "fence": PlaceholderFence,
-        "code_block": PlaceholderFence,
-    }
+    """Markdown for prose segments (code fences are rendered outside Textual)."""
 
 
 _TICK_S = 1.0 / 60.0
@@ -223,6 +169,7 @@ class AskApp(App[str]):
         self._verbose = verbose
         self._result = ""
         self.agent_result = AgentResult()
+        self._pending_answer = ""
         self._started = time.monotonic()
         self._events: queue.Queue[tuple[str, Any]] = queue.Queue()
         self._has_text = False
@@ -347,8 +294,8 @@ class AskApp(App[str]):
                         # Plain text (no Rich markup) — markup on this Label was
                         # clipping "Thought for…" to "Thou" on inline exit.
                         status.update("Thinking...")
-                    # Avoid trailing blank paragraphs from model newlines.
-                    tw.extend_target(str(payload).rstrip() + "\n")
+                    # Defer until _DONE so we can split code fences out.
+                    self._pending_answer = str(payload)
                 elif kind == _TOOL_START:
                     call_id, name, args = payload
                     card = ToolCard(
@@ -363,13 +310,26 @@ class AskApp(App[str]):
                         card.finish(ok, detail)
                 elif kind == _DONE:
                     self._stop_thinking()
-                    # Ensure answer is in the typewriter even if on_delta was skipped.
-                    if payload and not tw.target:
-                        tw.extend_target(str(payload).rstrip() + "\n")
-                    else:
-                        tw.target = tw.target.rstrip() + (
-                            "\n" if tw.target.strip() else ""
+                    answer = str(payload or self._pending_answer or "")
+                    # Only the leading prose goes in this panel; code + later
+                    # prose are emitted after exit (plain stdout / ProseApp).
+                    if answer and not tw.target:
+                        is_err = bool(
+                            self.agent_result.error
+                            or answer.startswith(
+                                ("Cannot reach LLM", "HTTP ", "error:")
+                            )
                         )
+                        if is_err:
+                            tw.extend_target(answer.rstrip() + "\n")
+                        else:
+                            segments = split_answer_segments(answer)
+                            if segments and segments[0].kind == "prose":
+                                tw.extend_target(
+                                    segments[0].text.rstrip() + "\n"
+                                )
+                            elif not segments:
+                                tw.extend_target(answer.rstrip() + "\n")
                     tw.mark_done()
                     return
 
@@ -402,6 +362,88 @@ class AskApp(App[str]):
                 self.exit(self._result)
 
             self.call_after_refresh(_exit_with_result)
+
+
+class ProseApp(App[None]):
+    """Inline Markdown panel for a prose segment (no tools / timing)."""
+
+    BINDINGS = [
+        Binding("ctrl+c", "quit_prose", "Quit", show=False, priority=True),
+    ]
+
+    CSS = """
+    ProseApp {
+        height: auto;
+        max-height: 36;
+        background: transparent;
+    }
+    #body {
+        height: auto;
+        max-height: 28;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+    }
+    #body > MarkdownParagraph {
+        margin: 0;
+        padding: 0 1;
+    }
+    """
+
+    def __init__(self, text: str) -> None:
+        super().__init__()
+        self._text = text
+
+    def compose(self) -> ComposeResult:
+        markdown = AskMarkdown(id="body")
+        markdown.code_indent_guides = False
+        yield markdown
+
+    def on_mount(self) -> None:
+        self.run_worker(self._drive)
+
+    def action_quit_prose(self) -> None:
+        self.exit(None)
+
+    async def _drive(self) -> None:
+        markdown = self.query_one("#body", AskMarkdown)
+        stream = Markdown.get_stream(markdown)
+        tw = AdaptiveTypewriter()
+        tw.extend_target(self._text.rstrip() + "\n")
+        tw.mark_done()
+        try:
+            while True:
+                slice_text = tw.tick(_TICK_S)
+                if slice_text:
+                    await stream.write(slice_text)
+                if tw.done and tw.caught_up:
+                    break
+                await asyncio.sleep(_TICK_S)
+        finally:
+            remaining = tw.snap()
+            if remaining:
+                await stream.write(remaining)
+            await stream.stop()
+            self.exit(None)
+
+
+def _emit_answer_tail(segments: list[AnswerSegment]) -> None:
+    """Print code plain and show later prose panels after the agent UI."""
+    from ask.clipboard import print_code_segment
+
+    start = 0
+    if segments and segments[0].kind == "prose":
+        start = 1  # already shown inside AskApp
+    for seg in segments[start:]:
+        if seg.kind == "code":
+            print_code_segment(seg.text, leading_blank=True)
+        else:
+            try:
+                ProseApp(seg.text).run(
+                    inline=True, inline_no_clear=True, mouse=False
+                )
+            except KeyboardInterrupt:
+                return
 
 
 def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
@@ -471,11 +513,10 @@ def run_ask_turn(
     result = app.agent_result
     if not result.answer and answer:
         result.answer = answer
-    # Plain stdout — selectable without Textual's full-width fence padding.
+    # Interleave remaining code (plain stdout) and prose (new Textual panels)
+    # so snippets sit between the lead-in and the closing text.
     if result.answer and not result.error:
-        from ask.clipboard import print_code_fences
-
-        print_code_fences(result.answer)
+        _emit_answer_tail(split_answer_segments(result.answer))
     return result
 
 
