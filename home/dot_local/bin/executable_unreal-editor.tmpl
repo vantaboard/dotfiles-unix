@@ -35,10 +35,21 @@ fi
 
 if ! command -v nvidia-smi >/dev/null 2>&1 || ! nvidia-smi >/dev/null 2>&1; then
   echo "WARN: NVIDIA driver mismatch or GPU unavailable (nvidia-smi failed)." >&2
-  echo "WARN: Reboot so the 595 kernel module loads, then retry." >&2
+  echo "WARN: Reboot so the kernel module matches userspace, then retry." >&2
 fi
 
-# -sm5: project's DefaultEngine.ini may request SM6; force SM5 for laptop NVIDIA stability.
-exec "$EDITOR" -sm5 "$@"
+# On Sway/Wayland+XWayland, Slate tooltips and notification toasts steal the first
+# click (and often leave "Dismiss" buttons dead). Disable both at startup.
+# Pass UE_EXTRA_ARGS="-sm5" if Vulkan SM6 fails on your GPU.
+extra_args=()
+if [[ -n "${UE_EXTRA_ARGS:-}" ]]; then
+  # shellcheck disable=SC2206
+  extra_args=(${UE_EXTRA_ARGS})
+fi
+
+exec "$EDITOR" \
+  -ExecCmds="Slate.EnableTooltips 0;Slate.bAllowNotifications 0" \
+  "${extra_args[@]}" \
+  "$@"
 {{- end -}}
 {{ end -}}
