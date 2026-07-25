@@ -183,15 +183,16 @@ def run_agent(
     result = AgentResult()
 
     if cb.on_status:
-        cb.on_status(f"Asking {config.model}…")
+        cb.on_status("Thinking…")
 
     try:
         for round_i in range(1, config.max_rounds + 1):
             result.rounds = round_i
             if cb.on_status:
-                cb.on_status(
-                    f"{config.model} · round {round_i}/{config.max_rounds}"
-                )
+                if round_i == 1:
+                    cb.on_status("Thinking…")
+                else:
+                    cb.on_status(f"Thinking… (step {round_i})")
 
             # Buffer the round. Stream live to on_delta only for the final
             # answer (no tool_calls). Tool-round content goes to on_preamble.
@@ -252,7 +253,7 @@ def run_agent(
             if cb.on_delta and result.answer:
                 cb.on_delta(result.answer)
             if cb.on_status:
-                cb.on_status(f"Done ({config.model})")
+                cb.on_status("Done")
             return result
 
         result.error = f"stopped after {config.max_rounds} tool rounds"
@@ -290,7 +291,7 @@ def run_agent_plain(
     def on_tool_start(call_id: str, name: str, args: dict[str, Any]) -> None:
         tool_meta[call_id] = (name, args)
         if verbose:
-            sys.stderr.write(f"… {running_label(name, args)}\n")
+            sys.stderr.write(f"✧ {running_label(name, args)}\n")
             sys.stderr.flush()
 
     def on_tool_end(call_id: str, ok: bool, detail: str) -> None:

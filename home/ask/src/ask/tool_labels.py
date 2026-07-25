@@ -65,9 +65,9 @@ def failed_label(name: str, args: dict[str, Any]) -> str:
     return f"Failed `{name}`"
 
 
-def running_markup(spinner: str, name: str, args: dict[str, Any]) -> str:
+def running_markup(frame: str, name: str, args: dict[str, Any]) -> str:
     label = running_label(name, args)
-    return f"[cyan]{spinner}[/] [dim]{label}[/]"
+    return f"[magenta]{frame}[/] [dim]{label}[/]"
 
 
 def done_markup(name: str, args: dict[str, Any], *, ok: bool) -> str:

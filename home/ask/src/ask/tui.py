@@ -23,6 +23,7 @@ from textual.widgets import Label, Markdown, Static
 from textual.widgets._markdown import MarkdownFence
 
 from ask.agent import AgentCallbacks, AgentConfig, AgentResult, run_agent
+from ask.think_anim import think_frame
 from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
 
@@ -56,8 +57,9 @@ class AskMarkdown(Markdown):
         "code_block": HighlightedFence,
     }
 
-_SPINNER_FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
 _TICK_S = 1.0 / 60.0
+_THINK_INTERVAL_S = 0.14
 
 _DELTA = "delta"
 _PREAMBLE = "preamble"
@@ -104,7 +106,7 @@ class ToolCard(Widget):
 
     def compose(self) -> ComposeResult:
         yield Label(
-            running_markup("⠋", self.tool_name, self.args),
+            running_markup(think_frame(0), self.tool_name, self.args),
             classes="tool-line",
             id="line",
             markup=True,
@@ -113,15 +115,16 @@ class ToolCard(Widget):
             yield Static("", classes="tool-detail", id="detail")
 
     def on_mount(self) -> None:
-        self.set_interval(0.1, self._tick)
+        self.set_interval(_THINK_INTERVAL_S, self._tick)
 
     def _tick(self) -> None:
         if self.status != "running":
             return
         self._spin_index += 1
-        frame = _SPINNER_FRAMES[self._spin_index % len(_SPINNER_FRAMES)]
         self.query_one("#line", Label).update(
-            running_markup(frame, self.tool_name, self.args)
+            running_markup(
+                think_frame(self._spin_index), self.tool_name, self.args
+            )
         )
 
     def finish(self, ok: bool, detail: str) -> None:
@@ -197,29 +200,38 @@ class AskApp(App[str]):
         self._spin_index = 0
         self._typewriter = AdaptiveTypewriter()
         self._cards: dict[str, ToolCard] = {}
-        self._status_base = f"Asking {config.model}…"
+        self._status_base = "Thinking…"
 
     def compose(self) -> ComposeResult:
-        yield Label(self._status_base, id="status")
+        yield Label(
+            f"[magenta]{think_frame(0)}[/] [dim]{self._status_base}[/]",
+            id="status",
+            markup=True,
+        )
         yield Vertical(id="tools")
         markdown = AskMarkdown(id="body")
         markdown.code_indent_guides = False
         yield markdown
 
     def on_mount(self) -> None:
-        self.set_interval(0.1, self._tick_spinner)
+        self.set_interval(_THINK_INTERVAL_S, self._tick_spinner)
         self.run_worker(self._run_agent, thread=True)
         self.run_worker(self._drive_ui)
 
     def action_quit_ask(self) -> None:
         self.exit("")
 
+    def _status_markup(self, frame: str | None = None) -> str:
+        glyph = frame if frame is not None else think_frame(self._spin_index)
+        return f"[magenta]{glyph}[/] [dim]{self._status_base}[/]"
+
     def _tick_spinner(self) -> None:
         if self._has_text:
             return
-        frame = _SPINNER_FRAMES[self._spin_index % len(_SPINNER_FRAMES)]
         self._spin_index += 1
-        self.query_one("#status", Label).update(f"{frame} {self._status_base}")
+        self.query_one("#status", Label).update(
+            self._status_markup(think_frame(self._spin_index))
+        )
 
     def _run_agent(self) -> None:
         def on_delta(text: str) -> None:
@@ -275,19 +287,19 @@ class AskApp(App[str]):
                 if kind == _STATUS:
                     self._status_base = str(payload)
                     if not self._has_text:
-                        status.update(self._status_base)
+                        status.update(self._status_markup())
                     else:
-                        status.update(str(payload))
+                        status.update(f"[dim]{payload}[/]")
                 elif kind == _PREAMBLE:
                     preview = str(payload).replace("\n", " ").strip()
                     if len(preview) > 100:
                         preview = preview[:97] + "…"
                     self._status_base = f"… {preview}"
-                    status.update(self._status_base)
+                    status.update(self._status_markup())
                 elif kind == _DELTA:
                     if not self._has_text:
                         self._has_text = True
-                        status.update("Answering…")
+                        status.update("[dim]Writing…[/]")
                     tw.extend_target(str(payload))
                 elif kind == _TOOL_START:
                     call_id, name, args = payload
@@ -327,7 +339,9 @@ class AskApp(App[str]):
                 await stream.write(remaining)
             await stream.stop()
             elapsed = max(1, int(round(time.monotonic() - self._started)))
-            status.update(f"Done in {elapsed}s · {self._config.model}")
+            status.update(
+                f"[dim]Thought for {elapsed}s · {self._config.model}[/]"
+            )
             self.exit(self._result)
 
 
