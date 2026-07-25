@@ -15,9 +15,13 @@ from ask.agent import (
 from ask.debug import DEFAULT_DEBUG_LOG, DebugLog
 from ask.history import (
     HISTORY_PATH,
+    HistoryError,
     append_exchange,
     clear_history,
+    messages_from_entry,
     print_history,
+    resolve_history_ref,
+    short_id,
 )
 
 
@@ -131,6 +135,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not append this exchange to history",
     )
+    p.add_argument(
+        "--follow-up",
+        "--followup",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="REF",
+        help=(
+            "Continue a prior ask: index (#N from --history), UUID / unique "
+            "prefix, or omit REF to follow up on the latest entry"
+        ),
+    )
     return p
 
 
@@ -147,6 +163,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.history is not None:
         print_history(args.history)
         return 0
+
+    messages = None
+    parent_id: str | None = None
+    if args.follow_up is not None:
+        try:
+            entry, idx = resolve_history_ref(
+                args.follow_up if args.follow_up != "" else None
+            )
+        except HistoryError as exc:
+            print(f"ask: {exc}", file=sys.stderr)
+            return 2
+        messages = messages_from_entry(entry)
+        parent_id = str(entry.get("id") or "") or None
+        eid = short_id(parent_id or "")
+        label = f"#{idx}"
+        if eid:
+            label += f" {eid}"
+        print(f"ask: following up on {label}", file=sys.stderr)
 
     try:
         question = _read_question(args)
@@ -177,7 +211,6 @@ def main(argv: list[str] | None = None) -> int:
     from ask.agent import answer_awaits_reply
     from ask.tui import prompt_for_question, run_ask_turn
 
-    messages = None
     current: str | None = question
     exit_code = 0
     try:
@@ -199,14 +232,21 @@ def main(argv: list[str] | None = None) -> int:
             )
             if not args.no_history and answer:
                 try:
-                    append_exchange(
+                    new_id = append_exchange(
                         current,
                         answer,
                         model=config.model,
                         base_url=config.base_url,
                         include_web=config.include_web,
                         error=is_error,
+                        parent_id=parent_id,
                     )
+                    parent_id = new_id
+                    if sys.stderr.isatty():
+                        print(
+                            f"ask: saved {short_id(new_id)}",
+                            file=sys.stderr,
+                        )
                 except OSError as exc:
                     print(
                         f"ask: failed to write history: {exc}",

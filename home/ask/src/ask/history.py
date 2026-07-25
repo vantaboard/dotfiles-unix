@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import threading
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
@@ -31,8 +33,16 @@ INPUT_HISTORY_PATH = Path(
 _lock = threading.Lock()
 
 
+class HistoryError(Exception):
+    """Invalid or ambiguous history reference."""
+
+
 def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def short_id(entry_id: str, *, length: int = 8) -> str:
+    return (entry_id or "")[:length]
 
 
 def append_exchange(
@@ -44,10 +54,18 @@ def append_exchange(
     include_web: bool = True,
     rounds: int = 0,
     error: bool = False,
-) -> Path:
-    """Append one Q&A exchange to the history JSONL file."""
+    parent_id: str | None = None,
+    entry_id: str | None = None,
+) -> str:
+    """Append one Q&A exchange; return its UUID.
+
+    Uses an exclusive file lock so concurrent ``ask`` processes can append
+    safely to the same JSONL file.
+    """
     _ensure_parent(HISTORY_PATH)
+    eid = entry_id or str(uuid.uuid4())
     record: dict[str, Any] = {
+        "id": eid,
         "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "question": question,
         "answer": answer,
@@ -57,11 +75,26 @@ def append_exchange(
         "rounds": rounds,
         "error": error,
     }
+    if parent_id:
+        record["parent_id"] = parent_id
     line = json.dumps(record, ensure_ascii=False) + "\n"
+    data = line.encode("utf-8")
     with _lock:
-        with HISTORY_PATH.open("a", encoding="utf-8") as fh:
-            fh.write(line)
-    return HISTORY_PATH
+        fd = os.open(
+            HISTORY_PATH,
+            os.O_WRONLY | os.O_CREAT | os.O_APPEND,
+            0o644,
+        )
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            try:
+                os.write(fd, data)
+                os.fsync(fd)
+            finally:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+    return eid
 
 
 def iter_history() -> Iterator[dict[str, Any]]:
@@ -95,15 +128,117 @@ def clear_history() -> bool:
     return False
 
 
+def find_by_id(entry_id: str) -> dict[str, Any] | None:
+    """Return the entry with exact ``id``, or None."""
+    if not entry_id:
+        return None
+    for entry in iter_history():
+        if entry.get("id") == entry_id:
+            return entry
+    return None
+
+
+def resolve_history_ref(ref: str | None) -> tuple[dict[str, Any], int]:
+    """Resolve a follow-up ref to ``(entry, 1-based index)``.
+
+    ``ref`` may be:
+    - ``None`` / ``""`` — latest entry
+    - decimal index (``21``) — 1-based position in the file
+    - full UUID or unique prefix
+    """
+    entries = list(iter_history())
+    if not entries:
+        raise HistoryError(f"no history yet — {HISTORY_PATH}")
+
+    if ref is None or str(ref).strip() == "":
+        return entries[-1], len(entries)
+
+    token = str(ref).strip()
+    if token.isdigit():
+        idx = int(token)
+        if idx < 1 or idx > len(entries):
+            raise HistoryError(
+                f"no history entry #{idx} (have {len(entries)})"
+            )
+        return entries[idx - 1], idx
+
+    # UUID / unique prefix (ignore entries that predate ids).
+    matches: list[tuple[dict[str, Any], int]] = []
+    for i, entry in enumerate(entries, start=1):
+        eid = str(entry.get("id") or "")
+        if not eid:
+            continue
+        if eid == token or eid.startswith(token):
+            matches.append((entry, i))
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        shown = ", ".join(short_id(e.get("id", "")) for e, _ in matches[:5])
+        raise HistoryError(
+            f"ambiguous id prefix {token!r} matches {len(matches)} "
+            f"entries ({shown}...)"
+        )
+    raise HistoryError(f"no history entry matching {token!r}")
+
+
+def followup_chain(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return parent→…→entry chain (oldest first), capped against cycles."""
+    by_id = {
+        str(e["id"]): e
+        for e in iter_history()
+        if e.get("id")
+    }
+    chain: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    cur: dict[str, Any] | None = entry
+    while cur is not None:
+        eid = str(cur.get("id") or "")
+        chain.append(cur)
+        if eid:
+            if eid in seen:
+                break
+            seen.add(eid)
+        parent = cur.get("parent_id")
+        if not parent:
+            break
+        cur = by_id.get(str(parent))
+    chain.reverse()
+    return chain
+
+
+def messages_from_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build chat messages to continue from ``entry`` (including parents)."""
+    from ask.tools import SYSTEM_PROMPT
+
+    messages: list[dict[str, Any]] = [
+        {"role": "system", "content": SYSTEM_PROMPT}
+    ]
+    for item in followup_chain(entry):
+        q = (item.get("question") or "").strip()
+        a = (item.get("answer") or "").strip()
+        if q:
+            messages.append({"role": "user", "content": q})
+        if a:
+            messages.append({"role": "assistant", "content": a})
+    return messages
+
+
 def format_history_entry(entry: dict[str, Any], *, index: int) -> str:
     ts = entry.get("ts") or ""
     q = (entry.get("question") or "").strip()
     a = (entry.get("answer") or "").strip()
     model = entry.get("model") or ""
     err = " [error]" if entry.get("error") else ""
-    header = f"#{index} {ts}{err}"
+    eid = short_id(str(entry.get("id") or ""))
+    header = f"#{index}"
+    if eid:
+        header += f" {eid}"
+    header += f" {ts}{err}"
     if model:
         header += f" · {model}"
+    parent = entry.get("parent_id")
+    if parent:
+        header += f" · follow-up of {short_id(str(parent))}"
     parts = [header, f"Q: {q}", f"A: {a}"]
     return "\n".join(parts)
 
