@@ -13,7 +13,7 @@ from textual.binding import Binding
 from textual.containers import Vertical
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Label, Markdown, Static
+from textual.widgets import Input, Label, Markdown, Static
 
 from ask.agent import AgentCallbacks, AgentConfig, AgentResult, run_agent
 from ask.tool_labels import done_markup, running_markup
@@ -286,6 +286,72 @@ class AskApp(App[str]):
             self.exit(self._result)
 
 
+class QuestionPromptApp(App[str | None]):
+    """Inline prompt when ``ask`` is run with no question argument."""
+
+    BINDINGS = [
+        Binding("ctrl+c", "cancel", "Cancel", show=False, priority=True),
+        Binding("escape", "cancel", "Cancel", show=False),
+    ]
+
+    CSS = """
+    QuestionPromptApp {
+        height: auto;
+        max-height: 8;
+        background: transparent;
+    }
+    #prompt-label {
+        height: 1;
+        padding: 0 1;
+        color: $text-muted;
+    }
+    #question-input {
+        margin: 0 1 1 1;
+        border: tall $accent;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Label("Ask (Enter to submit, Esc to cancel)", id="prompt-label")
+        yield Input(
+            placeholder="Type your question…",
+            id="question-input",
+        )
+
+    def on_mount(self) -> None:
+        self.query_one("#question-input", Input).focus()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        text = (event.value or "").strip()
+        self.exit(text or None)
+
+    def action_cancel(self) -> None:
+        self.exit(None)
+
+
+def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
+    """Prompt interactively for a question. Returns None if cancelled/empty."""
+    interactive = bool(
+        getattr(sys.stdin, "isatty", lambda: False)()
+        and getattr(sys.stdout, "isatty", lambda: False)()
+    )
+    textual_ui = interactive if use_textual is None else use_textual
+    if not textual_ui or not interactive:
+        if not interactive:
+            return None
+        try:
+            return input("ask> ").strip() or None
+        except (EOFError, KeyboardInterrupt):
+            print(file=sys.stderr)
+            return None
+
+    app = QuestionPromptApp()
+    try:
+        return app.run(inline=True, inline_no_clear=True)
+    except KeyboardInterrupt:
+        return None
+
+
 def run_ask_tui(
     question: str,
     config: AgentConfig,
@@ -312,4 +378,4 @@ def run_ask_tui(
         return ""
 
 
-__all__ = ["AskApp", "run_ask_tui"]
+__all__ = ["AskApp", "QuestionPromptApp", "prompt_for_question", "run_ask_tui"]

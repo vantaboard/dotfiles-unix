@@ -13,11 +13,23 @@ from ask.agent import (
 )
 
 
-def _read_question(args: argparse.Namespace) -> str:
+def _read_question(args: argparse.Namespace) -> str | None:
+    """Resolve the question from argv, stdin, or an interactive prompt.
+
+    Returns None when the user cancels an interactive prompt.
+    """
     parts = list(args.question or [])
-    if parts == ["-"] or (not parts and not sys.stdin.isatty()):
-        return sys.stdin.read().strip()
-    return " ".join(parts).strip()
+    if parts == ["-"]:
+        return sys.stdin.read().strip() or None
+    if parts:
+        return " ".join(parts).strip() or None
+    # No argv question: pipe/redirect → stdin; TTY → interactive prompt.
+    if not sys.stdin.isatty():
+        return sys.stdin.read().strip() or None
+
+    from ask.tui import prompt_for_question
+
+    return prompt_for_question(use_textual=False if args.plain else None)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,13 +37,14 @@ def build_parser() -> argparse.ArgumentParser:
         prog="ask",
         description=(
             "Ask your local LLM (llama-swap) a question. Uses allowlisted "
-            "tools (which/type, man, --help) and DuckDuckGo when helpful."
+            "tools (which/type, man, --help) and DuckDuckGo when helpful. "
+            "Run with no arguments to type the question interactively."
         ),
     )
     p.add_argument(
         "question",
         nargs="*",
-        help="Question to ask (use - to read stdin)",
+        help="Question to ask (omit to type interactively; use - for stdin)",
     )
     web = p.add_mutually_exclusive_group()
     web.add_argument(
@@ -65,7 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--plain",
         action="store_true",
-        help="Disable Textual UI (plain stdout)",
+        help="Disable Textual UI (plain stdout / plain prompt)",
     )
     p.add_argument(
         "-v",
@@ -78,8 +91,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    question = _read_question(args)
+    try:
+        question = _read_question(args)
+    except KeyboardInterrupt:
+        print(file=sys.stderr)
+        return 130
     if not question:
+        # None → cancelled interactive prompt; "" → empty stdin/submit.
+        if question is None and sys.stdin.isatty() and not args.question:
+            return 130
         print("ask: missing question", file=sys.stderr)
         return 2
 
