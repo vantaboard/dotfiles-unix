@@ -377,13 +377,17 @@ class AskApp(App[str]):
             if remaining:
                 await stream.write(remaining)
             await stream.stop()
-            # Set timing last, as plain text, so the retained inline frame
-            # keeps a full "Thought for Ns" line at the top (same as
-            # job-tracking's ThinkingApp).
+            # Set timing last, as plain text. Wait for a refresh so the
+            # retained inline frame includes the full line (immediate exit
+            # can drop the update and leave timing missing from the panel).
             elapsed = max(1, int(round(time.monotonic() - self._started)))
             status.display = True
             status.update(f"Thought for {elapsed}s")
-            self.exit(self._result)
+
+            def _exit_with_result() -> None:
+                self.exit(self._result)
+
+            self.call_after_refresh(_exit_with_result)
 
 
 def prompt_for_question(*, use_textual: bool | None = None) -> str | None:
