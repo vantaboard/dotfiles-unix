@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
+from typing import TextIO
 
 
 _FENCE_RE = re.compile(
@@ -125,11 +126,35 @@ def report_copied(fence: CodeFence) -> None:
     print(f"Copied {lang} ({n} {unit})", file=sys.stderr)
 
 
+def print_code_fences(
+    answer: str, *, file: TextIO[str] | None = None
+) -> list[CodeFence]:
+    """Print fenced code as plain terminal text (no UI padding).
+
+    Returns the fences that were printed.
+    """
+    out = sys.stdout if file is None else file
+    fences = extract_code_fences(answer)
+    if not fences:
+        return []
+    # Blank line after the Textual panel so selection starts on real code.
+    out.write("\n")
+    for i, fence in enumerate(fences):
+        if i:
+            out.write("\n")
+        out.write(fence.code)
+        if not fence.code.endswith("\n"):
+            out.write("\n")
+    out.flush()
+    return fences
+
+
 __all__ = [
     "CodeFence",
     "copy_primary_fence",
     "copy_text",
     "extract_code_fences",
     "pick_primary_fence",
+    "print_code_fences",
     "report_copied",
 ]

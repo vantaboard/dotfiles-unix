@@ -11,12 +11,6 @@ from typing import Any
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
-from textual.content import Content
-from textual.highlight import (
-    ANSIDarkHighlightTheme,
-    ANSILightHighlightTheme,
-    highlight,
-)
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Label, Markdown, Static
@@ -34,61 +28,61 @@ from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
 
 
-class HighlightedFence(MarkdownFence):
-    """Fence block with ANSI colors, shrink-wrapped for clean drag-select.
+class PlaceholderFence(MarkdownFence):
+    """Code fence stub — real code is printed plain after the Textual panel.
 
-    Upstream MarkdownFence uses ``width: 1fr`` and ``Label(expand=True)``, which
-    pads every line to the panel width — terminal selection then picks up
-    leading gutters and trailing spaces. Shrink-wrap so selection matches code.
+    Textual fence widgets pad to the panel width, so drag-select always picks up
+    leading/trailing spaces. Show a one-line pointer instead.
     """
 
     DEFAULT_CSS = """
-    HighlightedFence {
+    PlaceholderFence {
         width: auto;
-        max-width: 100%;
-        height: auto;
+        height: 1;
+        margin: 0 1;
         padding: 0;
-        margin: 1 0;
-        overflow-x: auto;
-        background: #1e1e1e;
-        color: #d4d4d4;
+        background: transparent;
     }
-    HighlightedFence > #code-content {
+    PlaceholderFence > #code-content {
         width: auto;
-        height: auto;
         padding: 0;
+        color: $text-muted;
     }
     """
 
-    @classmethod
-    def highlight(
-        cls,
-        code: str,
-        language: str,
-        ansi: bool = False,
-        dark: bool = True,
-    ) -> Content:
-        del ansi  # always prefer true ANSI token colors in the terminal
-        theme = ANSIDarkHighlightTheme if dark else ANSILightHighlightTheme
-        return highlight(
-            code,
-            language=language or "bash",
-            theme=theme,
-        )
+    def _placeholder_label(self) -> str:
+        lang = (self.lexer or "code").strip() or "code"
+        raw = self.code or ""
+        lines = len(raw.splitlines()) or (1 if raw.strip() else 0)
+        unit = "line" if lines == 1 else "lines"
+        return f"↓ {lang} ({lines} {unit}) printed below"
 
     def compose(self) -> ComposeResult:
         yield Label(
-            self._highlighted_code, id="code-content", expand=False
+            self._placeholder_label(),
+            id="code-content",
+            expand=False,
         )
+
+    def set_content(self, content: object) -> None:
+        # Ignore highlighted Content from streaming updates — keep the stub.
+        del content
+        self._content = self._placeholder_label()
+        try:
+            self.query_one("#code-content", Label).update(
+                self._placeholder_label()
+            )
+        except Exception:  # noqa: BLE001 — widget may not be mounted yet
+            pass
 
 
 class AskMarkdown(Markdown):
-    """Markdown widget with ANSI-highlighted code fences."""
+    """Markdown widget; code fences are placeholders (printed plain after)."""
 
     BLOCKS = {
         **Markdown.BLOCKS,
-        "fence": HighlightedFence,
-        "code_block": HighlightedFence,
+        "fence": PlaceholderFence,
+        "code_block": PlaceholderFence,
     }
 
 
@@ -477,6 +471,11 @@ def run_ask_turn(
     result = app.agent_result
     if not result.answer and answer:
         result.answer = answer
+    # Plain stdout — selectable without Textual's full-width fence padding.
+    if result.answer and not result.error:
+        from ask.clipboard import print_code_fences
+
+        print_code_fences(result.answer)
     return result
 
 
