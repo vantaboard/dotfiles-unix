@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from ask.agent import (
     DEFAULT_BASE_URL,
@@ -11,6 +12,7 @@ from ask.agent import (
     DEFAULT_MODEL,
     AgentConfig,
 )
+from ask.debug import DEFAULT_DEBUG_LOG, DebugLog
 
 
 def _read_question(args: argparse.Namespace) -> str | None:
@@ -86,6 +88,22 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Show tool argument/result detail",
     )
+    p.add_argument(
+        "--debug",
+        action="store_true",
+        help=(
+            "Write a detailed JSONL trace to the debug log "
+            f"(default: {DEFAULT_DEBUG_LOG})"
+        ),
+    )
+    p.add_argument(
+        "--debug-log",
+        metavar="PATH",
+        help=(
+            "Debug log path (implies --debug). "
+            "Also set via ASK_DEBUG_LOG."
+        ),
+    )
     return p
 
 
@@ -103,11 +121,18 @@ def main(argv: list[str] | None = None) -> int:
         print("ask: missing question", file=sys.stderr)
         return 2
 
+    debug: DebugLog | None = None
+    if args.debug or args.debug_log:
+        path = Path(args.debug_log) if args.debug_log else DEFAULT_DEBUG_LOG
+        debug = DebugLog(path)
+        print(f"ask: debug log -> {debug.path}", file=sys.stderr)
+
     config = AgentConfig(
         base_url=args.base_url,
         model=args.model,
         max_rounds=max(1, args.max_rounds),
         include_web=bool(args.web),
+        debug=debug,
     )
 
     from ask.tui import run_ask_tui
@@ -121,7 +146,13 @@ def main(argv: list[str] | None = None) -> int:
         )
     except KeyboardInterrupt:
         print(file=sys.stderr)
+        if debug is not None:
+            debug.log("interrupted")
         return 130
+    finally:
+        if debug is not None:
+            debug.close()
+
     # Textual inline mode leaves the answer on screen; plain already printed.
     # Exit 1 on transport/agent errors.
     if answer.startswith("Cannot reach LLM") or answer.startswith("HTTP "):
