@@ -271,7 +271,10 @@ def run_agent_plain(
     """Run without Textual; print answer to stdout."""
     import sys
 
+    from ask.tool_labels import done_label, running_label
+
     streamed = False
+    tool_meta: dict[str, tuple[str, dict[str, Any]]] = {}
 
     def on_delta(text: str) -> None:
         nonlocal streamed
@@ -282,17 +285,15 @@ def run_agent_plain(
         sys.stdout.flush()
 
     def on_tool_start(call_id: str, name: str, args: dict[str, Any]) -> None:
+        tool_meta[call_id] = (name, args)
         if verbose:
-            sys.stderr.write(
-                f"→ {name}({json.dumps(args, ensure_ascii=False)})\n"
-            )
+            sys.stderr.write(f"… {running_label(name, args)}\n")
             sys.stderr.flush()
 
     def on_tool_end(call_id: str, ok: bool, detail: str) -> None:
         if verbose:
-            mark = "✓" if ok else "✗"
-            preview = detail.replace("\n", " ")[:120]
-            sys.stderr.write(f"{mark} {preview}\n")
+            name, args = tool_meta.get(call_id, ("unknown", {}))
+            sys.stderr.write(f"{done_label(name, args, ok=ok)}\n")
             sys.stderr.flush()
 
     result = run_agent(

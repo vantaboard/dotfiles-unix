@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import queue
 import sys
 import time
@@ -16,6 +15,7 @@ from textual.widget import Widget
 from textual.widgets import Label, Markdown, Static
 
 from ask.agent import AgentCallbacks, AgentConfig, AgentResult, run_agent
+from ask.tool_labels import done_markup, running_markup
 from ask.typewriter import AdaptiveTypewriter
 
 _SPINNER_FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
@@ -36,13 +36,6 @@ class ToolCard(Widget):
     ToolCard {
         height: auto;
         padding: 0 1;
-        color: $text-muted;
-    }
-    ToolCard.success {
-        color: $success;
-    }
-    ToolCard.error {
-        color: $error;
     }
     ToolCard > .tool-line {
         height: 1;
@@ -72,35 +65,32 @@ class ToolCard(Widget):
         self._spin_index = 0
 
     def compose(self) -> ComposeResult:
-        yield Label(self._line_text("⠋"), classes="tool-line", id="line")
+        yield Label(
+            running_markup("⠋", self.tool_name, self.args),
+            classes="tool-line",
+            id="line",
+            markup=True,
+        )
         if self.verbose:
             yield Static("", classes="tool-detail", id="detail")
 
     def on_mount(self) -> None:
         self.set_interval(0.1, self._tick)
 
-    def _args_preview(self) -> str:
-        args_s = json.dumps(self.args, ensure_ascii=False)
-        if len(args_s) > 60:
-            return args_s[:57] + "…"
-        return args_s
-
-    def _line_text(self, mark: str) -> str:
-        return f"{mark} {self.tool_name}({self._args_preview()})"
-
     def _tick(self) -> None:
         if self.status != "running":
             return
         self._spin_index += 1
         frame = _SPINNER_FRAMES[self._spin_index % len(_SPINNER_FRAMES)]
-        self.query_one("#line", Label).update(self._line_text(frame))
+        self.query_one("#line", Label).update(
+            running_markup(frame, self.tool_name, self.args)
+        )
 
     def finish(self, ok: bool, detail: str) -> None:
         self.status = "success" if ok else "error"
-        self.set_class(ok, "success")
-        self.set_class(not ok, "error")
-        mark = "✓" if ok else "✗"
-        self.query_one("#line", Label).update(self._line_text(mark))
+        self.query_one("#line", Label).update(
+            done_markup(self.tool_name, self.args, ok=ok)
+        )
         if self.verbose:
             preview = detail.replace("\n", " ").strip()
             if len(preview) > 160:
