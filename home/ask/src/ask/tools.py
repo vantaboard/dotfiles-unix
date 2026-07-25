@@ -305,8 +305,9 @@ def openai_tool_schemas(*, include_web: bool) -> list[dict[str, Any]]:
                 "function": {
                     "name": "web_search",
                     "description": (
-                        "Search the web via DuckDuckGo HTML. Use when local "
-                        "man/--help is missing, incomplete, or unclear."
+                        "Search the web via DuckDuckGo HTML. Use to identify "
+                        "named products/tools, and when local man/--help is "
+                        "missing, incomplete, or unclear."
                     ),
                     "parameters": {
                         "type": "object",
