@@ -13,6 +13,7 @@ profile_example:
     docker: true
     dropbox: true
     onlyoffice: true
+    anki: true
     dunst: true
     earlyoom: true
     eza: true

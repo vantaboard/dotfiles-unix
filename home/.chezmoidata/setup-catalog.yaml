@@ -391,6 +391,12 @@ setup_catalog:
       label: ONLYOFFICE Desktop Editors
       description: Official .deb from onlyoffice.com/download-desktop (amd64/arm64)
       default: false
+    anki:
+      category: desktop
+      label: Anki
+      description: Official Linux .tar.zst from GitHub releases (ankitects/anki); install.sh → /usr/local; deps per docs.ankiweb.net
+      default: false
+      packages: [zstd, libxcb-xinerama0, libxcb-cursor0, libnss3, libxcb-icccm4, libxcb-keysyms1]
     sunshine:
       category: desktop
       label: Sunshine (Moonlight host)

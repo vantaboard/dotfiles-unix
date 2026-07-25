@@ -76,6 +76,7 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_onchange_after_install-doctl` | [doctl](https://github.com/digitalocean/doctl) latest release binary → `~/.local/bin` (when `doctl` enabled) |
 | After dotfiles | `run_onchange_after_install-dropbox` | Latest official [Dropbox .deb](https://linux.dropbox.com/packages/ubuntu/) + `libayatana-appindicator3-1` for tray icon; enables `dropbox.service` user unit for autostart (when `dropbox` enabled) |
 | After dotfiles | `run_onchange_after_install-onlyoffice` | Official [ONLYOFFICE Desktop Editors .deb](https://www.onlyoffice.com/download-desktop) for amd64/arm64 (when `onlyoffice` enabled) |
+| After dotfiles | `run_onchange_after_install-anki` | Latest official [Anki Linux .tar.zst](https://docs.ankiweb.net/platform/linux/installing.html) from [GitHub releases](https://github.com/ankitects/anki/releases) → `sudo ./install.sh` into `/usr/local` (when `anki` enabled) |
 | After dotfiles | `run_onchange_after_install-sunshine` | Latest official [Sunshine .deb](https://github.com/LizardByte/Sunshine/releases) for Ubuntu/Debian; enables `sunshine.service` user unit for Moonlight streaming (when `sunshine` enabled) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |

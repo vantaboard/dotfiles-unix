@@ -1,0 +1,116 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "anki" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: anki-v1
+# Official Linux package: https://docs.ankiweb.net/platform/linux/installing.html
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Anki install"
+  exit 0
+fi
+
+RELEASE_API="https://api.github.com/repos/ankitects/anki/releases/latest"
+
+anki_arch() {
+  case "$(uname -m)" in
+    x86_64|amd64) echo "x86_64" ;;
+    aarch64|arm64) echo "aarch64" ;;
+    *)
+      echo "WARN: Anki Linux package unsupported on arch=$(uname -m); skipping" >&2
+      return 1
+      ;;
+  esac
+}
+
+ensure_anki_deps() {
+  export DEBIAN_FRONTEND=noninteractive
+  # zstd for .tar.zst; remaining libs match the Anki Linux install docs (install.sh
+  # also installs a broader Debian dependency set when run with sudo).
+  sudo apt install -y -qq --no-install-recommends \
+    zstd \
+    libxcb-xinerama0 \
+    libxcb-cursor0 \
+    libnss3 \
+    libxcb-icccm4 \
+    libxcb-keysyms1
+}
+
+already_installed=0
+if command -v anki >/dev/null 2>&1; then
+  already_installed=1
+  echo "Anki already installed: $(command -v anki)"
+fi
+
+if [[ "$already_installed" -eq 1 ]]; then
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping Anki install"
+  exit 0
+fi
+
+arch="$(anki_arch)" || exit 0
+
+echo "Resolving latest Anki release..."
+tag="$(curl -fsSL "$RELEASE_API" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
+if [[ -z "$tag" ]]; then
+  echo "WARN: could not resolve Anki latest release tag; skipping"
+  exit 0
+fi
+
+asset="anki-${tag}-linux-${arch}.tar.zst"
+url="https://github.com/ankitects/anki/releases/download/${tag}/${asset}"
+
+ensure_anki_deps
+
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+echo "Downloading Anki ${tag} (${asset})..."
+curl -fsSL "$url" -o "$tmpdir/$asset"
+
+echo "Extracting Anki..."
+if ! tar xaf "$tmpdir/$asset" -C "$tmpdir" 2>/dev/null; then
+  tar --use-compress-program=unzstd -xf "$tmpdir/$asset" -C "$tmpdir"
+fi
+
+install_dir="$tmpdir/anki-linux"
+if [[ ! -x "$install_dir/install.sh" ]]; then
+  echo "WARN: Anki install.sh missing after extract; skipping"
+  exit 0
+fi
+
+echo "Installing Anki to /usr/local..."
+(
+  cd "$install_dir"
+  sudo ./install.sh
+)
+
+if command -v anki >/dev/null 2>&1; then
+  echo "Anki installed: $(command -v anki) (${tag})"
+  cat <<'EOF'
+
+Anki is installed. Launch with: anki
+Installation guide: https://docs.ankiweb.net/platform/linux/installing.html
+EOF
+else
+  echo "WARN: Anki install finished but 'anki' is not on PATH"
+fi
+{{- end -}}
+{{ end -}}

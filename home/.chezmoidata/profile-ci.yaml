@@ -63,6 +63,7 @@ profile_ci:
     llama: false
     sunshine: false
     onlyoffice: false
+    anki: false
     earlyoom: false
     thermald: false
   packages:
