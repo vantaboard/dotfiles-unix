@@ -172,6 +172,12 @@ class AskApp(App[str]):
         padding: 0;
         background: transparent;
     }
+    /* Default Markdown paragraphs use margin-bottom: 1, which leaves a blank
+       row before the inline panel's bottom rule. */
+    #body > MarkdownParagraph {
+        margin: 0;
+        padding: 0 1;
+    }
     MarkdownFence {
         margin: 1 0;
         background: #1e1e1e;
@@ -312,7 +318,8 @@ class AskApp(App[str]):
                         # the markdown panel after inline exit.
                         status.update("")
                         status.display = False
-                    tw.extend_target(str(payload))
+                    # Avoid trailing blank paragraphs from model newlines.
+                    tw.extend_target(str(payload).rstrip() + "\n")
                 elif kind == _TOOL_START:
                     call_id, name, args = payload
                     card = ToolCard(
@@ -331,7 +338,11 @@ class AskApp(App[str]):
                     status.display = False
                     # Ensure answer is in the typewriter even if on_delta was skipped.
                     if payload and not tw.target:
-                        tw.extend_target(str(payload))
+                        tw.extend_target(str(payload).rstrip() + "\n")
+                    else:
+                        tw.target = tw.target.rstrip() + (
+                            "\n" if tw.target.strip() else ""
+                        )
                     tw.mark_done()
                     return
 
