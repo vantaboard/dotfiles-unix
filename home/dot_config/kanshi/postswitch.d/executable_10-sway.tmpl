@@ -1,4 +1,15 @@
 #!/usr/bin/bash
+# Prefer EDID serials over DRM connector names: NVIDIA MST renumbers DP-*
+# across boots/replugs (historically DP-4/5/6, currently DP-3/5/7).
+BENQ_SERIAL="ETN5N03598SL0"
+ASUS_PRIMARY_SERIAL="N7LMQS030618"
+ASUS_SECONDARY_SERIAL="N7LMQS030621"
+
+resolve_output() {
+    local serial="$1"
+    swaymsg -t get_outputs | jq -r --arg s "$serial" '
+        .[] | select(.serial == $s) | .name' | head -n1
+}
 
 external_active=0
 if [ -n "${SWAYSOCK:-}" ]; then
@@ -6,8 +17,15 @@ if [ -n "${SWAYSOCK:-}" ]; then
 fi
 
 if [[ "$external_active" -ge 3 ]]; then
-    MONITOR_ARRAY=(DP-4 DP-5 DP-6)
-    LAYOUT_OUTPUT=$'output DP-4 position 0 0\noutput DP-5 position 1920 0\noutput DP-6 position 3840 0\noutput eDP-1 disable\n'
+    left="$(resolve_output "$BENQ_SERIAL")"
+    mid="$(resolve_output "$ASUS_PRIMARY_SERIAL")"
+    right="$(resolve_output "$ASUS_SECONDARY_SERIAL")"
+    if [[ -z "$left" || -z "$mid" || -z "$right" ]]; then
+        echo "10-sway: missing EDID match (left=${left:-?} mid=${mid:-?} right=${right:-?})" >&2
+        exit 1
+    fi
+    MONITOR_ARRAY=("$left" "$mid" "$right")
+    LAYOUT_OUTPUT="output ${left} position 0 0\noutput ${mid} position 1920 0\noutput ${right} position 3840 0\noutput eDP-1 disable\n"
 else
     ACTIVE_MONITORS=$(
         swaymsg -t get_outputs | jq -r '

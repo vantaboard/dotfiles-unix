@@ -61,7 +61,7 @@ docked_drm_ports_connected() {
 
 dock_usb_present() {
     # VIA/Realtek hub tree on 3-5 is the dock; USB often reconnects tens of
-    # seconds before NVIDIA MST exposes DP-4/5/6 after s2idle.
+    # seconds before NVIDIA MST exposes the dock DP connectors after s2idle.
     [[ -e /sys/bus/usb/devices/3-5 ]] || return 1
     lsusb 2>/dev/null | grep -qE '2109:2822|2109:0822|0bda:5411'
 }
@@ -206,9 +206,12 @@ simulate_dock_replug() {
     log "simulating dock replug (stop kanshi, cycle DP outputs, restart kanshi)"
     pkill -x kanshi 2>/dev/null || true
     sleep 1
-    for out in DP-4 DP-5 DP-6; do
+    # Connector names are unstable under NVIDIA MST; disable whatever DP-*
+    # sway currently knows about rather than hardcoding DP-3/4/5/6/7.
+    while read -r out; do
+        [[ -n "$out" ]] || continue
         swaymsg_cmd "output $out disable" || true
-    done
+    done < <(swaymsg_cmd -t get_outputs | jq -r '.[] | select(.name | test("^DP-")) | .name' 2>/dev/null)
     sleep 5
     start_kanshi
     wait_for_kanshi_outputs 3 || log "kanshi outputs slow after replug simulation"

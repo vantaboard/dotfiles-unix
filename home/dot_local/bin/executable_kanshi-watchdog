@@ -91,6 +91,10 @@ while sleep 5; do
         # Kernel sees dock outputs but sway has not applied the docked profile
         # (common after resume: recovery ran before MST enumerated).
         ((mismatch++)) || true
+    elif (( dp_conn >= 3 && edp_active >= 1 )); then
+        # Docked profile should disable eDP. Stale connector names in kanshi
+        # leave no matching profile, so sway keeps the laptop panel on.
+        ((mismatch++)) || true
     else
         mismatch=0
     fi

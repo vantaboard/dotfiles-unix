@@ -3,18 +3,20 @@
 # no session restart needed. eDP-1 stays connected while docked, and kanshi
 # only matches a profile that lists every connected output, so the docked
 # profile must include eDP-1 explicitly.
-# DP-5 is the primary ASUS monitor; postswitch/sway-docked-layout sets 144Hz when docked.
+# Match monitors by EDID description (make/model/serial), not DRM connector
+# names: NVIDIA MST renumbers DP-* across boots/replugs (historically
+# DP-4/5/6, currently DP-3/5/7).
 # Order matters — more specific docked profile must come before undocked.
-# Physical layout (left to right): BenQ GW2485TC (DP-4), ASUS VG248 primary
-# (DP-5), ASUS VG248 (DP-6). Dock silkscreen port labels do not match these
-# Linux output names.
-# Primary ASUS VG248 (DP-5) runs at 144Hz via postswitch/sway-docked-layout. DP-6
-# stays at 60Hz: the dock MST link cannot drive both ASUS monitors at 144Hz together.
+# Physical layout (left to right): BenQ GW2485TC, ASUS VG248 primary
+# (N7LMQS030618), ASUS VG248 (N7LMQS030621). Dock silkscreen port labels do
+# not match Linux output names.
+# All three docked externals stay at 60Hz: the dock MST link cannot drive
+# both ASUS monitors at 144Hz together.
 profile docked-home {
     output eDP-1 disable
-    output DP-4 enable mode 1920x1080@60Hz position 0,0
-    output DP-5 enable mode 1920x1080@60Hz position 1920,0
-    output DP-6 enable mode 1920x1080@60Hz position 3840,0
+    output "BNQ BenQ GW2485TC ETN5N03598SL0" enable mode 1920x1080@60Hz position 0,0
+    output "ASUSTek COMPUTER INC VG248 N7LMQS030618" enable mode 1920x1080@60Hz position 1920,0
+    output "ASUSTek COMPUTER INC VG248 N7LMQS030621" enable mode 1920x1080@60Hz position 3840,0
     exec $HOME/.config/kanshi/postswitch.d/10-sway
 }
 
