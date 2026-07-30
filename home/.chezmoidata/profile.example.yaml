@@ -140,6 +140,8 @@ profile_example:
     - displays_resume
     - libinput
     - udev
+    - wake_sources
+    - hibernate
     - sway_session
     - grub
     - llama

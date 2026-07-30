@@ -26,6 +26,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/keyd/default.conf" | sha256sum }}
 # hash: {{ include "system/libinput/local-overrides.quirks.tmpl" | sha256sum }}
 # hash: {{ include "system/udev/99-input-permissions.rules" | sha256sum }}
+# hash: {{ include "system/udev/99-wake-sources.rules" | sha256sum }}
 # hash: {{ include "system/ssh/sshd_config.d/99-keyonly-port.conf" | sha256sum }}
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd-sleep/displays-resume.tmpl" | sha256sum }}
@@ -169,6 +170,73 @@ if has_deploy udev; then
   fi
   sudo udevadm control --reload-rules 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=input --action=change 2>/dev/null || true
+fi
+
+if has_deploy wake_sources; then
+  deploy_file "$SOURCE/udev/99-wake-sources.rules" \
+    /etc/udev/rules.d/99-wake-sources.rules
+  sudo udevadm control --reload-rules 2>/dev/null || true
+  # Trigger both subsystems so already-attached devices are disarmed now instead
+  # of only after the next replug or reboot.
+  sudo udevadm trigger --subsystem-match=usb --action=change 2>/dev/null || true
+  sudo udevadm trigger --subsystem-match=net --action=change 2>/dev/null || true
+fi
+
+if has_deploy hibernate && [[ -d /etc/default/grub.d ]] && command -v update-grub >/dev/null 2>&1; then
+  swap_file="$(awk '$2 == "file" { print $1; exit }' /proc/swaps)"
+  if [[ -z "$swap_file" ]]; then
+    echo "hibernate: no swap file active; skipping resume configuration"
+  else
+    root_uuid="$(findmnt -no UUID -T /)"
+    # The kernel needs the swap file's first physical block to find the image.
+    # filefrag reports it in filesystem blocks, which on ext4 matches the
+    # page-sized units resume_offset expects. It changes every time the file is
+    # recreated, so re-derive it here rather than pinning a value in the repo.
+    # awk must not exit on the first match: a multi-GB swap file has many extents
+    # and closing the pipe early kills filefrag with SIGPIPE, which pipefail turns
+    # into a fatal 141 for the whole script.
+    swap_offset="$(sudo filefrag -v "$swap_file" |
+      awk '$1 == "0:" { gsub(/\.\./, "", $4); print $4 }')"
+
+    ram_kb="$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)"
+    swap_kb="$(awk '$2 == "file" { print $3; exit }' /proc/swaps)"
+    if (( swap_kb < ram_kb )); then
+      echo "hibernate: $swap_file is smaller than RAM ($((swap_kb / 1024))MB < $((ram_kb / 1024))MB);" \
+        "hibernation will fail once memory use exceeds it. Recreate it larger with" \
+        "swapoff, dd, mkswap, swapon, then re-run chezmoi apply to refresh resume_offset."
+    fi
+
+    changed=0
+    TMP_RESUME="$(mktemp)"
+    {
+      echo "# Deployed by chezmoi (deploy-system). Hibernation is unavailable unless the"
+      echo "# kernel knows both which device holds the image and the offset of the swap"
+      echo "# file inside it; with neither set, /sys/power/disk reads 'disabled' and"
+      echo "# hibernating silently cold-boots instead of resuming."
+      echo "GRUB_CMDLINE_LINUX_DEFAULT=\"\$GRUB_CMDLINE_LINUX_DEFAULT resume=UUID=$root_uuid resume_offset=$swap_offset\""
+    } > "$TMP_RESUME"
+    if ! sudo cmp -s "$TMP_RESUME" /etc/default/grub.d/99-resume.cfg; then
+      deploy_file "$TMP_RESUME" /etc/default/grub.d/99-resume.cfg
+      sudo update-grub 2>/dev/null || true
+      changed=1
+    fi
+    rm -f "$TMP_RESUME"
+
+    if [[ -d /etc/initramfs-tools/conf.d ]]; then
+      TMP_IRFS="$(mktemp)"
+      printf 'RESUME=UUID=%s\n' "$root_uuid" > "$TMP_IRFS"
+      if ! sudo cmp -s "$TMP_IRFS" /etc/initramfs-tools/conf.d/resume; then
+        deploy_file "$TMP_IRFS" /etc/initramfs-tools/conf.d/resume
+        sudo update-initramfs -u 2>/dev/null || true
+        changed=1
+      fi
+      rm -f "$TMP_IRFS"
+    fi
+
+    if (( changed )); then
+      echo "hibernate: resume=UUID=$root_uuid resume_offset=$swap_offset configured; reboot to enable"
+    fi
+  fi
 fi
 
 echo "System configuration deployed"

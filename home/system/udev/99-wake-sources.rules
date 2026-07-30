@@ -1,0 +1,31 @@
+# This laptop suspends via s2idle (firmware reports Low-power S0, so the kernel
+# never picks deep/S3). In s2idle the OS stays in a polling loop and *any* armed
+# wake source resumes it immediately, unlike S3 where the platform gates wakes.
+#
+# The dock's HID devices are what keep yanking us back out: the Razer sensor
+# fires on desk vibration and the footswitch on the lightest nudge. Disarm them
+# here. The internal keyboard (serio0), the lid, and the power button stay armed,
+# so those remain the way to wake the machine.
+#
+# These must match on "change" as well as "add": dock re-enumeration re-creates
+# the USB devices with power/wakeup back at its default.
+
+# Razer DeathAdder V2
+ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="1532", ATTR{idProduct}=="0084", \
+  ATTR{power/wakeup}="disabled"
+
+# PCsensor FootSwitch
+ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="3553", ATTR{idProduct}=="b001", \
+  ATTR{power/wakeup}="disabled"
+
+# Unbranded 2.4GHz "mini keyboard" receiver
+ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="1997", ATTR{idProduct}=="2433", \
+  ATTR{power/wakeup}="disabled"
+
+# Wake-on-LAN is on by default in the NIC (ethtool reports "Wake-on: g"), which
+# lets LAN traffic resume us. The setting lives in the adapter and comes back
+# every boot, so clear it whenever a physical ethernet device appears. Matching
+# en* covers the internal NIC and the dock's USB adapter while skipping the
+# veth/bridge interfaces Docker creates, where ethtool would fail.
+ACTION=="add|change", SUBSYSTEM=="net", KERNEL=="en*", \
+  RUN+="/bin/sh -c '/usr/sbin/ethtool -s %k wol d || true'"
