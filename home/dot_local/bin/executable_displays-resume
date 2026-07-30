@@ -1,10 +1,11 @@
 #!/usr/bin/bash
 # Re-apply the sway display layout after resume from suspend/hibernate.
 #
-# NVIDIA MST dock outputs often need many seconds after wake before modes are
+# NVIDIA MST dock outputs often need a few seconds after wake before modes are
 # valid. A physical dock replug triggers DRM hotplug, kanshi re-matches the
-# docked-home profile, and postswitch runs — HUP alone does not. After DRM is
-# ready we simulate that: stop kanshi, cycle dock outputs, restart kanshi.
+# docked-home profile, and postswitch runs — HUP alone does not. Prefer a light
+# kanshi/postswitch refresh first; only simulate a dock replug (disable/cycle
+# DP outputs) when the light path fails.
 #
 # Invoked from /usr/lib/systemd/system-sleep/displays-resume on post wake via
 # a systemd-run transient unit (--foreground). A plain background fork from
@@ -60,10 +61,16 @@ docked_drm_ports_connected() {
 }
 
 dock_usb_present() {
-    # VIA/Realtek hub tree on 3-5 is the dock; USB often reconnects tens of
-    # seconds before NVIDIA MST exposes the dock DP connectors after s2idle.
-    [[ -e /sys/bus/usb/devices/3-5 ]] || return 1
-    lsusb 2>/dev/null | grep -qE '2109:2822|2109:0822|0bda:5411'
+    # VIA Labs / Realtek hub chips used by the dock. The bus path is not stable
+    # across docks/firmware (historically 3-5, currently 3-4), so match by ID.
+    local d
+    for d in /sys/bus/usb/devices/*; do
+        [[ -f "$d/idVendor" && -f "$d/idProduct" ]] || continue
+        case "$(cat "$d/idVendor" 2>/dev/null):$(cat "$d/idProduct" 2>/dev/null)" in
+            2109:2822|2109:0822|0bda:5411) return 0 ;;
+        esac
+    done
+    return 1
 }
 
 is_docked() {
@@ -83,7 +90,7 @@ gbm_errors_recent() {
 
 wait_for_swaysock() {
     local attempt
-    for attempt in $(seq 1 90); do
+    for attempt in $(seq 1 60); do
         [[ -S "${SWAYSOCK:-}" ]] && { log "sway socket ready"; return 0; }
         SWAYSOCK="$(find_swaysock)"
         export SWAYSOCK
@@ -97,7 +104,7 @@ wait_for_drm() {
     local attempt count
     # Prefer waiting for dock DP when the USB hub is back but MST is still down.
     if dock_usb_present && ! is_docked; then
-        for attempt in $(seq 1 120); do
+        for attempt in $(seq 1 90); do
             count="$(docked_drm_ports_connected)"
             [[ "$count" -ge 3 ]] && { log "DRM ready: ${count} DP ports connected"; return 0; }
             (( attempt % 15 == 0 )) && log "dock USB up, waiting for DP (${count}/3, ${attempt}s)"
@@ -105,7 +112,7 @@ wait_for_drm() {
         done
         log "dock USB present but DP never enumerated; falling back"
     fi
-    for attempt in $(seq 1 120); do
+    for attempt in $(seq 1 90); do
         if is_docked; then
             count="$(docked_drm_ports_connected)"
             [[ "$count" -ge 3 ]] && { log "DRM ready: ${count} DP ports connected"; return 0; }
@@ -126,12 +133,12 @@ wait_for_drm() {
 
 wait_for_gpu_ready() {
     local attempt quiet=0 errors
-    for attempt in $(seq 1 90); do
+    for attempt in $(seq 1 60); do
         if is_docked; then
             errors="$(nvidia_modeset_errors_recent)"
             if [[ "$errors" -eq 0 ]]; then
                 ((quiet++)) || true
-                [[ "$quiet" -ge 5 ]] && { log "nvidia GPU quiet for ${quiet}s"; return 0; }
+                [[ "$quiet" -ge 3 ]] && { log "nvidia GPU quiet for ${quiet}s"; return 0; }
             else
                 quiet=0
             fi
@@ -178,13 +185,13 @@ sway_outputs_healthy() {
 }
 
 wait_for_kanshi_outputs() {
-    local required="${1:-3}" attempt count
-    for attempt in $(seq 1 45); do
+    local required="${1:-3}" max_wait="${2:-20}" attempt count
+    for attempt in $(seq 1 "$max_wait"); do
         if sway_outputs_healthy "$required"; then
             log "kanshi restored ${required} outputs (${attempt}s)"
             return 0
         fi
-        if (( attempt % 10 == 0 )); then
+        if (( attempt % 5 == 0 )); then
             count="$(sway_dp_active_count)"
             log "waiting for kanshi outputs (${count}/${required}, ${attempt}s, gbm_errors=$(gbm_errors_recent))"
         fi
@@ -201,8 +208,38 @@ start_kanshi() {
         kanshi >/dev/null 2>&1 || true
 }
 
+run_postswitch() {
+    if [[ -x "$HOME/.config/kanshi/postswitch.d/10-sway" ]]; then
+        SWAYSOCK="${SWAYSOCK:-}" "$HOME/.config/kanshi/postswitch.d/10-sway" 2>/dev/null || true
+    fi
+    "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
+    "$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
+    "$HOME/.local/bin/waybar-restart" 2>/dev/null || true
+}
+
+finish_healthy() {
+    local reason="$1"
+    log "${reason}"
+    "$HOME/.local/bin/input-recover" --foreground 2>/dev/null || true
+    exit 0
+}
+
+# Prefer not disabling DP outputs: after s2idle that cycle can leave sway with
+# failed atomic commits and force a long kanshi wait. Restart kanshi + postswitch
+# is usually enough once DRM/GPU are quiet.
+light_recovery() {
+    local required="$1"
+    log "light recovery (restart kanshi, no DP disable)"
+    swaymsg_cmd "output * dpms on" || true
+    pkill -x kanshi 2>/dev/null || true
+    sleep 1
+    start_kanshi
+    wait_for_kanshi_outputs "$required" 15 || log "kanshi outputs slow after light recovery"
+    run_postswitch
+}
+
 simulate_dock_replug() {
-    local out
+    local out required="${1:-3}"
     log "simulating dock replug (stop kanshi, cycle DP outputs, restart kanshi)"
     pkill -x kanshi 2>/dev/null || true
     sleep 1
@@ -212,58 +249,56 @@ simulate_dock_replug() {
         [[ -n "$out" ]] || continue
         swaymsg_cmd "output $out disable" || true
     done < <(swaymsg_cmd -t get_outputs | jq -r '.[] | select(.name | test("^DP-")) | .name' 2>/dev/null)
-    sleep 5
+    sleep 2
     start_kanshi
-    wait_for_kanshi_outputs 3 || log "kanshi outputs slow after replug simulation"
-}
-
-apply_recovery() {
-    local docked=no
-    is_docked && docked=yes
-    log "apply_recovery (docked=${docked})"
-    swaymsg_cmd "output * dpms on" || true
-
-    if is_docked; then
-        simulate_dock_replug
-    else
-        pkill -x kanshi 2>/dev/null || true
-        sleep 1
-        start_kanshi
-        wait_for_kanshi_outputs 1 || true
-    fi
-
-    if [[ -x "$HOME/.config/kanshi/postswitch.d/10-sway" ]]; then
-        SWAYSOCK="${SWAYSOCK:-}" "$HOME/.config/kanshi/postswitch.d/10-sway" 2>/dev/null || true
-    fi
-    "$HOME/.local/bin/sway-docked-layout" 2>/dev/null || true
-    "$HOME/.local/bin/sway-wallpaper" 2>/dev/null || true
-    "$HOME/.local/bin/waybar-restart" 2>/dev/null || true
+    wait_for_kanshi_outputs "$required" 20 || log "kanshi outputs slow after replug simulation"
+    run_postswitch
 }
 
 wait_for_swaysock || { log "no sway socket; user may be at login screen"; exit 0; }
 
 wait_for_drm || log "drm wait timed out; proceeding anyway"
 wait_for_gpu_ready || true
-log "post-GPU settle pause"
-sleep 5
 
 required=1
 if is_docked || dock_usb_present; then required=3; fi
 
-for round in $(seq 1 5); do
-    log "recovery round ${round} (need ${required} healthy outputs)"
-    apply_recovery
-    sleep 5
+# Fast path: DRM/GPU already settled and sway still has a valid layout. The old
+# path always disabled every DP output here, which caused the multi-tens-of-
+# seconds black screen even when wake had already restored the monitors.
+if sway_outputs_healthy "$required"; then
+    log "outputs already healthy after settle; light refresh only"
+    swaymsg_cmd "output * dpms on" || true
+    run_postswitch
+    finish_healthy "outputs healthy without recovery"
+fi
+
+log "outputs unhealthy after settle; trying light recovery first"
+for round in 1 2; do
+    log "light recovery round ${round} (need ${required} healthy outputs)"
+    light_recovery "$required"
+    sleep 2
     count="$(sway_dp_active_count)"
     gbm="$(gbm_errors_recent)"
-    log "round ${round} result: ${count}/${required} outputs, gbm_errors=${gbm}"
+    log "light round ${round} result: ${count}/${required} outputs, gbm_errors=${gbm}"
     if sway_outputs_healthy "$required"; then
-        log "outputs healthy after round ${round}"
-        "$HOME/.local/bin/input-recover" --foreground 2>/dev/null || true
-        exit 0
+        finish_healthy "outputs healthy after light round ${round}"
     fi
-    log "outputs still unhealthy after round ${round}; retrying"
-    sleep 10
+done
+
+log "light recovery failed; falling back to dock-replug simulation"
+for round in 1 2; do
+    log "heavy recovery round ${round} (need ${required} healthy outputs)"
+    simulate_dock_replug "$required"
+    sleep 2
+    count="$(sway_dp_active_count)"
+    gbm="$(gbm_errors_recent)"
+    log "heavy round ${round} result: ${count}/${required} outputs, gbm_errors=${gbm}"
+    if sway_outputs_healthy "$required"; then
+        finish_healthy "outputs healthy after heavy round ${round}"
+    fi
+    log "outputs still unhealthy after heavy round ${round}; retrying"
+    sleep 5
 done
 
 log "outputs still unhealthy; restarting sway so GDM can start a fresh session"
