@@ -64,6 +64,7 @@ profile_termux_example:
     sunshine: false
     onlyoffice: false
     anki: false
+    freecad: false
     earlyoom: false
     thermald: false
   packages: []

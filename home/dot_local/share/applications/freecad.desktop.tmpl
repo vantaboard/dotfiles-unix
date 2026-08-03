@@ -1,0 +1,24 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "freecad" -}}
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=FreeCAD
+GenericName=CAD Application
+Comment=Feature-based 3D CAD modeler
+Exec={{ .chezmoi.homeDir }}/.local/bin/freecad %F
+TryExec={{ .chezmoi.homeDir }}/.local/bin/freecad
+Icon=freecad
+Terminal=false
+StartupNotify=true
+StartupWMClass=FreeCAD
+Categories=Graphics;Science;Engineering;Education;
+MimeType=application/x-extension-fcstd;model/vnd.collada+xml;application/sla;
+Keywords=cad;3d;modeling;parametric;
+{{- end -}}
+{{ end -}}

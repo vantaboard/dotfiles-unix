@@ -397,6 +397,13 @@ setup_catalog:
       description: Official Linux .tar.zst from GitHub releases (ankitects/anki); install.sh → /usr/local; deps per docs.ankiweb.net
       default: false
       packages: [zstd, libxcb-xinerama0, libxcb-cursor0, libnss3, libxcb-icccm4, libxcb-keysyms1]
+    freecad:
+      category: desktop
+      label: FreeCAD
+      description: Official Linux AppImage from GitHub Releases (FreeCAD/FreeCAD) into ~/.local/opt/freecad via run_after_install-freecad; freecad linked in ~/.local/bin
+      default: false
+      packages: [jq]
+      config_paths: [dot_local/share/applications/freecad.desktop]
     sunshine:
       category: desktop
       label: Sunshine (Moonlight host)

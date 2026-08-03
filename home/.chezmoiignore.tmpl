@@ -51,6 +51,9 @@ dot_local/bin/executable_godotdev
 dot_local/bin/executable_godot-nvr
 dot_local/share/applications/godot.desktop
 {{- end }}
+{{- if not (index $f "freecad") }}
+dot_local/share/applications/freecad.desktop
+{{- end }}
 {{- if not (index $f "llama") }}
 dot_local/bin/executable_aichat
 dot_local/share/aichat/**

@@ -1,0 +1,148 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "freecad" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Official Linux AppImage: https://www.freecad.org/downloads.php
+# Releases: https://github.com/FreeCAD/FreeCAD/releases
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping FreeCAD AppImage install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+LOCAL_BIN="$HOME_DIR/.local/bin"
+INSTALL_DIR="$HOME_DIR/.local/opt/freecad"
+CACHE_DIR="$HOME_DIR/.cache/freecad-install"
+APPIMAGE="$INSTALL_DIR/FreeCAD.AppImage"
+EXTRACT_DIR="$INSTALL_DIR/extracted"
+VERSION_FILE="$INSTALL_DIR/version"
+ICON_DIR="$HOME_DIR/.local/share/icons/hicolor/scalable/apps"
+RELEASES_API="https://api.github.com/repos/FreeCAD/FreeCAD/releases?per_page=30"
+
+case "$(uname -m)" in
+  x86_64) FREECAD_ARCH="x86_64" ;;
+  aarch64|arm64) FREECAD_ARCH="aarch64" ;;
+  *)
+    echo "WARN: unsupported architecture $(uname -m); skipping FreeCAD install"
+    exit 0
+    ;;
+esac
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping FreeCAD install"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: jq not found; skipping FreeCAD install"
+  exit 0
+fi
+
+# /releases/latest can be a weekly prerelease; pick newest non-prerelease.
+releases="$(curl -fsSL "$RELEASES_API")"
+metadata="$(jq -c '[.[] | select(.prerelease == false and .draft == false)][0] // empty' <<<"$releases")"
+if [[ -z "$metadata" || "$metadata" == "null" ]]; then
+  echo "WARN: FreeCAD releases API did not return a stable release"
+  exit 0
+fi
+
+target_version="$(jq -r '.tag_name // empty' <<<"$metadata")"
+download_url="$(jq -r --arg arch "$FREECAD_ARCH" '
+  .assets[]?
+  | select(.name | test("^FreeCAD_.*-Linux-" + $arch + "(-|$).*\\.AppImage$"))
+  | select(.name | endswith(".zsync") | not)
+  | .browser_download_url
+' <<<"$metadata" | head -1)"
+
+if [[ -z "$target_version" || -z "$download_url" ]]; then
+  echo "WARN: FreeCAD stable release did not include a Linux ${FREECAD_ARCH} AppImage"
+  exit 0
+fi
+
+link_freecad() {
+  mkdir -p "$LOCAL_BIN"
+  rm -f "$LOCAL_BIN/freecad"
+  cat > "$LOCAL_BIN/freecad" <<EOF
+#!/bin/bash
+set -euo pipefail
+exec "$EXTRACT_DIR/AppRun" "\$@"
+EOF
+  chmod +x "$LOCAL_BIN/freecad"
+}
+
+install_icon() {
+  local icon_src
+
+  mkdir -p "$ICON_DIR"
+  icon_src="$(find "$EXTRACT_DIR" -type f \( -name 'org.freecad*.svg' -o -name 'freecad.svg' -o -name 'org.freecad*.png' -o -name 'freecad.png' \) 2>/dev/null | head -1 || true)"
+  if [[ -n "$icon_src" ]]; then
+    case "$icon_src" in
+      *.svg) install -m 644 "$icon_src" "$ICON_DIR/freecad.svg" ;;
+      *.png)
+        mkdir -p "$HOME_DIR/.local/share/icons/hicolor/256x256/apps"
+        install -m 644 "$icon_src" "$HOME_DIR/.local/share/icons/hicolor/256x256/apps/freecad.png"
+        ;;
+    esac
+  fi
+}
+
+extract_appimage() {
+  local tmp_extract
+
+  mkdir -p "$CACHE_DIR"
+  tmp_extract="$(mktemp -d "${CACHE_DIR}/extract.XXXXXX")"
+  (
+    cd "$tmp_extract"
+    "$APPIMAGE" --appimage-extract >/dev/null
+  )
+  rm -rf "$EXTRACT_DIR"
+  mv "$tmp_extract/squashfs-root" "$EXTRACT_DIR"
+  rmdir "$tmp_extract" 2>/dev/null || rm -rf "$tmp_extract"
+}
+
+appimage_current() {
+  [[ -x "$APPIMAGE" ]] || return 1
+  [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$target_version" ]] || return 1
+  [[ "$(wc -c < "$APPIMAGE")" -gt 50000000 ]]
+}
+
+extracted_current() {
+  [[ -x "$EXTRACT_DIR/AppRun" ]]
+}
+
+if appimage_current; then
+  echo "FreeCAD ${target_version} already installed at $APPIMAGE"
+  if ! extracted_current; then
+    echo "Extracting FreeCAD AppImage to $EXTRACT_DIR..."
+    extract_appimage
+  fi
+  link_freecad
+  install_icon
+  exit 0
+fi
+
+mkdir -p "$INSTALL_DIR" "$CACHE_DIR"
+tmp_file="$(mktemp "${CACHE_DIR}/FreeCAD.AppImage.XXXXXX")"
+cleanup() { rm -f "$tmp_file"; }
+trap cleanup EXIT
+
+echo "Installing FreeCAD ${target_version} AppImage (${FREECAD_ARCH})..."
+curl -fL --progress-bar "$download_url" -o "$tmp_file"
+chmod +x "$tmp_file"
+mv "$tmp_file" "$APPIMAGE"
+printf '%s\n' "$target_version" > "$VERSION_FILE"
+echo "Extracting FreeCAD AppImage to $EXTRACT_DIR..."
+extract_appimage
+link_freecad
+install_icon
+
+echo "FreeCAD ${target_version} installed; freecad -> $EXTRACT_DIR/AppRun"
+{{- end -}}
+{{ end -}}

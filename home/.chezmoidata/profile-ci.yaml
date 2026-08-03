@@ -64,6 +64,7 @@ profile_ci:
     sunshine: false
     onlyoffice: false
     anki: false
+    freecad: false
     earlyoom: false
     thermald: false
   packages:
