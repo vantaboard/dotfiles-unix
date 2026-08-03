@@ -10,6 +10,7 @@ set -euo pipefail
 
 # Official Linux AppImage: https://www.freecad.org/downloads.php
 # Releases: https://github.com/FreeCAD/FreeCAD/releases
+# MCP addon + server: https://github.com/neka-nat/freecad-mcp
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping FreeCAD AppImage install"
@@ -25,6 +26,11 @@ EXTRACT_DIR="$INSTALL_DIR/extracted"
 VERSION_FILE="$INSTALL_DIR/version"
 ICON_DIR="$HOME_DIR/.local/share/icons/hicolor/scalable/apps"
 RELEASES_API="https://api.github.com/repos/FreeCAD/FreeCAD/releases?per_page=30"
+MCP_REPO_DIR="$INSTALL_DIR/freecad-mcp"
+# FreeCAD 1.1 AppImage user data (confirmed via FreeCAD.getUserAppDataDir())
+FREECAD_USER_DIR="$HOME_DIR/.local/share/FreeCAD/v1-1"
+FREECAD_MOD_DIR="$FREECAD_USER_DIR/Mod"
+CURSOR_MCP_JSON="$HOME_DIR/.cursor/mcp.json"
 
 case "$(uname -m)" in
   x86_64) FREECAD_ARCH="x86_64" ;;
@@ -117,31 +123,125 @@ extracted_current() {
   [[ -x "$EXTRACT_DIR/AppRun" ]]
 }
 
+resolve_uvx() {
+  local candidate
+  if command -v uvx >/dev/null 2>&1; then
+    command -v uvx
+    return 0
+  fi
+  for candidate in \
+    "$LOCAL_BIN/uvx" \
+    "$HOME_DIR/.local/share/mise/shims/uvx" \
+    "$HOME_DIR/.local/share/mise/installs/uv/latest/"*/uvx; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Install https://github.com/neka-nat/freecad-mcp FreeCAD workbench + Cursor MCP entry.
+install_freecad_mcp() {
+  local uvx_bin tmp_mcp settings_path
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "WARN: git not found; skipping FreeCAD MCP addon install"
+    return 0
+  fi
+
+  echo "Installing FreeCAD MCP addon (neka-nat/freecad-mcp)..."
+  mkdir -p "$INSTALL_DIR"
+  if [[ -d "$MCP_REPO_DIR/.git" ]]; then
+    git -C "$MCP_REPO_DIR" fetch --depth 1 origin main
+    git -C "$MCP_REPO_DIR" reset --hard origin/main
+  else
+    rm -rf "$MCP_REPO_DIR"
+    git clone --depth 1 https://github.com/neka-nat/freecad-mcp.git "$MCP_REPO_DIR"
+  fi
+
+  if [[ ! -d "$MCP_REPO_DIR/addon/FreeCADMCP" ]]; then
+    echo "WARN: FreeCADMCP addon missing after clone; skipping"
+    return 0
+  fi
+
+  mkdir -p "$FREECAD_MOD_DIR"
+  rm -rf "$FREECAD_MOD_DIR/FreeCADMCP"
+  cp -a "$MCP_REPO_DIR/addon/FreeCADMCP" "$FREECAD_MOD_DIR/FreeCADMCP"
+  echo "FreeCAD MCP addon -> $FREECAD_MOD_DIR/FreeCADMCP"
+
+  settings_path="$FREECAD_USER_DIR/freecad_mcp_settings.json"
+  mkdir -p "$FREECAD_USER_DIR"
+  if [[ -f "$settings_path" ]]; then
+    tmp_mcp="$(mktemp)"
+    jq '.auto_start_rpc = true
+        | .remote_enabled = (.remote_enabled // false)
+        | .allowed_ips = (.allowed_ips // "127.0.0.1")' \
+      "$settings_path" > "$tmp_mcp"
+    mv "$tmp_mcp" "$settings_path"
+  else
+    cat > "$settings_path" <<'EOF'
+{
+  "remote_enabled": false,
+  "allowed_ips": "127.0.0.1",
+  "auto_start_rpc": true
+}
+EOF
+  fi
+  echo "Enabled FreeCAD MCP auto-start RPC -> $settings_path"
+
+  if ! uvx_bin="$(resolve_uvx)"; then
+    echo "WARN: uvx not found; install uv (mise/uv) then re-run to register Cursor MCP"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$CURSOR_MCP_JSON")"
+  if [[ ! -f "$CURSOR_MCP_JSON" ]]; then
+    printf '%s\n' '{"mcpServers":{}}' > "$CURSOR_MCP_JSON"
+  fi
+
+  tmp_mcp="$(mktemp)"
+  if ! jq --arg cmd "$uvx_bin" '
+      .mcpServers = (.mcpServers // {})
+      | .mcpServers.freecad = {
+          "command": $cmd,
+          "args": ["freecad-mcp"]
+        }
+    ' "$CURSOR_MCP_JSON" > "$tmp_mcp"; then
+    rm -f "$tmp_mcp"
+    echo "WARN: failed to update $CURSOR_MCP_JSON"
+    return 0
+  fi
+  mv "$tmp_mcp" "$CURSOR_MCP_JSON"
+  chmod 600 "$CURSOR_MCP_JSON"
+  echo "Registered Cursor MCP server freecad -> $uvx_bin freecad-mcp"
+}
+
 if appimage_current; then
   echo "FreeCAD ${target_version} already installed at $APPIMAGE"
   if ! extracted_current; then
     echo "Extracting FreeCAD AppImage to $EXTRACT_DIR..."
     extract_appimage
   fi
-  link_freecad
-  install_icon
-  exit 0
+else
+  mkdir -p "$INSTALL_DIR" "$CACHE_DIR"
+  tmp_file="$(mktemp "${CACHE_DIR}/FreeCAD.AppImage.XXXXXX")"
+  cleanup() { rm -f "$tmp_file"; }
+  trap cleanup EXIT
+
+  echo "Installing FreeCAD ${target_version} AppImage (${FREECAD_ARCH})..."
+  curl -fL --progress-bar "$download_url" -o "$tmp_file"
+  chmod +x "$tmp_file"
+  mv "$tmp_file" "$APPIMAGE"
+  printf '%s\n' "$target_version" > "$VERSION_FILE"
+  echo "Extracting FreeCAD AppImage to $EXTRACT_DIR..."
+  extract_appimage
+  trap - EXIT
 fi
 
-mkdir -p "$INSTALL_DIR" "$CACHE_DIR"
-tmp_file="$(mktemp "${CACHE_DIR}/FreeCAD.AppImage.XXXXXX")"
-cleanup() { rm -f "$tmp_file"; }
-trap cleanup EXIT
-
-echo "Installing FreeCAD ${target_version} AppImage (${FREECAD_ARCH})..."
-curl -fL --progress-bar "$download_url" -o "$tmp_file"
-chmod +x "$tmp_file"
-mv "$tmp_file" "$APPIMAGE"
-printf '%s\n' "$target_version" > "$VERSION_FILE"
-echo "Extracting FreeCAD AppImage to $EXTRACT_DIR..."
-extract_appimage
 link_freecad
 install_icon
+install_freecad_mcp
 
 echo "FreeCAD ${target_version} installed; freecad -> $EXTRACT_DIR/AppRun"
 {{- end -}}

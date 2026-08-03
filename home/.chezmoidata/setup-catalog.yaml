@@ -400,9 +400,9 @@ setup_catalog:
     freecad:
       category: desktop
       label: FreeCAD
-      description: Official Linux AppImage from GitHub Releases (FreeCAD/FreeCAD) into ~/.local/opt/freecad via run_after_install-freecad; freecad linked in ~/.local/bin
+      description: Official Linux AppImage from GitHub Releases into ~/.local/opt/freecad; installs neka-nat/freecad-mcp workbench (auto-start RPC) and registers freecad in ~/.cursor/mcp.json via uvx
       default: false
-      packages: [jq]
+      packages: [jq, git]
       config_paths: [dot_local/share/applications/freecad.desktop]
     sunshine:
       category: desktop
