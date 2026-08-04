@@ -176,10 +176,11 @@ if has_deploy wake_sources; then
   deploy_file "$SOURCE/udev/99-wake-sources.rules" \
     /etc/udev/rules.d/99-wake-sources.rules
   sudo udevadm control --reload-rules 2>/dev/null || true
-  # Trigger both subsystems so already-attached devices are disarmed now instead
-  # of only after the next replug or reboot.
+  # Trigger so already-attached devices are disarmed now instead of only after
+  # the next replug or reboot. platform covers the ACPI lid (PNP0C0D).
   sudo udevadm trigger --subsystem-match=usb --action=change 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=net --action=change 2>/dev/null || true
+  sudo udevadm trigger --subsystem-match=platform --action=change 2>/dev/null || true
 fi
 
 if has_deploy hibernate && [[ -d /etc/default/grub.d ]] && command -v update-grub >/dev/null 2>&1; then

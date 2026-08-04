@@ -4,11 +4,17 @@
 #
 # The dock's HID devices are what keep yanking us back out: the Razer sensor
 # fires on desk vibration and the footswitch on the lightest nudge. Disarm them
-# here. The internal keyboard (serio0), the lid, and the power button stay armed,
-# so those remain the way to wake the machine.
+# here. The lid is also disarmed: closing it into a backpack bounces the
+# non-SW_LID-compliant switch and immediately resumes s2idle (logind already
+# ignores lid for suspend/resume policy). The internal keyboard (serio0) and
+# the power button stay armed, so those remain the way to wake the machine.
 #
 # These must match on "change" as well as "add": dock re-enumeration re-creates
 # the USB devices with power/wakeup back at its default.
+
+# ACPI lid switch (PNP0C0D) — must not wake from suspend
+ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0D:00", \
+  ATTR{power/wakeup}="disabled"
 
 # Razer DeathAdder V2
 ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="1532", ATTR{idProduct}=="0084", \
