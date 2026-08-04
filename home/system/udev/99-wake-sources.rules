@@ -2,18 +2,43 @@
 # never picks deep/S3). In s2idle the OS stays in a polling loop and *any* armed
 # wake source resumes it immediately, unlike S3 where the platform gates wakes.
 #
-# The dock's HID devices are what keep yanking us back out: the Razer sensor
-# fires on desk vibration and the footswitch on the lightest nudge. Disarm them
-# here. The lid is also disarmed: closing it into a backpack bounces the
-# non-SW_LID-compliant switch and immediately resumes s2idle (logind already
-# ignores lid for suspend/resume policy). The internal keyboard (serio0) and
-# the power button stay armed, so those remain the way to wake the machine.
+# Backpack / desk spurious wakes we disarm here:
+#   - lid switch (non-SW_LID-compliant bounce)
+#   - dock HIDs (Razer sensor, footswitch, mini-keyboard dongle)
+#   - touchpad (I2C HID — bag pressure)
+#   - USB / Thunderbolt controllers (any attached device activity)
+#   - AC adapter and USB-C PD plug/unplug
+#   - Wake-on-LAN
+# The internal keyboard (serio0) and the power button stay armed — those are
+# the intentional ways to wake the machine. logind already ignores lid policy.
 #
 # These must match on "change" as well as "add": dock re-enumeration re-creates
-# the USB devices with power/wakeup back at its default.
+# devices with power/wakeup back at its default.
 
-# ACPI lid switch (PNP0C0D) — must not wake from suspend
+# ACPI lid switch (PNP0C0D)
 ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0D:00", \
+  ATTR{power/wakeup}="disabled"
+
+# Internal touchpad (ITE5570 I2C HID)
+ACTION=="add|change", SUBSYSTEM=="i2c", DRIVER=="i2c_hid_acpi", \
+  ATTR{power/wakeup}="disabled"
+
+# USB host controllers (XHCI on 00:14.0 and Thunderbolt XHCI on 00:0d.0)
+ACTION=="add|change", SUBSYSTEM=="pci", DRIVER=="xhci_hcd", \
+  ATTR{power/wakeup}="disabled"
+
+# Thunderbolt / USB4 controller
+ACTION=="add|change", SUBSYSTEM=="pci", DRIVER=="thunderbolt", \
+  ATTR{power/wakeup}="disabled"
+
+# Thunderbolt PCIe root port (TRP0)
+ACTION=="add|change", SUBSYSTEM=="pci", KERNEL=="0000:00:07.0", \
+  ATTR{power/wakeup}="disabled"
+
+# AC adapter (Mains) and USB-C PD ports — plugging in must not resume
+ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains", \
+  ATTR{power/wakeup}="disabled"
+ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{type}=="USB", \
   ATTR{power/wakeup}="disabled"
 
 # Razer DeathAdder V2

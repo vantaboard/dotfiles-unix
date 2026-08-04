@@ -523,7 +523,7 @@ setup_catalog:
       category: system
       label: Suspend wake-source trimming
       default: true
-      description: udev rules disarming lid wake, dock HID devices, and Wake-on-LAN so s2idle suspend is not resumed instantly
+      description: udev rules disarming lid/touchpad/USB/Thunderbolt/AC wake and Wake-on-LAN so s2idle suspend is not resumed instantly
       packages: [ethtool]
       system_deploy: wake_sources
     hibernate:
