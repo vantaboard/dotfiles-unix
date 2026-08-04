@@ -183,6 +183,7 @@ if has_deploy wake_sources; then
   sudo udevadm trigger --subsystem-match=platform --action=change 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=pci --action=change 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=i2c --action=change 2>/dev/null || true
+  sudo udevadm trigger --subsystem-match=serio --action=change 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=power_supply --action=change 2>/dev/null || true
 fi
 

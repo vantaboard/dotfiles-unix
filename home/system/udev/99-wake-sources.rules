@@ -4,19 +4,22 @@
 #
 # Backpack / desk spurious wakes we disarm here:
 #   - lid switch (non-SW_LID-compliant bounce)
+#   - internal keyboard (bag key presses) and touchpad (I2C HID pressure)
 #   - dock HIDs (Razer sensor, footswitch, mini-keyboard dongle)
-#   - touchpad (I2C HID — bag pressure)
 #   - USB / Thunderbolt controllers (any attached device activity)
 #   - AC adapter and USB-C PD plug/unplug
 #   - Wake-on-LAN
-# The internal keyboard (serio0) and the power button stay armed — those are
-# the intentional ways to wake the machine. logind already ignores lid policy.
+# The power button is the intentional wake path. logind already ignores lid.
 #
 # These must match on "change" as well as "add": dock re-enumeration re-creates
 # devices with power/wakeup back at its default.
 
 # ACPI lid switch (PNP0C0D)
 ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0D:00", \
+  ATTR{power/wakeup}="disabled"
+
+# Internal keyboard (i8042 / atkbd)
+ACTION=="add|change", SUBSYSTEM=="serio", DRIVER=="atkbd", \
   ATTR{power/wakeup}="disabled"
 
 # Internal touchpad (ITE5570 I2C HID)
