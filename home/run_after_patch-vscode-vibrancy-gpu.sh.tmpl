@@ -1,0 +1,51 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{- $p := .profile_example -}}
+{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "cursor" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Vibrancy Continued forces terminal.integrated.gpuAcceleration=off so acrylic
+# terminals use the DOM renderer. We prefer GPU on; strip that override whenever
+# the extension (re)appears under ~/.cursor/extensions.
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+EXT_GLOB="$HOME_DIR/.cursor/extensions/illixion.vscode-vibrancy-continued-*/extension/vscode-settings.js"
+MARKER='// Patched: do not force terminal.integrated.gpuAcceleration off (keep user setting).'
+NEEDLE='await settingsStore.update("terminal.integrated.gpuAcceleration", "off");'
+
+shopt -s nullglob
+files=($EXT_GLOB)
+if ((${#files[@]} == 0)); then
+  exit 0
+fi
+
+patched=0
+for f in "${files[@]}"; do
+  if grep -Fq "$NEEDLE" "$f"; then
+    python3 - "$f" "$NEEDLE" "$MARKER" <<'PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+needle, marker = sys.argv[2], sys.argv[3]
+text = path.read_text()
+if needle not in text:
+    raise SystemExit(f"needle missing after grep: {path}")
+path.write_text(text.replace(needle, marker, 1))
+PY
+    echo "Patched Vibrancy GPU override: $f"
+    patched=1
+  elif grep -Fq "$MARKER" "$f"; then
+    : # already patched
+  else
+    echo "WARN: Vibrancy settings file missing expected gpuAcceleration line: $f"
+  fi
+done
+
+if ((patched == 0)); then
+  echo "Vibrancy GPU override already patched"
+fi
+{{- end -}}
+{{ end -}}
