@@ -21,6 +21,7 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | Sway Wayland session | `home/system/wayland-sessions/sway.desktop` | `/usr/share/wayland-sessions/sway.desktop` |
 | Sway session wrapper | `home/system/bin/sway-session` | `/usr/local/bin/sway-session` (sources `wayland.conf` before exec) |
 | GDM Wayland enable | `home/system/gdm3/custom.conf` | `/etc/gdm3/custom.conf` (with `sway_session` deploy) |
+| GDM greeter freeze workaround | `home/system/systemd/gdm.service.d/wait-for-nvidia.conf` | `/etc/systemd/system/gdm.service.d/` (with `sway_session` deploy; waits for NVIDIA DRM device, PCI address substituted at deploy) |
 | Enabled services list | `home/.chezmoidata/enabled-services.yaml` | `systemctl enable` via script |
 | Kanshi profiles | `home/dot_config/kanshi/` | `~/.config/kanshi/` |
 
