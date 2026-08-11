@@ -44,7 +44,7 @@ packages:
       - keyd
       - network-manager
       - network-manager-gnome
-      - pulseaudio
+      - pipewire-pulse
       - flatpak
       # Editors and dev tools
       - neovim

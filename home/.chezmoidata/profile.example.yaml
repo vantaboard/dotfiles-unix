@@ -117,7 +117,7 @@ profile_example:
     - openssh-server
     - playerctl
     - pkg-config
-    - pulseaudio
+    - pipewire-pulse
     - ripgrep
     - rofi
     - bemenu

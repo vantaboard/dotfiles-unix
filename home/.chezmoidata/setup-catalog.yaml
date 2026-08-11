@@ -379,7 +379,7 @@ setup_catalog:
       label: Desktop utilities
       description: brightness, playerctl, network, audio
       default: true
-      packages: [playerctl, brightnessctl, acpi, libnotify-bin, network-manager, network-manager-gnome, pulseaudio]
+      packages: [playerctl, brightnessctl, acpi, libnotify-bin, network-manager, network-manager-gnome, pipewire-pulse]
     dropbox:
       category: desktop
       label: Dropbox
