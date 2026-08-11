@@ -1,0 +1,4 @@
+# Disable /etc/xdg/autostart/pulseaudio.desktop under Sway.
+# Classic PulseAudio races PipeWire for ALSA devices and yields Dummy Output.
+[Desktop Entry]
+Hidden=true

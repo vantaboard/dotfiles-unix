@@ -109,7 +109,8 @@ font pango:FixedsysExcelsior Nerd Font Mono 10
 floating_modifier $mod
 
 exec --no-startup-id volumeicon
-exec --no-startup-id pulseaudio
+# PipeWire (+ pipewire-pulse) owns audio; classic pulseaudio steals /dev/snd
+# and leaves only Dummy Output. Do not exec pulseaudio here.
 exec --no-startup-id pa-applet
 bindsym $mod+Ctrl+m exec pavucontrol
 
