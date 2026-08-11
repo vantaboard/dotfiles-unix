@@ -272,6 +272,13 @@ for_window [class="Xfce4-notifyd"] opacity 1.0
 for_window [class="xfce4-notifyd"] opacity 1.0
 for_window [class="vlc"] opacity 1.0
 for_window [class="mpv"] opacity 1.0
+# Keep displays awake while a media window is on a visible workspace
+# (swayidle -w honors these inhibitors; VLC under XWayland won't use the
+# Wayland idle-inhibit protocol on its own).
+for_window [class="(?i)vlc"] inhibit_idle visible
+for_window [app_id="(?i)vlc"] inhibit_idle visible
+for_window [class="(?i)mpv"] inhibit_idle visible
+for_window [app_id="(?i)mpv"] inhibit_idle visible
 for_window [class="Steam"] opacity 1.0
 for_window [class="steam_app"] opacity 1.0
 for_window [class="steamwebhelper"] opacity 1.0
