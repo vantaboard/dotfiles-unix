@@ -147,6 +147,7 @@ profile_example:
     - grub
     - llama
     - ssh
+    - hdmi_audio
   secrets:
     git_gpg_key: ""
   input_devices:

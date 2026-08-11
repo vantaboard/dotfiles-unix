@@ -31,6 +31,9 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd-sleep/displays-resume.tmpl" | sha256sum }}
 # hash: {{ include "system/modprobe.d/nvidia-s0ix.conf" | sha256sum }}
+# hash: {{ include "system/modprobe.d/snd-hda-intel-long-hdmi.conf" | sha256sum }}
+# hash: {{ include "system/alsa-card-profile/mixer/profile-sets/hdmi-force-available.conf" | sha256sum }}
+# hash: {{ include "system/alsa-card-profile/mixer/paths/hdmi-output-0-force.conf" | sha256sum }}
 # hash: {{ include "system/systemd/gdm.service.d/wait-for-nvidia.conf" | sha256sum }}
 # hash: {{ include "system/systemd/logind.conf.d/ignore-lid-switch.conf" | sha256sum }}
 # hash: {{ include "system/systemd/llama-swap.service.tmpl" | sha256sum }}
@@ -206,6 +209,31 @@ if has_deploy wake_sources; then
   sudo udevadm trigger --subsystem-match=i2c --action=change 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=serio --action=change 2>/dev/null || true
   sudo udevadm trigger --subsystem-match=power_supply --action=change 2>/dev/null || true
+fi
+
+if has_deploy hdmi_audio; then
+  # snd_hda_intel power_save/snoop + ACP profile-set that ignores ELD/jack for
+  # long passive HDMI. WirePlumber Lua overrides live under ~/.config (chezmoi).
+  deploy_file "$SOURCE/modprobe.d/snd-hda-intel-long-hdmi.conf" \
+    /etc/modprobe.d/snd-hda-intel-long-hdmi.conf
+  ACP_ROOT=/usr/share/alsa-card-profile/mixer
+  deploy_file "$SOURCE/alsa-card-profile/mixer/profile-sets/hdmi-force-available.conf" \
+    "$ACP_ROOT/profile-sets/hdmi-force-available.conf"
+  for n in 0 1 2 3; do
+    deploy_file "$SOURCE/alsa-card-profile/mixer/paths/hdmi-output-${n}-force.conf" \
+      "$ACP_ROOT/paths/hdmi-output-${n}-force.conf"
+  done
+  sudo rm -f "$ACP_ROOT/paths/hdmi-output-force.conf.common"
+  if command -v update-initramfs >/dev/null 2>&1; then
+    sudo update-initramfs -u
+  fi
+  # Classic pulseaudio holds /dev/snd and leaves PipeWire on Dummy Output.
+  # pipewire-pulse already provides the PulseAudio socket compatibility layer.
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl --user mask pulseaudio.service pulseaudio.socket 2>/dev/null || true
+  fi
+  echo "hdmi_audio: snd_hda_intel power_save/snoop disabled; ACP force-available profiles installed"
+  echo "hdmi_audio: reboot for snoop=0; WirePlumber Lua is under ~/.config/wireplumber/main.lua.d/"
 fi
 
 if has_deploy hibernate && [[ -d /etc/default/grub.d ]] && command -v update-grub >/dev/null 2>&1; then

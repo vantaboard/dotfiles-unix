@@ -519,6 +519,12 @@ setup_catalog:
       label: displays-resume sleep hook
       default: true
       system_deploy: displays_resume
+    hdmi_audio:
+      category: system
+      label: Long HDMI audio workarounds
+      default: true
+      description: snd_hda_intel power_save/snoop off, WirePlumber no suspend-on-idle, ACP profile-set that ignores failed HDMI ELD/jack detect
+      system_deploy: hdmi_audio
     wake_sources:
       category: system
       label: Suspend wake-source trimming
