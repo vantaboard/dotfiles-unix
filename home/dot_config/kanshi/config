@@ -6,17 +6,35 @@
 # Match monitors by EDID description (make/model/serial), not DRM connector
 # names: NVIDIA MST renumbers DP-* across boots/replugs (historically
 # DP-4/5/6, currently DP-3/5/7).
-# Order matters — more specific docked profile must come before undocked.
+# Order matters — more specific profiles first (full 3-monitor, then
+# 2-monitor partials when MST drops a stream, then undocked).
 # Physical layout (left to right): BenQ GW2485TC, ASUS VG248 primary
 # (N7LMQS030618), ASUS VG248 (N7LMQS030621). Dock silkscreen port labels do
 # not match Linux output names.
-# All three docked externals stay at 60Hz: the dock MST link cannot drive
+# All docked externals stay at 60Hz: the dock MST link cannot drive
 # both ASUS monitors at 144Hz together.
 profile docked-home {
     output eDP-1 disable
     output "BNQ BenQ GW2485TC ETN5N03598SL0" enable mode 1920x1080@60Hz position 0,0
     output "ASUSTek COMPUTER INC VG248 N7LMQS030618" enable mode 1920x1080@60Hz position 1920,0
     output "ASUSTek COMPUTER INC VG248 N7LMQS030621" enable mode 1920x1080@60Hz position 3840,0
+    exec $HOME/.config/kanshi/postswitch.d/10-sway
+}
+
+# MST sometimes only enumerates two of three DP streams (DP-3 stays
+# disconnected). Without these profiles kanshi matches nothing, leaves eDP on,
+# and the missing ASUS never gets a layout retry from postswitch alone.
+profile docked-home-no-secondary {
+    output eDP-1 disable
+    output "BNQ BenQ GW2485TC ETN5N03598SL0" enable mode 1920x1080@60Hz position 0,0
+    output "ASUSTek COMPUTER INC VG248 N7LMQS030618" enable mode 1920x1080@60Hz position 1920,0
+    exec $HOME/.config/kanshi/postswitch.d/10-sway
+}
+
+profile docked-home-no-primary {
+    output eDP-1 disable
+    output "BNQ BenQ GW2485TC ETN5N03598SL0" enable mode 1920x1080@60Hz position 0,0
+    output "ASUSTek COMPUTER INC VG248 N7LMQS030621" enable mode 1920x1080@60Hz position 1920,0
     exec $HOME/.config/kanshi/postswitch.d/10-sway
 }
 

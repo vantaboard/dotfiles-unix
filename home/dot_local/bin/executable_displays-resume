@@ -115,7 +115,16 @@ wait_for_drm() {
     for attempt in $(seq 1 90); do
         if is_docked; then
             count="$(docked_drm_ports_connected)"
-            [[ "$count" -ge 3 ]] && { log "DRM ready: ${count} DP ports connected"; return 0; }
+            # Accept a partial MST link (2/3) after a short wait so resume does
+            # not sit on Dummy-layout / eDP while one stream is missing forever.
+            if [[ "$count" -ge 3 ]]; then
+                log "DRM ready: ${count} DP ports connected"
+                return 0
+            fi
+            if [[ "$count" -ge 2 && "$attempt" -ge 30 ]]; then
+                log "DRM partial: ${count}/3 DP ports connected after ${attempt}s; continuing"
+                return 0
+            fi
             (( attempt % 15 == 0 )) && log "waiting for DRM (${count}/3 DP connected, ${attempt}s)"
         else
             local edp
@@ -130,7 +139,6 @@ wait_for_drm() {
     done
     return 1
 }
-
 wait_for_gpu_ready() {
     local attempt quiet=0 errors
     for attempt in $(seq 1 60); do
@@ -166,7 +174,12 @@ sway_outputs_healthy() {
     if is_docked; then
         ready="$(sway_dp_active_count)"
         drm_count="$(docked_drm_ports_connected)"
-        [[ "$ready" -ge "$required" && "$drm_count" -ge 3 && "$gbm_errors" -eq 0 ]]
+        # Healthy if sway matches DRM: full 3/3, or a stable partial 2/2 link.
+        if [[ "$drm_count" -ge 3 ]]; then
+            [[ "$ready" -ge 3 && "$gbm_errors" -eq 0 ]]
+        else
+            [[ "$ready" -ge 2 && "$drm_count" -ge 2 && "$gbm_errors" -eq 0 ]]
+        fi
     else
         ready="$(swaymsg_cmd -t get_outputs \
             | jq -r '[.[] | select(.name == "eDP-1") | select(.active)
@@ -183,7 +196,6 @@ sway_outputs_healthy() {
         [[ "$ready" -ge 1 && "$gbm_errors" -eq 0 ]]
     fi
 }
-
 wait_for_kanshi_outputs() {
     local required="${1:-3}" max_wait="${2:-20}" attempt count
     for attempt in $(seq 1 "$max_wait"); do
@@ -261,7 +273,17 @@ wait_for_drm || log "drm wait timed out; proceeding anyway"
 wait_for_gpu_ready || true
 
 required=1
-if is_docked || dock_usb_present; then required=3; fi
+if is_docked || dock_usb_present; then
+    drm_count="$(docked_drm_ports_connected)"
+    if [[ "$drm_count" -ge 3 ]]; then
+        required=3
+    elif [[ "$drm_count" -ge 2 ]]; then
+        required=2
+        log "partial MST link (${drm_count} DP); targeting ${required} healthy outputs"
+    else
+        required=3
+    fi
+fi
 
 # Fast path: DRM/GPU already settled and sway still has a valid layout. The old
 # path always disabled every DP output here, which caused the multi-tens-of-

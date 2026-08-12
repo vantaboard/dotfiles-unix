@@ -19,18 +19,25 @@ resolve_output() {
 
 external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
 
-if [[ "$external_active" -ge 3 ]]; then
-    left="$(resolve_output "$BENQ_SERIAL")"
-    mid="$(resolve_output "$ASUS_PRIMARY_SERIAL")"
-    right="$(resolve_output "$ASUS_SECONDARY_SERIAL")"
-    if [[ -z "$left" || -z "$mid" || -z "$right" ]]; then
-        echo "sway-docked-layout: missing EDID match (left=${left:-?} mid=${mid:-?} right=${right:-?})" >&2
-        exit 1
-    fi
+left="$(resolve_output "$BENQ_SERIAL")"
+mid="$(resolve_output "$ASUS_PRIMARY_SERIAL")"
+right="$(resolve_output "$ASUS_SECONDARY_SERIAL")"
+
+if [[ "$external_active" -ge 3 && -n "$left" && -n "$mid" && -n "$right" ]]; then
     swaymsg output "$left" enable dpms on mode 1920x1080@60Hz position 0 0
     swaymsg output "$mid" enable dpms on mode 1920x1080@60Hz position 1920 0
     swaymsg output "$right" enable dpms on mode 1920x1080@60Hz position 3840 0
     swaymsg output eDP-1 disable
+elif [[ "$external_active" -ge 2 && -n "$left" ]]; then
+    # Partial MST: keep BenQ left, whichever ASUS is present in the middle.
+    swaymsg output "$left" enable dpms on mode 1920x1080@60Hz position 0 0
+    if [[ -n "$mid" ]]; then
+        swaymsg output "$mid" enable dpms on mode 1920x1080@60Hz position 1920 0
+    elif [[ -n "$right" ]]; then
+        swaymsg output "$right" enable dpms on mode 1920x1080@60Hz position 1920 0
+    fi
+    swaymsg output eDP-1 disable
+    echo "sway-docked-layout: partial dock (missing ASUS serial mid=${mid:--} right=${right:--})" >&2
 else
     swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0 0
 fi
