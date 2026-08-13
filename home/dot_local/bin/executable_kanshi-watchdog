@@ -44,7 +44,7 @@ restart_kanshi() {
     sleep 1
     # Direct spawn: `swaymsg exec --no-startup-id kanshi` with separate args
     # fails because swaymsg parses --no-startup-id as its own option.
-    setsid -f kanshi >/dev/null 2>&1 || true
+    setsid -f "$HOME/.local/bin/kanshi-start" >/dev/null 2>&1 || true
 }
 
 # On session restart the previous watchdog may still hold the flock for up to

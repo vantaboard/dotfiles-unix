@@ -1,0 +1,39 @@
+#!/usr/bin/bash
+# GDM ExecStartPre: if the USB-C dock is present, wait for NVIDIA MST to
+# finish enumerating DP sinks before the greeter modesets. The card node
+# appears at the same moment as "Failed to get dynamic displays", which is
+# too early — a 2-stream modeset here prevents a third stream from joining.
+set -uo pipefail
+
+TIMEOUT=20
+
+dock_usb_present() {
+    local d
+    for d in /sys/bus/usb/devices/*; do
+        [[ -f "$d/idVendor" && -f "$d/idProduct" ]] || continue
+        case "$(cat "$d/idVendor" 2>/dev/null):$(cat "$d/idProduct" 2>/dev/null)" in
+            2109:2822|2109:0822|0bda:5411) return 0 ;;
+        esac
+    done
+    return 1
+}
+
+dp_connected_count() {
+    local n=0 p
+    for p in /sys/class/drm/card*-DP-*/status; do
+        [[ -e "$p" ]] || continue
+        [[ "$(cat "$p" 2>/dev/null)" == "connected" ]] && ((n++)) || true
+    done
+    echo "$n"
+}
+
+dock_usb_present || exit 0
+
+attempt=0
+while (( attempt < TIMEOUT )); do
+    count="$(dp_connected_count)"
+    [[ "$count" -ge 3 ]] && exit 0
+    sleep 1
+    ((attempt++)) || true
+done
+exit 0

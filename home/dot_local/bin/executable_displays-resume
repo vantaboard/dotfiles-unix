@@ -217,7 +217,7 @@ wait_for_kanshi_outputs() {
 # was swallowed by 2>/dev/null, so kanshi silently never restarted).
 start_kanshi() {
     setsid -f env SWAYSOCK="${SWAYSOCK:-}" WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
-        kanshi >/dev/null 2>&1 || true
+        "$HOME/.local/bin/kanshi-start" >/dev/null 2>&1 || true
 }
 
 run_postswitch() {

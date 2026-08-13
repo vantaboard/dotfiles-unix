@@ -32,7 +32,7 @@ exec --no-startup-id dunst
 # alias names, which made the whole `enable --now` fail and skip the start.)
 exec --no-startup-id systemctl --user restart sunshine.service
 {{- end }}
-exec --no-startup-id kanshi
+exec --no-startup-id $HOME/.local/bin/kanshi-start
 # Retries kanshi when a dock hotplug race leaves outputs dark (e.g. undock
 # while wlroots is mid-teardown fails the eDP-1 enable and kanshi gives up).
 exec --no-startup-id $HOME/.local/bin/kanshi-watchdog

@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+# Start kanshi only after dock MST has had a chance to enumerate all streams.
+set -uo pipefail
+
+"$HOME/.local/bin/wait-dock-mst" 25 || true
+exec kanshi "$@"

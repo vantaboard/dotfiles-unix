@@ -31,6 +31,8 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 # hash: {{ include "system/ssh/ssh.socket.d/port.conf" | sha256sum }}
 # hash: {{ include "system/systemd-sleep/displays-resume.tmpl" | sha256sum }}
 # hash: {{ include "system/modprobe.d/nvidia-s0ix.conf" | sha256sum }}
+# hash: {{ include "system/modprobe.d/nvidia-drm-nofbdev.conf" | sha256sum }}
+# hash: {{ include "system/bin/wait-dock-mst" | sha256sum }}
 # hash: {{ include "system/modprobe.d/snd-hda-intel-long-hdmi.conf" | sha256sum }}
 # hash: {{ include "system/alsa-card-profile/mixer/profile-sets/hdmi-force-available.conf" | sha256sum }}
 # hash: {{ include "system/alsa-card-profile/mixer/paths/hdmi-output-0-force.conf" | sha256sum }}
@@ -93,18 +95,26 @@ if has_deploy displays_resume && command -v systemctl >/dev/null 2>&1; then
   # The nvidia modules are baked into the initramfs, so a rebuild is needed
   # for the option to take effect at boot.
   if [[ -d /etc/modprobe.d && -d /proc/driver/nvidia ]]; then
+    nvidia_modprobe_changed=0
     if ! cmp -s "$SOURCE/modprobe.d/nvidia-s0ix.conf" /etc/modprobe.d/nvidia-s0ix.conf; then
       deploy_file "$SOURCE/modprobe.d/nvidia-s0ix.conf" /etc/modprobe.d/nvidia-s0ix.conf
-      if command -v update-initramfs >/dev/null 2>&1; then
-        sudo update-initramfs -u
-      fi
+      nvidia_modprobe_changed=1
       echo "NVIDIA S0ix power management enabled; reboot for suspend/resume fix"
+    fi
+    if ! cmp -s "$SOURCE/modprobe.d/nvidia-drm-nofbdev.conf" /etc/modprobe.d/nvidia-drm-nofbdev.conf 2>/dev/null; then
+      deploy_file "$SOURCE/modprobe.d/nvidia-drm-nofbdev.conf" /etc/modprobe.d/nvidia-drm-nofbdev.conf
+      nvidia_modprobe_changed=1
+      echo "NVIDIA DRM fbdev disabled; reboot so MST can enumerate all dock displays"
+    fi
+    if (( nvidia_modprobe_changed )) && command -v update-initramfs >/dev/null 2>&1; then
+      sudo update-initramfs -u
     fi
   fi
 fi
 
 if has_deploy sway_session; then
   deploy_file "$SOURCE/bin/sway-session" /usr/local/bin/sway-session 755
+  deploy_file "$SOURCE/bin/wait-dock-mst" /usr/local/bin/wait-dock-mst 755
   deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop
   deploy_dir_file "$SOURCE/systemd/logind.conf.d/ignore-lid-switch.conf" \
     /etc/systemd/logind.conf.d/ignore-lid-switch.conf
