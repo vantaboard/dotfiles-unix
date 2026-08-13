@@ -1,3 +1,5 @@
+require("compat")
+
 local hooks = function(ev)
   local name, kind = ev.data.spec.name, ev.data.kind
   local path = ev.data.path
@@ -342,6 +344,20 @@ if vim.fn.isdirectory(go_bin) == 1 then
     vim.env.GOBIN = go_bin
   end
   vim.env.PATH = go_bin .. ":" .. vim.env.PATH
+end
+
+-- Mason health and jdtls need java/javac on PATH. mise-managed JDKs are not
+-- always injected when Neovim is launched outside an activated shell.
+if vim.fn.executable("java") == 0 then
+  local mise = vim.fs.joinpath(vim.env.HOME, ".local", "bin", "mise")
+  if vim.fn.executable(mise) == 1 then
+    local result = vim.system({ mise, "where", "java" }, { text = true }):wait()
+    local java_path = result.code == 0 and vim.trim(result.stdout or ""):match("[^\r\n]+") or ""
+    local java_bin = java_path ~= "" and vim.fs.dirname(java_path) or ""
+    if java_bin ~= "" and vim.fn.isdirectory(java_bin) == 1 then
+      vim.env.PATH = java_bin .. ":" .. vim.env.PATH
+    end
+  end
 end
 
 vim.g.python3_host_prog = vim.fn.expand("~/.local/share/nvim/venv/bin/python")

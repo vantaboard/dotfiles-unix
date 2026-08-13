@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: nvim-tools-v9
+# hash: nvim-tools-v10
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Neovim tool installs"
@@ -254,6 +254,26 @@ install_cpptools_adapter() {
   find "$CPPTOOLS_DIR" -type f \( -name 'OpenDebugAD7' -o -name 'OpenDebugAD7.exe' \) -exec chmod +x {} +
 }
 
+ensure_java() {
+  if command -v java >/dev/null 2>&1 && command -v javac >/dev/null 2>&1; then
+    echo "java already on PATH"
+    return 0
+  fi
+  if command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then
+    echo "Activating Java 21 via mise for jdtls/mason..."
+    mise use -g java@temurin-21 || mise use -g java@21 || echo "WARN: mise use java failed"
+    return 0
+  fi
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "Installing openjdk-21-jdk for jdtls/mason..."
+    if command -v sudo >/dev/null 2>&1; then
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-21-jdk || echo "WARN: openjdk-21-jdk install failed"
+    else
+      DEBIAN_FRONTEND=noninteractive apt-get install -y openjdk-21-jdk 2>/dev/null || echo "WARN: openjdk-21-jdk install failed (no sudo)"
+    fi
+  fi
+}
+
 install_go_tools() {
   if ! command -v go >/dev/null 2>&1; then
     echo "WARN: go not found; skipping go tool installs"
@@ -307,6 +327,7 @@ fi
 
 install_python_provider
 install_node_provider
+ensure_java
 install_lua_language_server
 install_pyright
 install_python_lsps
