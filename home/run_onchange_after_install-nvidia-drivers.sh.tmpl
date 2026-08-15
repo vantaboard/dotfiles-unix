@@ -1,0 +1,46 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Re-run when installed kernels change so NVIDIA modules track upgrades.
+# hash: kernels={{ output "bash" "-c" "ls -1 /lib/modules 2>/dev/null | grep -E '^[0-9]' | sort | tr '\\n' ','" }}
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping ubuntu-drivers"
+  exit 0
+fi
+
+has_nvidia_pci() {
+  local vendor
+  for vendor in /sys/bus/pci/devices/*/vendor; do
+    [[ -r "$vendor" ]] || continue
+    if [[ "$(cat "$vendor" 2>/dev/null)" == "0x10de" ]]; then
+      return 0
+    fi
+  done
+  if command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null | grep -qi '\[10de:'; then
+    return 0
+  fi
+  return 1
+}
+
+if ! has_nvidia_pci; then
+  echo "No NVIDIA GPU; skipping ubuntu-drivers"
+  exit 0
+fi
+
+if ! command -v ubuntu-drivers >/dev/null 2>&1; then
+  echo "WARN: ubuntu-drivers not found (install ubuntu-drivers-common); skipping"
+  exit 0
+fi
+
+echo "NVIDIA GPU detected; running ubuntu-drivers install for installed kernels..."
+sudo ubuntu-drivers install
+
+if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+  echo "nvidia-smi OK after ubuntu-drivers install"
+else
+  echo "NOTE: nvidia-smi failed after driver install (often Driver/library version mismatch)."
+  echo "NOTE: Reboot to load the matching kernel module. LLM tier stays sticky until then."
+fi
+{{ end -}}

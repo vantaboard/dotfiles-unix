@@ -8,7 +8,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: llama-binaries-v1-b9873-v235
+# hash: llama-binaries-v1-b9873-v235-nvidia-sticky
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping llama.cpp / llama-swap install"
@@ -48,8 +48,30 @@ llama_swap_ok() {
   [[ -x /usr/local/bin/llama-swap ]] && /usr/local/bin/llama-swap --version 2>/dev/null | grep -q "235"
 }
 
+has_nvidia_pci() {
+  local vendor
+  for vendor in /sys/bus/pci/devices/*/vendor; do
+    [[ -r "$vendor" ]] || continue
+    if [[ "$(cat "$vendor" 2>/dev/null)" == "0x10de" ]]; then
+      return 0
+    fi
+  done
+  if command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null | grep -qi '\[10de:'; then
+    return 0
+  fi
+  return 1
+}
+
 detect_backend() {
   if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+    echo "cuda"
+    return 0
+  fi
+  # After a kernel/driver update, nvidia-smi often fails until reboot (NVML
+  # version mismatch). Prefer CUDA on NVIDIA hosts so we do not thrash to
+  # vulkan/cpu and reinstall binaries.
+  if has_nvidia_pci; then
+    echo "WARN: NVIDIA GPU present but nvidia-smi failed; installing CUDA backend (reboot to use GPU)" >&2
     echo "cuda"
     return 0
   fi

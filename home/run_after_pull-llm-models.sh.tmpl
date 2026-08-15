@@ -20,7 +20,7 @@
 {{ end -}}
 set -euo pipefail
 
-# hash: llm-models-v2-sha256
+# hash: llm-models-v3-sticky-tier-cache
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping LLM model download"
@@ -30,11 +30,27 @@ fi
 HOME_DIR="{{ .chezmoi.homeDir }}"
 CACHE_DIR="$HOME_DIR/.cache/chezmoi"
 STAMP_FILE="$CACHE_DIR/llm-models.stamp"
+GPU_STATE_FILE="$CACHE_DIR/llm-gpu.state"
 MANIFEST_FILE="$HOME_DIR/.config/llama-cpp/models.json"
 MODELS_DIR="$HOME_DIR/.local/share/llama.cpp/models"
+TIER_CACHE_DIR="$MODELS_DIR/by-tier"
 REFRESH_DAYS="${CHEZMOI_LLM_MODELS_REFRESH_DAYS:-7}"
 LLM_HOST="${LLM_HOST:-http://127.0.0.1:9292}"
 IS_TERMUX={{ if eq .chezmoi.os "android" }}1{{ else }}0{{ end }}
+
+has_nvidia_pci() {
+  local vendor
+  for vendor in /sys/bus/pci/devices/*/vendor; do
+    [[ -r "$vendor" ]] || continue
+    if [[ "$(cat "$vendor" 2>/dev/null)" == "0x10de" ]]; then
+      return 0
+    fi
+  done
+  if command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null | grep -qi '\[10de:'; then
+    return 0
+  fi
+  return 1
+}
 
 gpu_vram_mb() {
   local mb
@@ -67,6 +83,25 @@ select_tier() {
   else
     echo "low"
   fi
+}
+
+read_gpu_state() {
+  # shellcheck disable=SC2034
+  STICKY_TIER=""
+  STICKY_VRAM_MB=""
+  [[ -f "$GPU_STATE_FILE" ]] || return 1
+  # shellcheck disable=SC1090
+  source "$GPU_STATE_FILE"
+  [[ -n "${STICKY_TIER:-}" && -n "${STICKY_VRAM_MB:-}" ]] || return 1
+  [[ "$STICKY_TIER" =~ ^(high|medium|low)$ ]] || return 1
+  [[ "$STICKY_VRAM_MB" =~ ^[0-9]+$ ]] || return 1
+  return 0
+}
+
+write_gpu_state() {
+  local tier=$1 vram_mb=$2
+  mkdir -p "$CACHE_DIR"
+  printf 'STICKY_TIER=%q\nSTICKY_VRAM_MB=%q\n' "$tier" "$vram_mb" > "$GPU_STATE_FILE"
 }
 
 tier_coder_url() {
@@ -109,10 +144,10 @@ tier_chat_sha256() {
 }
 
 write_manifest() {
-  local tier=$1 vram_mb=$2 ram_mb=$3
+  local tier=$1 vram_mb=$2 ram_mb=$3 pending_reboot=$4
   mkdir -p "$(dirname "$MANIFEST_FILE")"
-  printf '{\n  "tier": "%s",\n  "vram_mb": %s,\n  "ram_mb": %s,\n  "coder": "%s/.local/share/llama.cpp/models/coder.gguf",\n  "chat": "%s/.local/share/llama.cpp/models/chat.gguf"\n}\n' \
-    "$tier" "$vram_mb" "$ram_mb" "$HOME_DIR" "$HOME_DIR" > "$MANIFEST_FILE"
+  printf '{\n  "tier": "%s",\n  "vram_mb": %s,\n  "ram_mb": %s,\n  "pending_reboot": %s,\n  "coder": "%s/.local/share/llama.cpp/models/coder.gguf",\n  "chat": "%s/.local/share/llama.cpp/models/chat.gguf"\n}\n' \
+    "$tier" "$vram_mb" "$ram_mb" "$pending_reboot" "$HOME_DIR" "$HOME_DIR" > "$MANIFEST_FILE"
 }
 
 download_model() {
@@ -174,6 +209,46 @@ download_model() {
   done
 }
 
+# Migrate legacy flat models into by-tier/<tier>/ once, then activate via symlink.
+migrate_legacy_models() {
+  local tier=$1
+  local tier_dir="$TIER_CACHE_DIR/$tier"
+  local role dest legacy
+  mkdir -p "$tier_dir"
+  for role in coder chat; do
+    dest="$tier_dir/${role}.gguf"
+    legacy="$MODELS_DIR/${role}.gguf"
+    if [[ -f "$dest" ]]; then
+      continue
+    fi
+    if [[ -f "$legacy" && ! -L "$legacy" ]]; then
+      echo "Migrating legacy ${role}.gguf into by-tier/${tier}/"
+      mv "$legacy" "$dest"
+      if [[ -f "${legacy}.url" ]]; then
+        mv "${legacy}.url" "${dest}.url"
+      fi
+    fi
+  done
+}
+
+activate_tier_links() {
+  local tier=$1
+  local tier_dir="$TIER_CACHE_DIR/$tier"
+  local coder_src="$tier_dir/coder.gguf"
+  local chat_src="$tier_dir/chat.gguf"
+
+  mkdir -p "$MODELS_DIR"
+  if [[ -f "$coder_src" ]]; then
+    ln -sfn "by-tier/${tier}/coder.gguf" "$MODELS_DIR/coder.gguf"
+  fi
+  if [[ -f "$chat_src" ]]; then
+    ln -sfn "by-tier/${tier}/chat.gguf" "$MODELS_DIR/chat.gguf"
+  elif [[ -f "$coder_src" ]]; then
+    # low tier: chat is the same weights as coder
+    ln -sfn "by-tier/${tier}/coder.gguf" "$MODELS_DIR/chat.gguf"
+  fi
+}
+
 should_refresh() {
   local fingerprint=$1
   if [[ "${CHEZMOI_LLM_MODELS_REFRESH:-}" == "1" ]]; then
@@ -217,34 +292,67 @@ ensure_llm_ready() {
   return 1
 }
 
-VRAM_MB="$(gpu_vram_mb 2>/dev/null || echo 0)"
+PENDING_REBOOT=false
+VRAM_MB=""
+TIER=""
 RAM_MB="$(system_ram_mb)"
-TIER="$(select_tier "$VRAM_MB")"
+
+if VRAM_MB="$(gpu_vram_mb 2>/dev/null)"; then
+  TIER="$(select_tier "$VRAM_MB")"
+  write_gpu_state "$TIER" "$VRAM_MB"
+elif (( IS_TERMUX == 0 )) && has_nvidia_pci; then
+  if read_gpu_state; then
+    TIER="$STICKY_TIER"
+    VRAM_MB="$STICKY_VRAM_MB"
+    PENDING_REBOOT=true
+    echo "WARN: NVIDIA GPU present but VRAM probe failed (driver/kernel mismatch is common after updates)."
+    echo "WARN: Keeping sticky LLM tier '${TIER}' (${VRAM_MB}MB VRAM). Reboot to restore GPU acceleration."
+  else
+    echo "WARN: NVIDIA GPU present but VRAM probe failed, and no sticky tier is stored yet."
+    echo "WARN: Skipping LLM model tier changes until reboot restores nvidia-smi (avoids wiping high-tier GGUFs)."
+    echo "WARN: Reboot, then re-run chezmoi apply."
+    exit 0
+  fi
+else
+  VRAM_MB=0
+  TIER="$(select_tier "$VRAM_MB")"
+fi
+
 CODER_URL="$(tier_coder_url "$TIER")"
 CHAT_URL="$(tier_chat_url "$TIER")"
 CODER_SHA="$(tier_coder_sha256 "$TIER")"
 CHAT_SHA="$(tier_chat_sha256 "$TIER")"
-FINGERPRINT="v2:${TIER}:${VRAM_MB}:${RAM_MB}:${CODER_URL}:${CHAT_URL}:${CODER_SHA}:${CHAT_SHA}"
+FINGERPRINT="v3:${TIER}:${VRAM_MB}:${RAM_MB}:${CODER_URL}:${CHAT_URL}:${CODER_SHA}:${CHAT_SHA}"
+TIER_DIR="$TIER_CACHE_DIR/$TIER"
 
-echo "LLM tier: ${TIER} (${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM)"
-write_manifest "$TIER" "$VRAM_MB" "$RAM_MB"
+if [[ "$PENDING_REBOOT" == "true" ]]; then
+  echo "LLM tier: ${TIER} (${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM) [pending reboot]"
+else
+  echo "LLM tier: ${TIER} (${VRAM_MB}MB VRAM, ${RAM_MB}MB RAM)"
+fi
+write_manifest "$TIER" "$VRAM_MB" "$RAM_MB" "$PENDING_REBOOT"
+
+migrate_legacy_models "$TIER"
 
 if ! should_refresh "$FINGERPRINT"; then
+  activate_tier_links "$TIER"
   exit 0
 fi
 
 FAILED=0
-download_model "$CODER_URL" "$MODELS_DIR/coder.gguf" "$CODER_SHA" || FAILED=1
+download_model "$CODER_URL" "$TIER_DIR/coder.gguf" "$CODER_SHA" || FAILED=1
 if [[ "$CHAT_URL" != "$CODER_URL" ]]; then
-  download_model "$CHAT_URL" "$MODELS_DIR/chat.gguf" "$CHAT_SHA" || FAILED=1
-else
-  ln -sf coder.gguf "$MODELS_DIR/chat.gguf"
+  download_model "$CHAT_URL" "$TIER_DIR/chat.gguf" "$CHAT_SHA" || FAILED=1
 fi
+
+activate_tier_links "$TIER"
 
 if (( FAILED == 0 )); then
   write_stamp "$FINGERPRINT"
-  echo "LLM model download complete"
-  if ensure_llm_ready; then
+  echo "LLM model download complete (cached under by-tier/${TIER}/)"
+  if [[ "$PENDING_REBOOT" == "true" ]]; then
+    echo "NOTE: models retained for sticky tier; reboot before expecting GPU-backed inference."
+  elif ensure_llm_ready; then
     echo "LLM API reachable at ${LLM_HOST}"
   else
     echo "NOTE: models downloaded; start llama-swap / llama-server then retry"

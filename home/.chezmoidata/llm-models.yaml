@@ -1,6 +1,11 @@
 # Pinned Hugging Face GGUF models for local inference (llama.cpp).
 # Tiers are selected by VRAM in run_after_pull-llm-models.sh.tmpl.
 # Note: high/medium coder stays on 3B so Minuet FIM can stay resident next to chat.
+#
+# Models are cached under ~/.local/share/llama.cpp/models/by-tier/<tier>/ and
+# activated via symlinks. After kernel/NVIDIA updates, nvidia-smi may fail until
+# reboot; the pull script keeps a sticky tier (llm-gpu.state) so high-tier GGUFs
+# are not replaced by low-tier downloads while the driver is mismatched.
 llm_models:
   tiers:
     high:

@@ -80,6 +80,8 @@ chezmoi update         # Pull upstream and re-apply
 | After dotfiles | `run_onchange_after_install-anki` | Latest official [Anki Linux .tar.zst](https://docs.ankiweb.net/platform/linux/installing.html) from [GitHub releases](https://github.com/ankitects/anki/releases) → `sudo ./install.sh` into `/usr/local` (when `anki` enabled) |
 | After dotfiles | `run_onchange_after_install-sunshine` | Latest official [Sunshine .deb](https://github.com/LizardByte/Sunshine/releases) for Ubuntu/Debian; enables `sunshine.service` user unit for Moonlight streaming (when `sunshine` enabled) |
 | After dotfiles | `run_onchange_after_deploy-system` | systemd, GRUB, SSH, udev (if enabled) |
+| After dotfiles | `run_onchange_after_install-nvidia-drivers` | `ubuntu-drivers install` when `/lib/modules` changes on NVIDIA hosts (DKMS/modules for new kernels); reminds to reboot if `nvidia-smi` fails |
+| After dotfiles | `run_after_pull-llm-models` | VRAM → high/medium/low GGUF downloads into `by-tier/<tier>/` with sticky NVIDIA tier across driver mismatches (when `llama` enabled) |
 | After dotfiles | `run_onchange_after_enable-services` | `systemctl enable` for profile units |
 
 Set `CHEZMOI_SKIP_SYSTEM_DEPLOY=1` to skip sudo system deploy (e.g. in containers).
