@@ -286,9 +286,18 @@ if has_deploy hibernate && [[ -d /etc/default/grub.d ]] && command -v update-gru
     fi
     rm -f "$TMP_RESUME"
 
+    # initramfs-tools only recognizes swap *block devices*. Our resume target is a
+    # swap *file* on the root FS, so RESUME=UUID=<root> always warns "no matching
+    # swap device". Kernel cmdline (resume= + resume_offset= above) is what
+    # actually enables hibernation resume; set RESUME=none to silence the warning
+    # and stop mkinitramfs from auto-picking some other swap partition.
     if [[ -d /etc/initramfs-tools/conf.d ]]; then
       TMP_IRFS="$(mktemp)"
-      printf 'RESUME=UUID=%s\n' "$root_uuid" > "$TMP_IRFS"
+      printf '%s\n' \
+        '# Deployed by chezmoi (deploy-system). Swapfile hibernation uses GRUB' \
+        '# resume=/resume_offset=; RESUME=none avoids a false "no matching swap"' \
+        '# warning (root UUID is ext4, not a swap device).' \
+        'RESUME=none' > "$TMP_IRFS"
       if ! sudo cmp -s "$TMP_IRFS" /etc/initramfs-tools/conf.d/resume; then
         deploy_file "$TMP_IRFS" /etc/initramfs-tools/conf.d/resume
         sudo update-initramfs -u 2>/dev/null || true
