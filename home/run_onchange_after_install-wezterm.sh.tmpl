@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: wezterm-v1
+# hash: wezterm-v2
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping wezterm install"
@@ -85,6 +85,7 @@ fi
 
 echo "Installing wezterm (${asset_name})..."
 curl -fsSL "$asset_url" -o "$tmpdir/wezterm.AppImage"
+mkdir -p "$(dirname "$WEZTERM_APPIMAGE")"
 install -m 755 "$tmpdir/wezterm.AppImage" "$WEZTERM_APPIMAGE"
 link_wezterm_bin
 
