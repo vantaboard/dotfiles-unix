@@ -151,6 +151,7 @@ APT_MANUAL_BUILTIN_EXCLUDE=(
   ubuntu-minimal ubuntu-standard ubuntu-desktop ubuntu-desktop-minimal
   systemd-sysv systemd-timesyncd
   kitty
+  wezterm
 )
 APT_MANUAL_BUILTIN_EXCLUDE_PATTERNS=(
   '^linux-image-'

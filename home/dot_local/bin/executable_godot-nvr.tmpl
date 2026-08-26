@@ -10,7 +10,7 @@
 # Usage: godot-nvr [terminal_app_id] +{line} {file} [--tab|--vsplit]
 set -euo pipefail
 
-DEFAULT_TERMINAL="kitty"
+DEFAULT_TERMINAL="org.wezfurlong.wezterm"
 ARG0="${1:-}"
 
 if [[ -n "$ARG0" && "$ARG0" != +* && "$ARG0" != --* && ! -f "$ARG0" ]]; then

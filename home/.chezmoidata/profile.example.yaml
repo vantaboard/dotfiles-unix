@@ -39,7 +39,7 @@ profile_example:
     jq: true
     keychain: true
     keyd: true
-    kitty: true
+    wezterm: true
     mise: true
     neovim: true
     ngrok: true

@@ -1,8 +1,9 @@
 packages:
   ubuntu:
-    # Never install via apt — use run_onchange_after_install-kitty.sh instead
+    # Never install via apt — use run_onchange_after_install-wezterm.sh instead
     apt_exclude:
       - kitty
+      - wezterm
       # xrandr hotplug tool; conflicts with kanshi on sway Wayland (never install).
       - autorandr
     apt:

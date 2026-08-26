@@ -64,12 +64,6 @@ exec swayidle -w \
 exec --no-startup-id systemctl --user enable --now dropbox.service
 {{- end }}
 
-# Start a hidden kitty instance for fast startup. Kill any daemon leaked from
-# a previous session first: it survives `swaymsg exit` (stuck in a DRM syncobj
-# wait against the dead session, ignoring SIGTERM) and hijacks the
-# single-instance socket, making Mod+Return silently do nothing.
-exec --no-startup-id pkill -9 -f "^$HOME/.local/bin/kitty --single-instance" 2>/dev/null; sleep 1; exec $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket --start-as hidden
-
 set $mod Mod4
 
 default_border pixel 4
@@ -98,7 +92,7 @@ exec --no-startup-id $HOME/.local/bin/wayneko
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
-bindsym $mod+Return exec $HOME/.local/bin/kitty --single-instance --class "scratchpad-kitty" --listen-on unix:/tmp/kitty-socket
+bindsym $mod+Return exec $HOME/.local/bin/wezterm start
 bindsym $mod+Shift+q kill
 bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
 bindsym $mod+d exec --no-startup-id $HOME/.local/bin/bemenu-drun
@@ -244,14 +238,14 @@ shadow_blur_radius 18
 shadow_color #0839058C
 shadow_offset -6 -6
 
-# Blur wallpaper behind semi-transparent windows (kitty sets its own opacity)
+# Blur wallpaper behind semi-transparent windows (wezterm sets its own opacity)
 blur enable
 blur_xray disable
 blur_passes 3
 blur_radius 6
 {{- end }}
 
-# Default opaque — only clients that set their own opacity (e.g. kitty) go translucent
+# Default opaque — only clients that set their own opacity (e.g. wezterm) go translucent
 for_window [class="waybar"] opacity 1.0
 for_window [app_id="waybar"] opacity 1.0
 for_window [class="Polybar"] opacity 1.0

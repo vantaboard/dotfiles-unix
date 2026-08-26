@@ -138,7 +138,7 @@ echo
 echo "Manual checks after logging into Sway from GDM:"
 echo "  - Docked 3-monitor layout and undocked eDP switch"
 echo "  - Mod+1..8 workspace routing after dock/undock"
-echo "  - Mod+d launcher, Mod+Return kitty, swaylock, blank-monitors, suspend/resume"
+echo "  - Mod+d launcher, Mod+Return wezterm, swaylock, blank-monitors, suspend/resume"
 echo "  - screenshot-region (grim/slurp/still/wl-copy), rofi-emoji (bemoji), copyq, sunshine, NVIDIA offload apps"
 echo "  - waybar sway/language indicator and py3status modules"
 

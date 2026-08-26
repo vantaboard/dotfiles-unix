@@ -1,0 +1,99 @@
+{{ if and (eq .chezmoi.os "linux") -}}
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $f := $p.features -}}
+{{- if index $f "wezterm" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: wezterm-v1
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping wezterm install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+LOCAL_BIN="$HOME_DIR/.local/bin"
+WEZTERM_APPIMAGE="$HOME_DIR/.local/share/wezterm/wezterm.AppImage"
+WEZTERM_BIN="$LOCAL_BIN/wezterm"
+RELEASE_API="https://api.github.com/repos/wezterm/wezterm/releases/latest"
+
+wezterm_usable() {
+  [[ -x "$WEZTERM_BIN" ]] && "$WEZTERM_BIN" --version >/dev/null 2>&1
+}
+
+link_wezterm_bin() {
+  mkdir -p "$LOCAL_BIN" "$(dirname "$WEZTERM_APPIMAGE")"
+  ln -sf "$WEZTERM_APPIMAGE" "$WEZTERM_BIN"
+}
+
+if wezterm_usable; then
+  echo "wezterm already installed: $("$WEZTERM_BIN" --version | head -1)"
+  link_wezterm_bin
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping wezterm install"
+  exit 0
+fi
+
+case "$(uname -m)" in
+  x86_64|amd64)
+    asset_glob='*Ubuntu20.04.AppImage'
+    ;;
+  aarch64|arm64)
+    asset_glob='*Ubuntu20.04.AppImage'
+    ;;
+  *)
+    echo "WARN: unsupported arch for wezterm AppImage: $(uname -m)"
+    exit 0
+    ;;
+esac
+
+tmpdir="$(mktemp -d)"
+cleanup() { rm -rf "$tmpdir"; }
+trap cleanup EXIT
+
+echo "Resolving latest wezterm release..."
+release_json="$(curl -fsSL "$RELEASE_API")"
+asset_name="$(printf '%s' "$release_json" | jq -r --arg glob "$asset_glob" '
+  .assets[]
+  | select(.name | test("Ubuntu20.04\\.AppImage$"))
+  | select(.name | test("\\.sha256$|\\.zsync") | not)
+  | .name
+' | head -1)"
+asset_url="$(printf '%s' "$release_json" | jq -r --arg name "$asset_name" '
+  .assets[] | select(.name == $name) | .browser_download_url
+' | head -1)"
+
+if [[ -z "$asset_name" || -z "$asset_url" ]]; then
+  echo "WARN: could not resolve wezterm AppImage asset"
+  exit 0
+fi
+
+echo "Installing wezterm (${asset_name})..."
+curl -fsSL "$asset_url" -o "$tmpdir/wezterm.AppImage"
+install -m 755 "$tmpdir/wezterm.AppImage" "$WEZTERM_APPIMAGE"
+link_wezterm_bin
+
+if wezterm_usable; then
+  echo "wezterm installed: $("$WEZTERM_BIN" --version | head -1)"
+else
+  echo "WARN: wezterm install failed"
+  rm -f "$WEZTERM_APPIMAGE" "$WEZTERM_BIN"
+  exit 0
+fi
+{{- end -}}
+{{ end -}}

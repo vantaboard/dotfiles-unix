@@ -16,7 +16,7 @@ setup_catalog:
       default: true
     - id: desktop
       label: Desktop / Sway
-      description: Sway, kitty, kanshi, waybar, display tooling
+      description: Sway, wezterm, kanshi, waybar, display tooling
       default: true
     - id: dev
       label: Development
@@ -355,13 +355,13 @@ setup_catalog:
       label: Wayland session helpers
       default: true
       config_paths: [dot_config/environment.d/wayland.conf]
-    kitty:
+    wezterm:
       category: desktop
-      label: Kitty terminal
+      label: WezTerm terminal
       default: true
       install_tools: true
-      description: Installed via sw.kovidgoyal.net installer into ~/.local/kitty.app; kitty/kitten linked in ~/.local/bin
-      config_paths: [dot_config/kitty]
+      description: Installed via GitHub AppImage into ~/.local/share/wezterm; wezterm linked in ~/.local/bin
+      config_paths: [dot_config/wezterm]
     dunst:
       category: desktop
       label: dunst notifications

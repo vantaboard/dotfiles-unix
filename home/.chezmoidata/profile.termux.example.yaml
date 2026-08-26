@@ -41,7 +41,7 @@ profile_termux_example:
     swappy: false
     kanshi: false
     wayland_session: false
-    kitty: false
+    wezterm: false
     dunst: false
     rofi: false
     desktop_utils: false

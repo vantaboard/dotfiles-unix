@@ -38,7 +38,7 @@ profile_ci:
     wayneko: false
     swayfx: false
     swappy: false
-    kitty: false
+    wezterm: false
     dunst: false
     kanshi: false
     wayland_session: false

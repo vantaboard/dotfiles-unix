@@ -124,10 +124,6 @@ function cpmeta() {
     rm meta.txt
 }
 
-kitty-reload() {
-    kill -SIGUSR1 $(pidof kitty)
-}
-
 function ldiff() {
     # $ ldiff a.csv b.csv
     # > 235

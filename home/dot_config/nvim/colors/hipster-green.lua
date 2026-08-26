@@ -1,4 +1,4 @@
--- Hipster Green — matches kitty current-theme.conf
+-- Hipster Green — matches wezterm Hipster Green color scheme
 
 vim.cmd.highlight 'clear'
 if vim.fn.exists 'syntax_on' then
