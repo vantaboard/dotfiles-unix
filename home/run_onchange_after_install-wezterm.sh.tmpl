@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: wezterm-v2
+# hash: wezterm-v3
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping wezterm install"
@@ -38,9 +38,28 @@ link_wezterm_bin() {
   ln -sf "$WEZTERM_APPIMAGE" "$WEZTERM_BIN"
 }
 
+install_wezterm_terminfo() {
+  local terminfo_dir="$HOME_DIR/.terminfo"
+  local terminfo_file
+  if ! command -v tic >/dev/null 2>&1; then
+    echo "WARN: tic not found; skipping wezterm terminfo install"
+    return 0
+  fi
+  terminfo_file="$(mktemp)"
+  if curl -fsSL "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/wezterm.terminfo" -o "$terminfo_file"; then
+    mkdir -p "$terminfo_dir"
+    tic -x -o "$terminfo_dir" "$terminfo_file"
+    echo "wezterm terminfo installed in $terminfo_dir"
+  else
+    echo "WARN: could not download wezterm.terminfo"
+  fi
+  rm -f "$terminfo_file"
+}
+
 if wezterm_usable; then
   echo "wezterm already installed: $("$WEZTERM_BIN" --version | head -1)"
   link_wezterm_bin
+  install_wezterm_terminfo
   exit 0
 fi
 
@@ -88,6 +107,7 @@ curl -fsSL "$asset_url" -o "$tmpdir/wezterm.AppImage"
 mkdir -p "$(dirname "$WEZTERM_APPIMAGE")"
 install -m 755 "$tmpdir/wezterm.AppImage" "$WEZTERM_APPIMAGE"
 link_wezterm_bin
+install_wezterm_terminfo
 
 if wezterm_usable; then
   echo "wezterm installed: $("$WEZTERM_BIN" --version | head -1)"

@@ -79,4 +79,10 @@ config.max_fps = 120
 config.animation_fps = 120
 config.front_end = "WebGpu"
 
+local home = wezterm.home_dir
+config.set_environment_variables = {
+  TERMINFO_DIRS = home .. "/.terminfo",
+}
+config.term = "wezterm"
+
 return config
