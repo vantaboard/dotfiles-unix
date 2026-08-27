@@ -74,6 +74,7 @@ config.use_ime = false
 config.enable_wayland = true
 config.check_for_updates = false
 config.automatically_reload_config = true
+config.quit_when_all_windows_are_closed = false
 
 config.max_fps = 120
 config.animation_fps = 120

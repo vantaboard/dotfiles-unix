@@ -16,7 +16,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: wezterm-v3
+# hash: wezterm-v4
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping wezterm install"
@@ -25,17 +25,18 @@ fi
 
 HOME_DIR="{{ .chezmoi.homeDir }}"
 LOCAL_BIN="$HOME_DIR/.local/bin"
-WEZTERM_APPIMAGE="$HOME_DIR/.local/share/wezterm/wezterm.AppImage"
-WEZTERM_BIN="$LOCAL_BIN/wezterm"
-RELEASE_API="https://api.github.com/repos/wezterm/wezterm/releases/latest"
+LEGACY_APPIMAGE="$HOME_DIR/.local/share/wezterm/wezterm.AppImage"
+LEGACY_BIN="$LOCAL_BIN/wezterm"
+WEZTERM_APT_KEYRING="/usr/share/keyrings/wezterm-fury.gpg"
+WEZTERM_APT_LIST="/etc/apt/sources.list.d/wezterm.list"
 
 wezterm_usable() {
-  [[ -x "$WEZTERM_BIN" ]] && "$WEZTERM_BIN" --version >/dev/null 2>&1
+  [[ -x /usr/bin/wezterm ]] && /usr/bin/wezterm --version >/dev/null 2>&1
 }
 
-link_wezterm_bin() {
-  mkdir -p "$LOCAL_BIN" "$(dirname "$WEZTERM_APPIMAGE")"
-  ln -sf "$WEZTERM_APPIMAGE" "$WEZTERM_BIN"
+remove_legacy_appimage() {
+  rm -f "$LEGACY_BIN" "$LEGACY_APPIMAGE"
+  rmdir "$HOME_DIR/.local/share/wezterm" 2>/dev/null || true
 }
 
 install_wezterm_terminfo() {
@@ -56,64 +57,44 @@ install_wezterm_terminfo() {
   rm -f "$terminfo_file"
 }
 
+setup_wezterm_apt_repo() {
+  if [[ -f "$WEZTERM_APT_KEYRING" && -f "$WEZTERM_APT_LIST" ]]; then
+    return 0
+  fi
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "WARN: curl not found; skipping wezterm apt repo setup"
+    return 1
+  fi
+  echo "Setting up wezterm apt repository..."
+  curl -fsSL https://apt.fury.io/wez/gpg.key \
+    | sudo gpg --yes --dearmor -o "$WEZTERM_APT_KEYRING"
+  echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' \
+    | sudo tee "$WEZTERM_APT_LIST" >/dev/null
+  sudo chmod 644 "$WEZTERM_APT_KEYRING"
+}
+
 if wezterm_usable; then
-  echo "wezterm already installed: $("$WEZTERM_BIN" --version | head -1)"
-  link_wezterm_bin
+  echo "wezterm already installed: $(/usr/bin/wezterm --version | head -1)"
+  remove_legacy_appimage
   install_wezterm_terminfo
   exit 0
 fi
 
-if ! command -v curl >/dev/null 2>&1; then
-  echo "WARN: curl not found; skipping wezterm install"
+remove_legacy_appimage
+
+if ! setup_wezterm_apt_repo; then
   exit 0
 fi
 
-case "$(uname -m)" in
-  x86_64|amd64)
-    asset_glob='*Ubuntu20.04.AppImage'
-    ;;
-  aarch64|arm64)
-    asset_glob='*Ubuntu20.04.AppImage'
-    ;;
-  *)
-    echo "WARN: unsupported arch for wezterm AppImage: $(uname -m)"
-    exit 0
-    ;;
-esac
-
-tmpdir="$(mktemp -d)"
-cleanup() { rm -rf "$tmpdir"; }
-trap cleanup EXIT
-
-echo "Resolving latest wezterm release..."
-release_json="$(curl -fsSL "$RELEASE_API")"
-asset_name="$(printf '%s' "$release_json" | jq -r --arg glob "$asset_glob" '
-  .assets[]
-  | select(.name | test("Ubuntu20.04\\.AppImage$"))
-  | select(.name | test("\\.sha256$|\\.zsync") | not)
-  | .name
-' | head -1)"
-asset_url="$(printf '%s' "$release_json" | jq -r --arg name "$asset_name" '
-  .assets[] | select(.name == $name) | .browser_download_url
-' | head -1)"
-
-if [[ -z "$asset_name" || -z "$asset_url" ]]; then
-  echo "WARN: could not resolve wezterm AppImage asset"
-  exit 0
-fi
-
-echo "Installing wezterm (${asset_name})..."
-curl -fsSL "$asset_url" -o "$tmpdir/wezterm.AppImage"
-mkdir -p "$(dirname "$WEZTERM_APPIMAGE")"
-install -m 755 "$tmpdir/wezterm.AppImage" "$WEZTERM_APPIMAGE"
-link_wezterm_bin
-install_wezterm_terminfo
+export DEBIAN_FRONTEND=noninteractive
+sudo apt update -qq
+sudo apt install -y -qq wezterm
 
 if wezterm_usable; then
-  echo "wezterm installed: $("$WEZTERM_BIN" --version | head -1)"
+  install_wezterm_terminfo
+  echo "wezterm installed: $(/usr/bin/wezterm --version | head -1)"
 else
   echo "WARN: wezterm install failed"
-  rm -f "$WEZTERM_APPIMAGE" "$WEZTERM_BIN"
   exit 0
 fi
 {{- end -}}

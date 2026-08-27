@@ -63,6 +63,10 @@ exec swayidle -w \
 {{- if index $f "dropbox" }}
 exec --no-startup-id systemctl --user enable --now dropbox.service
 {{- end }}
+{{- if index $f "wezterm" }}
+# Pre-warm wezterm GUI (off-screen) so Mod+Return reuses a live process.
+exec --no-startup-id $HOME/.local/bin/wezterm-prewarm
+{{- end }}
 
 set $mod Mod4
 
@@ -92,7 +96,7 @@ exec --no-startup-id $HOME/.local/bin/wayneko
 bindsym $mod+u border none
 bindsym $mod+y border pixel 3
 bindsym $mod+n border normal
-bindsym $mod+Return exec $HOME/.local/bin/wezterm start
+bindsym $mod+Return exec wezterm start
 bindsym $mod+Shift+q kill
 bindsym $mod+shift+w exec /usr/bin/python $HOME/.local/bin/cameractrls2 -d "/dev/video2" -s exposure_time_absolute,50,800
 bindsym $mod+d exec --no-startup-id $HOME/.local/bin/bemenu-drun

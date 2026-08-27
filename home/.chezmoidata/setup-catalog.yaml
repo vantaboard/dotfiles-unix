@@ -360,7 +360,7 @@ setup_catalog:
       label: WezTerm terminal
       default: true
       install_tools: true
-      description: Installed via GitHub AppImage into ~/.local/share/wezterm; wezterm linked in ~/.local/bin
+      description: Installed via apt.fury.io wezterm package; terminfo in ~/.terminfo
       config_paths: [dot_config/wezterm]
     dunst:
       category: desktop

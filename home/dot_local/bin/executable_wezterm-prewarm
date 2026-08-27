@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+set -euo pipefail
+
+# Kill GUI leaked from a previous Sway session (still bound to a dead Wayland display).
+pkill -x wezterm-gui 2>/dev/null || true
+sleep 0.5
+
+# Start off-screen so login stays clean; Mod+Return reuses the warm GUI process.
+exec wezterm start --position -32000,-32000

@@ -1,6 +1,6 @@
 packages:
   ubuntu:
-    # Never install via apt — use run_onchange_after_install-wezterm.sh instead
+    # Never install via apt — use run_onchange_after_install-wezterm.sh (apt.fury.io) instead
     apt_exclude:
       - kitty
       - wezterm

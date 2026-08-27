@@ -17,7 +17,7 @@ bemenu_cmd="bemenu -i -p 'run' \
   --sb '#0f0a05' --sf '#23ff18' \
   --ab '#0f0a05' --af '#84c137'"
 
-j4-dmenu-desktop --dmenu="$bemenu_cmd" --term="$HOME/.local/bin/wezterm" --no-generic &
+j4-dmenu-desktop --dmenu="$bemenu_cmd" --term="wezterm" --no-generic &
 launcher_pid=$!
 
 (
