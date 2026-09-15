@@ -16,14 +16,17 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: anki-v1
 # Official Linux package: https://docs.ankiweb.net/platform/linux/installing.html
+# Runs on every chezmoi apply; upgrades when GitHub latest differs from installed.
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping Anki install"
   exit 0
 fi
 
+HOME_DIR="{{ .chezmoi.homeDir }}"
+VERSION_FILE="$HOME_DIR/.local/state/anki/version"
+SHARE_DIR="/usr/local/share/anki"
 RELEASE_API="https://api.github.com/repos/ankitects/anki/releases/latest"
 
 anki_arch() {
@@ -35,6 +38,31 @@ anki_arch() {
       return 1
       ;;
   esac
+}
+
+# GitHub tags like 26.09 / 25.07.5 map to METADATA Version 26.9 / 25.7.5.
+anki_pep440() {
+  local IFS='.'
+  local -a parts
+  local out="" part
+  read -ra parts <<< "$1"
+  for part in "${parts[@]}"; do
+    [[ -n "$part" ]] || continue
+    part=$((10#$part))
+    out="${out:+$out.}$part"
+  done
+  printf '%s\n' "$out"
+}
+
+installed_pep440() {
+  local files meta
+  shopt -s nullglob
+  files=("$SHARE_DIR"/app_packages/anki-*.dist-info/METADATA)
+  shopt -u nullglob
+  ((${#files[@]} > 0)) || return 1
+  meta="$(sed -n 's/^Version:[[:space:]]*//p' "${files[0]}" | head -1)"
+  [[ -n "$meta" ]] || return 1
+  printf '%s\n' "$meta"
 }
 
 ensure_anki_deps() {
@@ -50,15 +78,29 @@ ensure_anki_deps() {
     libxcb-keysyms1
 }
 
-already_installed=0
-if command -v anki >/dev/null 2>&1; then
-  already_installed=1
-  echo "Anki already installed: $(command -v anki)"
-fi
+record_version() {
+  mkdir -p "$(dirname "$VERSION_FILE")"
+  printf '%s\n' "$1" > "$VERSION_FILE"
+}
 
-if [[ "$already_installed" -eq 1 ]]; then
-  exit 0
-fi
+anki_current() {
+  local installed_meta target_meta
+
+  command -v anki >/dev/null 2>&1 || return 1
+  [[ -x "$SHARE_DIR/anki" ]] || return 1
+
+  if [[ -f "$VERSION_FILE" && "$(cat "$VERSION_FILE")" == "$target_tag" ]]; then
+    return 0
+  fi
+
+  installed_meta="$(installed_pep440)" || return 1
+  target_meta="$(anki_pep440 "$target_tag")"
+  [[ "$installed_meta" == "$target_meta" ]] || return 1
+
+  # Backfill state file so the next apply skips the METADATA probe.
+  record_version "$target_tag"
+  return 0
+}
 
 if ! command -v curl >/dev/null 2>&1; then
   echo "WARN: curl not found; skipping Anki install"
@@ -68,21 +110,26 @@ fi
 arch="$(anki_arch)" || exit 0
 
 echo "Resolving latest Anki release..."
-tag="$(curl -fsSL "$RELEASE_API" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
-if [[ -z "$tag" ]]; then
+target_tag="$(curl -fsSL "$RELEASE_API" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
+if [[ -z "$target_tag" ]]; then
   echo "WARN: could not resolve Anki latest release tag; skipping"
   exit 0
 fi
 
-asset="anki-${tag}-linux-${arch}.tar.zst"
-url="https://github.com/ankitects/anki/releases/download/${tag}/${asset}"
+if anki_current; then
+  echo "Anki ${target_tag} already installed: $(command -v anki)"
+  exit 0
+fi
+
+asset="anki-${target_tag}-linux-${arch}.tar.zst"
+url="https://github.com/ankitects/anki/releases/download/${target_tag}/${asset}"
 
 ensure_anki_deps
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
-echo "Downloading Anki ${tag} (${asset})..."
+echo "Installing Anki ${target_tag} (${asset})..."
 curl -fsSL "$url" -o "$tmpdir/$asset"
 
 echo "Extracting Anki..."
@@ -102,15 +149,17 @@ echo "Installing Anki to /usr/local..."
   sudo ./install.sh
 )
 
-if command -v anki >/dev/null 2>&1; then
-  echo "Anki installed: $(command -v anki) (${tag})"
-  cat <<'EOF'
+if ! command -v anki >/dev/null 2>&1; then
+  echo "WARN: Anki install finished but 'anki' is not on PATH"
+  exit 0
+fi
+
+record_version "$target_tag"
+echo "Anki installed: $(command -v anki) (${target_tag})"
+cat <<'EOF'
 
 Anki is installed. Launch with: anki
 Installation guide: https://docs.ankiweb.net/platform/linux/installing.html
 EOF
-else
-  echo "WARN: Anki install finished but 'anki' is not on PATH"
-fi
 {{- end -}}
 {{ end -}}
