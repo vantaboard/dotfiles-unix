@@ -1,0 +1,173 @@
+#!/usr/bin/bash
+# Resolve and apply sway output layouts from ~/.config/sway/displays.json
+# (generated from profile.displays). No machine-specific IDs in this script.
+set -euo pipefail
+
+DISPLAYS_JSON="${XDG_CONFIG_HOME:-$HOME/.config}/sway/displays.json"
+OTD_ARTIST="0:0:OpenTabletDriver_Virtual_Artist_Tablet"
+OTD_POINTER="0:0:OpenTabletDriver_Virtual_Tablet"
+
+usage() {
+  echo "Usage: $(basename "$0") {json|match|apply}" >&2
+  exit 2
+}
+
+[[ $# -ge 1 ]] || usage
+
+displays_json() {
+  if [[ -f "$DISPLAYS_JSON" ]]; then
+    cat "$DISPLAYS_JSON"
+  else
+    printf '%s\n' '{"laptop":{"match":"eDP-1"},"devices":{},"layouts":[]}'
+  fi
+}
+
+sway_outputs_json() {
+  if [[ -n "${SWAYSOCK:-}" ]] && command -v swaymsg >/dev/null 2>&1; then
+    swaymsg -t get_outputs 2>/dev/null || printf '%s\n' '[]'
+  else
+    printf '%s\n' '[]'
+  fi
+}
+
+device_output_name() {
+  local outputs_json="$1"
+  local device_json="$2"
+  local serial make model name=""
+  serial="$(jq -r '.serial // empty' <<<"$device_json")"
+  make="$(jq -r '.make // empty' <<<"$device_json")"
+  model="$(jq -r '.model // empty' <<<"$device_json")"
+  if [[ -n "$serial" ]]; then
+    name="$(jq -r --arg s "$serial" '[.[] | select(.serial == $s) | .name][0] // empty' <<<"$outputs_json")"
+  fi
+  if [[ -z "$name" && -n "$make" && -n "$model" ]]; then
+    name="$(jq -r --arg make "$make" --arg model "$model" \
+      '[.[] | select(.make == $make and .model == $model) | .name][0] // empty' <<<"$outputs_json")"
+  fi
+  printf '%s' "$name"
+}
+
+undocked_json() {
+  local laptop_match="$1"
+  local laptop_mode="$2"
+  jq -n \
+    --arg laptop_match "$laptop_match" \
+    --arg laptop_mode "$laptop_mode" \
+    '{
+      layout: "undocked",
+      laptop: { match: $laptop_match, mode: $laptop_mode, action: "enable", name: $laptop_match },
+      outputs: []
+    }'
+}
+
+# Best matching layout as JSON (most arranged outputs wins):
+# { "layout": "...", "laptop": {...}, "outputs": [ {device,name,mode,x,y,map_tablet}, ... ] }
+match_layout() {
+  local cfg outputs n_layouts i layout_json laptop_json laptop_match laptop_mode
+  local arrange_n j item_json dev_name dev_json out_name resolved fail
+  local best_n=-1 best_json=""
+  cfg="$(displays_json)"
+  outputs="$(sway_outputs_json)"
+  laptop_json="$(jq -c '.laptop // {}' <<<"$cfg")"
+  laptop_match="$(jq -r '.match // "eDP-1"' <<<"$laptop_json")"
+  laptop_mode="$(jq -r '.mode // empty' <<<"$laptop_json")"
+  n_layouts="$(jq '.layouts | length' <<<"$cfg")"
+
+  for ((i = 0; i < n_layouts; i++)); do
+    layout_json="$(jq -c --argjson i "$i" '.layouts[$i]' <<<"$cfg")"
+    arrange_n="$(jq '.arrange | length' <<<"$layout_json")"
+    fail=0
+    resolved='[]'
+    for ((j = 0; j < arrange_n; j++)); do
+      item_json="$(jq -c --argjson j "$j" '.arrange[$j]' <<<"$layout_json")"
+      dev_name="$(jq -r '.device' <<<"$item_json")"
+      dev_json="$(jq -c --arg n "$dev_name" '.devices[$n] // {}' <<<"$cfg")"
+      out_name="$(device_output_name "$outputs" "$dev_json")"
+      if [[ -z "$out_name" ]]; then
+        fail=1
+        break
+      fi
+      resolved="$(jq -c \
+        --arg device "$dev_name" \
+        --arg name "$out_name" \
+        --argjson item "$item_json" \
+        --argjson dev "$dev_json" \
+        '. + [{
+          device: $device,
+          name: $name,
+          mode: ($dev.mode // ""),
+          x: ($item.x // 0),
+          y: ($item.y // 0),
+          map_tablet: ($dev.map_tablet // false)
+        }]' <<<"$resolved")"
+    done
+    if [[ "$fail" -eq 0 && "$arrange_n" -gt "$best_n" ]]; then
+      best_n=$arrange_n
+      best_json="$(jq -n \
+        --argjson layout "$layout_json" \
+        --argjson laptop "$laptop_json" \
+        --argjson outs "$resolved" \
+        --arg laptop_match "$laptop_match" \
+        --arg laptop_mode "$laptop_mode" \
+        '{
+          layout: $layout.name,
+          laptop: {
+            match: $laptop_match,
+            mode: $laptop_mode,
+            action: ($layout.laptop // "enable"),
+            name: $laptop_match
+          },
+          outputs: $outs
+        }')"
+    fi
+  done
+
+  if [[ -n "$best_json" ]]; then
+    printf '%s\n' "$best_json"
+    return 0
+  fi
+  undocked_json "$laptop_match" "$laptop_mode"
+}
+
+apply_layout() {
+  local matched action laptop_name laptop_mode name mode x y kamvas
+  matched="$(match_layout)"
+  action="$(jq -r '.laptop.action' <<<"$matched")"
+  laptop_name="$(jq -r '.laptop.name' <<<"$matched")"
+  laptop_mode="$(jq -r '.laptop.mode // empty' <<<"$matched")"
+
+  while IFS=$'\t' read -r name mode x y; do
+    [[ -z "$name" ]] && continue
+    if [[ -n "$mode" ]]; then
+      swaymsg output "$name" enable dpms on mode "$mode" position "$x" "$y" >/dev/null
+    else
+      swaymsg output "$name" enable dpms on position "$x" "$y" >/dev/null
+    fi
+  done < <(jq -r '.outputs[] | [.name, .mode, (.x|tostring), (.y|tostring)] | @tsv' <<<"$matched")
+
+  if [[ "$action" == "disable" ]]; then
+    swaymsg output "$laptop_name" disable >/dev/null
+  else
+    if [[ -n "$laptop_mode" ]]; then
+      swaymsg output "$laptop_name" enable mode "$laptop_mode" position 0 0 >/dev/null
+    else
+      swaymsg output "$laptop_name" enable position 0 0 >/dev/null
+    fi
+  fi
+
+  kamvas="$(jq -r '[.outputs[] | select(.map_tablet == true) | .name][0] // empty' <<<"$matched")"
+  if [[ -n "$kamvas" ]]; then
+    swaymsg input "$OTD_ARTIST" map_to_output "$kamvas" >/dev/null || true
+    swaymsg input "$OTD_POINTER" map_to_output "$kamvas" >/dev/null || true
+  fi
+}
+
+case "$1" in
+  json) displays_json ;;
+  match) match_layout ;;
+  apply)
+    [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]] || exit 0
+    apply_layout
+    ;;
+  *) usage ;;
+esac

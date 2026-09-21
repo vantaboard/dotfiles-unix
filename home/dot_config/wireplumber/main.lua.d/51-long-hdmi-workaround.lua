@@ -23,10 +23,7 @@ table.insert(alsa_monitor.rules, {
 table.insert(alsa_monitor.rules, {
   matches = {
     {
-      -- NVIDIA GPU HDMI audio (GA104 HDA on this host).
-      { "device.name", "equals", "alsa_card.pci-0000_01_00.1" },
-    },
-    {
+      -- NVIDIA HDMI audio on any PCI slot.
       { "device.nick", "equals", "HDA NVidia" },
     },
   },

@@ -1,62 +1,29 @@
 #!/usr/bin/bash
-# Prefer EDID serials over DRM connector names: NVIDIA MST renumbers DP-*
-# across boots/replugs (historically DP-4/5/6, currently DP-3/5/7).
-# Kamvas 22 Plus has an empty EDID serial, so match that output by make+model.
-BENQ_SERIAL="ETN5N03598SL0"
-ASUS_PRIMARY_SERIAL="N7LMQS030618"
-ASUS_SECONDARY_SERIAL="N7LMQS030621"
-KAMVAS_MAKE="HAT"
-KAMVAS_MODEL="Kamvas 22plus"
+# Apply the matching profile.displays layout to sway workspaces after kanshi.
+set -euo pipefail
 OTD_ARTIST="0:0:OpenTabletDriver_Virtual_Artist_Tablet"
 OTD_POINTER="0:0:OpenTabletDriver_Virtual_Tablet"
 
-resolve_output() {
-    local serial="$1"
-    swaymsg -t get_outputs | jq -r --arg s "$serial" '
-        .[] | select(.serial == $s) | .name' | head -n1
-}
+matched="$("$HOME/.local/bin/sway-displays" match)"
+laptop_name="$(jq -r '.laptop.name' <<<"$matched")"
+laptop_mode="$(jq -r '.laptop.mode // empty' <<<"$matched")"
+laptop_action="$(jq -r '.laptop.action' <<<"$matched")"
+kamvas="$(jq -r '[.outputs[] | select(.map_tablet == true) | .name][0] // empty' <<<"$matched")"
+mapfile -t MONITOR_ARRAY < <(jq -r '.outputs[].name' <<<"$matched")
 
-resolve_output_by_model() {
-    local make="$1"
-    local model="$2"
-    swaymsg -t get_outputs | jq -r --arg make "$make" --arg model "$model" '
-        .[] | select(.make == $make and .model == $model) | .name' | head -n1
-}
-
-external_active=0
-if [ -n "${SWAYSOCK:-}" ]; then
-    external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
-fi
-
-left="$(resolve_output "$BENQ_SERIAL")"
-asus_primary="$(resolve_output "$ASUS_PRIMARY_SERIAL")"
-asus_secondary="$(resolve_output "$ASUS_SECONDARY_SERIAL")"
-kamvas="$(resolve_output_by_model "$KAMVAS_MAKE" "$KAMVAS_MODEL")"
-# Kamvas sits in the middle slot when it replaces the primary ASUS.
-if [[ -n "$kamvas" ]]; then
-    mid="$kamvas"
+LAYOUT_OUTPUT=""
+if [[ "${#MONITOR_ARRAY[@]}" -eq 0 ]]; then
+    MONITOR_ARRAY=("$laptop_name")
+    LAYOUT_OUTPUT="output ${laptop_name} enable"
+    [[ -n "$laptop_mode" ]] && LAYOUT_OUTPUT+=" mode ${laptop_mode}"
+    LAYOUT_OUTPUT+=" position 0,0\n"
 else
-    mid="$asus_primary"
-fi
-right="$asus_secondary"
-if [[ -z "$right" && -n "$asus_primary" && "$mid" != "$asus_primary" ]]; then
-    right="$asus_primary"
-fi
-
-if [[ "$external_active" -ge 3 ]]; then
-    if [[ -z "$left" || -z "$mid" || -z "$right" ]]; then
-        echo "10-sway: missing EDID match (left=${left:-?} mid=${mid:-?} right=${right:-?})" >&2
-        exit 1
+    while IFS=$'\t' read -r name x y; do
+        LAYOUT_OUTPUT+="output ${name} position ${x} ${y}\n"
+    done < <(jq -r '.outputs[] | [.name, (.x|tostring), (.y|tostring)] | @tsv' <<<"$matched")
+    if [[ "$laptop_action" == "disable" ]]; then
+        LAYOUT_OUTPUT+="output ${laptop_name} disable\n"
     fi
-    MONITOR_ARRAY=("$left" "$mid" "$right")
-    LAYOUT_OUTPUT="output ${left} position 0 0\noutput ${mid} position 1920 0\noutput ${right} position 3840 0\noutput eDP-1 disable\n"
-else
-    ACTIVE_MONITORS=$(
-        swaymsg -t get_outputs | jq -r '
-            .[] | select(.active) | .rect.x as $x | "\($x) \(.name)"' | sort -n | awk '{print $2}'
-    )
-    MONITOR_ARRAY=($ACTIVE_MONITORS)
-    LAYOUT_OUTPUT=$'output eDP-1 enable mode 1920x1080@144Hz position 0,0\n'
 fi
 
 MOVE_KEYS=("b" "n" "m")

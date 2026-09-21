@@ -52,8 +52,8 @@ bash -n "${REPO_ROOT}/scripts/lib/pkg-manual.sh"
 echo "OK: ${REPO_ROOT}/scripts/lib/pkg-manual.sh"
 bash -n "${REPO_ROOT}/scripts/pkg-manual-sync"
 echo "OK: ${REPO_ROOT}/scripts/pkg-manual-sync"
-bash -n "${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
-echo "OK: ${REPO_ROOT}/tests/lib/zsh-smoke-common.sh"
+bash -n "${REPO_ROOT}/tests/validate-displays.sh"
+echo "OK: ${REPO_ROOT}/tests/validate-displays.sh"
 
 for script in \
   "${HOME_DIR}/dot_local/bin/executable_deploy-dotfiles" \

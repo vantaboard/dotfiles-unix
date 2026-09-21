@@ -1,0 +1,40 @@
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $displays := index $p "displays" | default dict -}}
+{{- $laptop := index $displays "laptop" | default dict -}}
+{{- $laptopMatch := index $laptop "match" | default "eDP-1" -}}
+{{- $laptopMode := index $laptop "mode" | default "" -}}
+{{- $devices := index $displays "devices" | default dict -}}
+{{- $layouts := index $displays "layouts" | default list -}}
+# Generated from profile.displays. Match monitors by EDID description
+# (make/model/serial), not DRM connector names: NVIDIA MST renumbers DP-*.
+# Empty layouts yield laptop-only. Host-specific devices live in gitignored
+# profile.yaml / profile-host.yaml.
+{{- range $layouts }}
+{{- if and (ne .name "undocked") (ne .laptop "enable") }}
+
+profile {{ .name }} {
+    output {{ $laptopMatch }} disable
+{{- range .arrange }}
+{{- $dev := index $devices .device }}
+    output {{ $dev.description | quote }} enable{{ if index $dev "mode" }} mode {{ index $dev "mode" }}{{ end }} position {{ .x }},{{ .y }}
+{{- end }}
+    exec $HOME/.config/kanshi/postswitch.d/10-sway
+}
+{{- end }}
+{{- end }}
+
+profile undocked {
+    output {{ $laptopMatch }} enable{{ if $laptopMode }} mode {{ $laptopMode }}{{ end }} position 0,0
+    exec $HOME/.config/kanshi/postswitch.d/10-sway
+}

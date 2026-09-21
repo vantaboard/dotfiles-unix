@@ -148,11 +148,26 @@ profile_example:
     - llama
     - ssh
     - hdmi_audio
+  identity:
+    git_email: ""
+    git_ssh_key: ""
   secrets:
     git_gpg_key: ""
   input_devices:
-    pointers:
-      - match: "Razer Razer DeathAdder V2"
-        pointer_accel: -0.8
-      - match: "MOSART Semi. 2.4G Wireless Mouse"
-        pointer_accel: -0.5
+    pointers: []
+  # Machine-specific. Empty layouts → laptop panel only. Put real EDID
+  # descriptions in gitignored profile.yaml, for example:
+  #   displays:
+  #     laptop: { match: eDP-1, mode: 1920x1080@60Hz }
+  #     devices:
+  #       left: { description: "Make Model SERIAL", serial: SERIAL, mode: 1920x1080@60Hz }
+  #     layouts:
+  #       - name: docked
+  #         laptop: disable
+  #         arrange: [{ device: left, x: 0, y: 0 }]
+  displays:
+    laptop:
+      match: eDP-1
+    devices: {}
+    layouts: []
+  wake_usb: []

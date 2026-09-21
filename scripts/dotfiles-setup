@@ -168,11 +168,27 @@ collect_profile_arrays() {
   mapfile -t SYSTEM_DEPLOY < <(printf '%s\n' "${SYSTEM_DEPLOY[@]}" | sort -u)
 }
 
+extract_profile_section() {
+  local file="$1" section="$2"
+  [[ -f "$file" ]] || return 0
+  awk -v key="$section" '
+    BEGIN { pat = "^  " key ":" }
+    $0 ~ pat { p=1; print; next }
+    p && /^  [A-Za-z0-9_]+:/ { exit }
+    p { print }
+  ' "$file"
+}
+
 write_profile_yaml() {
   local outfile="$1"
   local key="$2"
+  local existing=""
   mkdir -p "$(dirname "$outfile")"
   collect_profile_arrays
+  if [[ -f "$outfile" && "$outfile" != /dev/stdout && "$outfile" != "-" ]]; then
+    existing="$(mktemp)"
+    cp "$outfile" "$existing"
+  fi
   {
     echo "$key:"
     echo "  features:"
@@ -196,9 +212,19 @@ write_profile_yaml() {
     for deploy in "${SYSTEM_DEPLOY[@]}"; do
       echo "    - $deploy"
     done
+    echo "  identity:"
+    echo "    git_email: \"${GIT_EMAIL:-}\""
+    echo "    git_ssh_key: \"${GIT_SSH_KEY:-}\""
     echo "  secrets:"
     echo "    git_gpg_key: \"${GIT_GPG_KEY:-}\""
+    if [[ -n "$existing" ]]; then
+      local extra
+      for extra in unreal_engine_path input_devices displays wake_usb; do
+        extract_profile_section "$existing" "$extra"
+      done
+    fi
   } > "$outfile"
+  [[ -n "$existing" ]] && rm -f "$existing"
 }
 
 print_summary() {
@@ -320,7 +346,11 @@ run_wizard() {
   catalog_resolve_features ENABLED
   fi
 
-  # Secrets
+  # Identity + secrets
+  if [[ "${ENABLED[git]:-0}" == "1" ]]; then
+    GIT_EMAIL="$(setup_ui_input "Git email for gctp / personal commits (leave empty to skip)" "${GIT_EMAIL:-}")"
+    GIT_SSH_KEY="$(setup_ui_input "Git SSH key path (leave empty for ~/.ssh/id_ed25519)" "${GIT_SSH_KEY:-}")"
+  fi
   if [[ "${ENABLED[gpg_signing]:-0}" == "1" ]]; then
     GIT_GPG_KEY="$(setup_ui_input "GPG key ID for git signing" "${GIT_GPG_KEY:-}")"
   fi
@@ -339,6 +369,30 @@ run_wizard() {
 SCOPE_GLOBAL=1
 SCOPE_HOST=0
 GIT_GPG_KEY=""
+GIT_EMAIL=""
+GIT_SSH_KEY=""
+
+yaml_map_scalar() {
+  local file="$1" map="$2" field="$3"
+  [[ -f "$file" ]] || return 0
+  awk -v map="$map" -v field="$field" '
+    $0 ~ "^  " map ":" { p=1; next }
+    p && /^  [A-Za-z0-9_]+:/ { exit }
+    p && $1 ~ field ":" {
+      val=$0
+      sub("^[^:]+:[[:space:]]*", "", val)
+      gsub(/^["'\'']|["'\'']$/, "", val)
+      print val
+      exit
+    }
+  ' "$file"
+}
+
+if [[ -f "$PROFILE_DIR/profile.yaml" ]]; then
+  GIT_EMAIL="$(yaml_map_scalar "$PROFILE_DIR/profile.yaml" identity git_email || true)"
+  GIT_SSH_KEY="$(yaml_map_scalar "$PROFILE_DIR/profile.yaml" identity git_ssh_key || true)"
+  GIT_GPG_KEY="$(yaml_map_scalar "$PROFILE_DIR/profile.yaml" secrets git_gpg_key || true)"
+fi
 
 run_wizard
 

@@ -18,12 +18,14 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | llama-swap model config | `home/dot_config/llama-swap/config.yaml.tmpl` | `~/.config/llama-swap/config.yaml` |
 | keyd key remapping | `home/system/keyd/default.conf` | `/etc/keyd/default.conf` (Debian binary: `keyd.rvaiya`) |
 | libinput pointer overrides | `home/system/libinput/local-overrides.quirks.tmpl` | `/etc/libinput/local-overrides.quirks` (from `profile.input_devices.pointers`) |
+| USB s2idle wake disarms | `home/system/udev/99-wake-sources.rules.tmpl` | `/etc/udev/rules.d/99-wake-sources.rules` (`profile.wake_usb` plus generic lid/keyboard/XHCI rules) |
 | Sway Wayland session | `home/system/wayland-sessions/sway.desktop` | `/usr/share/wayland-sessions/sway.desktop` |
 | Sway session wrapper | `home/system/bin/sway-session` | `/usr/local/bin/sway-session` (sources `wayland.conf` before exec) |
 | GDM Wayland enable | `home/system/gdm3/custom.conf` | `/etc/gdm3/custom.conf` (with `sway_session` deploy) |
 | GDM greeter freeze workaround | `home/system/systemd/gdm.service.d/wait-for-nvidia.conf` | `/etc/systemd/system/gdm.service.d/` (with `sway_session` deploy; waits for NVIDIA DRM device, PCI address substituted at deploy) |
 | Enabled services list | `home/.chezmoidata/enabled-services.yaml` | `systemctl enable` via script |
-| Kanshi profiles | `home/dot_config/kanshi/` | `~/.config/kanshi/` |
+| Kanshi profiles | `home/dot_config/kanshi/config.tmpl` | `~/.config/kanshi/` (from `profile.displays`) |
+| Sway display layout | `home/dot_config/sway/displays.json.tmpl` | `~/.config/sway/displays.json` (from `profile.displays`) |
 
 Deploy and enable scripts:
 
@@ -73,7 +75,7 @@ VPN and credential-bearing configuration is documented in [vpn-setup.md](vpn-set
 
 ## Machine-specific display config
 
-Display layout is managed by **kanshi** (`~/.config/kanshi/config`) and the sway postswitch script (`~/.config/kanshi/postswitch.d/10-sway`). Adjust output names and positions when setting up on different monitor hardware.
+Display layout is generated from **`profile.displays`** into kanshi (`~/.config/kanshi/config`) and `~/.config/sway/displays.json`. Leave `layouts` empty for laptop-only; add EDID descriptions and named layouts in gitignored `profile.yaml` for a dock.
 
 ---
 

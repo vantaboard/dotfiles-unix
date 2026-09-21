@@ -31,7 +31,14 @@ git clone git@github.com:vantaboard/dotfiles-unix.git /tmp/dotfiles-unix
 
 The wizard lets you choose feature categories (shell, desktop, dev, system), individual packages and zsh plugins, and whether to save a global profile, host-specific overrides, or both. Selections are written to gitignored `profile.yaml` files and drive conditional templates so disabled plugins never get sourced.
 
-**Profile auto-selection:** When no `profile.yaml` exists, chezmoi picks a base profile from the environment: [profile.example.yaml](home/.chezmoidata/profile.example.yaml) on Linux, [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) when `.chezmoi.os == "android"`. Explicit `profile.yaml`, `CHEZMOI_CI=1`, or `profile-host.yaml` overrides still take precedence (see [profile.tpl](home/.chezmoitemplates/profile.tpl)). Inspect the effective profile with:
+**Profile auto-selection:** When no `profile.yaml` exists, chezmoi picks a base profile from the environment: [profile.example.yaml](home/.chezmoidata/profile.example.yaml) on Linux, [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) when `.chezmoi.os == "android"`. Explicit `profile.yaml`, `CHEZMOI_CI=1`, or `profile-host.yaml` overrides still take precedence (see [profile.tpl](home/.chezmoitemplates/profile.tpl)). Machine-specific values belong in the gitignored profile, not in tracked files:
+
+- `identity.git_email` / `identity.git_ssh_key` — used by `gctp` via `~/.env`
+- `displays.devices` / `displays.layouts` — kanshi + sway output layout (empty → laptop panel only)
+- `wake_usb` — extra USB devices to disarm as s2idle wake sources
+- `input_devices.pointers` — libinput/Sway pointer accel by device name
+
+Inspect the effective profile with:
 
 ```bash
 chezmoi execute-template -f home/.chezmoitemplates/profile.tpl

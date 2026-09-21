@@ -17,6 +17,15 @@ set -uo pipefail
 export HOME
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
+DISPLAYS_JSON="${HOME}/.config/sway/displays.json"
+
+laptop_output_name() {
+    jq -r '.laptop.match // "eDP-1"' "$DISPLAYS_JSON" 2>/dev/null || echo eDP-1
+}
+
+displays_full_count() {
+    jq '[.layouts[].arrange | length] | max // 1' "$DISPLAYS_JSON" 2>/dev/null || echo 1
+}
 LOG_DIR="${HOME}/.local/state"
 LOG="${LOG_DIR}/displays-resume.log"
 mkdir -p "$LOG_DIR"
@@ -174,16 +183,18 @@ sway_outputs_healthy() {
     if is_docked; then
         ready="$(sway_dp_active_count)"
         drm_count="$(docked_drm_ports_connected)"
-        # Healthy if sway matches DRM: full 3/3, or a stable partial 2/2 link.
-        if [[ "$drm_count" -ge 3 ]]; then
-            [[ "$ready" -ge 3 && "$gbm_errors" -eq 0 ]]
+        # Healthy if sway matches DRM: full layout, or a stable 2-stream MST link.
+        full="$(displays_full_count)"
+        if [[ "$drm_count" -ge "$full" ]]; then
+            [[ "$ready" -ge "$full" && "$gbm_errors" -eq 0 ]]
         else
             [[ "$ready" -ge 2 && "$drm_count" -ge 2 && "$gbm_errors" -eq 0 ]]
         fi
     else
         ready="$(swaymsg_cmd -t get_outputs \
-            | jq -r '[.[] | select(.name == "eDP-1") | select(.active)
-                      | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' \
+            | jq -r --arg laptop "$(laptop_output_name)" \
+                '[.[] | select(.name == $laptop) | select(.active)
+                  | select(.current_mode.width // 0 > 0) | select(.dpms == true)] | length' \
             2>/dev/null || echo 0)"
         # Dock USB is back but we only have the laptop panel: resume recovery
         # likely ran before MST came up and must not declare success.
@@ -197,7 +208,7 @@ sway_outputs_healthy() {
     fi
 }
 wait_for_kanshi_outputs() {
-    local required="${1:-3}" max_wait="${2:-20}" attempt count
+    local required="${1:-$(displays_full_count)}" max_wait="${2:-20}" attempt count
     for attempt in $(seq 1 "$max_wait"); do
         if sway_outputs_healthy "$required"; then
             log "kanshi restored ${required} outputs (${attempt}s)"
@@ -251,7 +262,7 @@ light_recovery() {
 }
 
 simulate_dock_replug() {
-    local out required="${1:-3}"
+    local out required="${1:-$(displays_full_count)}"
     log "simulating dock replug (stop kanshi, cycle DP outputs, restart kanshi)"
     pkill -x kanshi 2>/dev/null || true
     sleep 1
@@ -275,13 +286,17 @@ wait_for_gpu_ready || true
 required=1
 if is_docked || dock_usb_present; then
     drm_count="$(docked_drm_ports_connected)"
-    if [[ "$drm_count" -ge 3 ]]; then
-        required=3
+    full="$(displays_full_count)"
+    if [[ "$full" -lt 1 ]]; then
+        full=1
+    fi
+    if [[ "$drm_count" -ge "$full" ]]; then
+        required="$full"
     elif [[ "$drm_count" -ge 2 ]]; then
         required=2
         log "partial MST link (${drm_count} DP); targeting ${required} healthy outputs"
     else
-        required=3
+        required="$full"
     fi
 fi
 

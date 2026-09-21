@@ -89,5 +89,14 @@ profile_ci:
     - bat
   systemd_units: []
   system_deploy: []
+  identity:
+    git_email: ""
+    git_ssh_key: ""
   secrets:
     git_gpg_key: ""
+  displays:
+    laptop:
+      match: eDP-1
+    devices: {}
+    layouts: []
+  wake_usb: []

@@ -1,3 +1,16 @@
+{{- $p := .profile_example -}}
+{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
+{{- if index . "profile" -}}
+{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
+{{-   else -}}{{- $p = .profile -}}
+{{-   end -}}
+{{- end -}}
+{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
+{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- if eq .chezmoi.os "android" -}}
+{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
+{{- end -}}
+{{- $wake := index $p "wake_usb" | default list -}}
 # This laptop suspends via s2idle (firmware reports Low-power S0, so the kernel
 # never picks deep/S3). In s2idle the OS stays in a polling loop and *any* armed
 # wake source resumes it immediately, unlike S3 where the platform gates wakes.
@@ -5,7 +18,7 @@
 # Backpack / desk spurious wakes we disarm here:
 #   - lid switch (non-SW_LID-compliant bounce)
 #   - internal keyboard (bag key presses) and touchpad (I2C HID pressure)
-#   - dock HIDs (Razer sensor, footswitch, mini-keyboard dongle)
+#   - USB devices listed in profile.wake_usb
 #   - USB / Thunderbolt controllers (any attached device activity)
 #   - AC adapter and USB-C PD plug/unplug
 #   - Wake-on-LAN
@@ -22,11 +35,11 @@ ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="PNP0C0D:00", \
 ACTION=="add|change", SUBSYSTEM=="serio", DRIVER=="atkbd", \
   ATTR{power/wakeup}="disabled"
 
-# Internal touchpad (ITE5570 I2C HID)
+# Internal touchpad (I2C HID)
 ACTION=="add|change", SUBSYSTEM=="i2c", DRIVER=="i2c_hid_acpi", \
   ATTR{power/wakeup}="disabled"
 
-# USB host controllers (XHCI on 00:14.0 and Thunderbolt XHCI on 00:0d.0)
+# USB host controllers (XHCI and Thunderbolt XHCI)
 ACTION=="add|change", SUBSYSTEM=="pci", DRIVER=="xhci_hcd", \
   ATTR{power/wakeup}="disabled"
 
@@ -43,18 +56,12 @@ ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains", \
   ATTR{power/wakeup}="disabled"
 ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{type}=="USB", \
   ATTR{power/wakeup}="disabled"
+{{- range $wake }}
 
-# Razer DeathAdder V2
-ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="1532", ATTR{idProduct}=="0084", \
+# {{ .name }}
+ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="{{ .vendor }}", ATTR{idProduct}=="{{ .product }}", \
   ATTR{power/wakeup}="disabled"
-
-# PCsensor FootSwitch
-ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="3553", ATTR{idProduct}=="b001", \
-  ATTR{power/wakeup}="disabled"
-
-# Unbranded 2.4GHz "mini keyboard" receiver
-ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="1997", ATTR{idProduct}=="2433", \
-  ATTR{power/wakeup}="disabled"
+{{- end }}
 
 # Wake-on-LAN is on by default in the NIC (ethtool reports "Wake-on: g"), which
 # lets LAN traffic resume us. The setting lives in the adapter and comes back

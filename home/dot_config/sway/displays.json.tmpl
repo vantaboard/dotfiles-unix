@@ -10,8 +10,8 @@
 {{- if eq .chezmoi.os "android" -}}
 {{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
 {{- end -}}
-{{- $identity := index $p "identity" | default dict -}}
-{{- $secrets := index $p "secrets" | default dict -}}
-export GIT_GPG_KEY="{{ index $secrets "git_gpg_key" | default "" }}"
-export GIT_EMAIL="{{ index $identity "git_email" | default "" }}"
-export GIT_SSH_KEY="{{ index $identity "git_ssh_key" | default "" }}"
+{{- $displays := index $p "displays" | default dict -}}
+{{- $laptop := index $displays "laptop" | default dict -}}
+{{- $devices := index $displays "devices" | default dict -}}
+{{- $layouts := index $displays "layouts" | default list -}}
+{{ dict "laptop" $laptop "devices" $devices "layouts" $layouts | toPrettyJson }}
