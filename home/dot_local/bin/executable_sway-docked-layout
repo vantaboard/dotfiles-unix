@@ -2,14 +2,19 @@
 # Restore docked/undocked output positions after sway reload scrambles them.
 # Prefer EDID serials over DRM connector names: NVIDIA MST renumbers DP-*
 # across boots/replugs (historically DP-4/5/6, currently DP-3/5/7).
+# Kamvas 22 Plus has an empty EDID serial, so match that output by make+model.
 set -euo pipefail
 
 [[ "${XDG_SESSION_TYPE:-}" == "wayland" && -n "${SWAYSOCK:-}" ]] || exit 0
 
-# Physical layout left → right: BenQ, ASUS primary, ASUS secondary.
+# Physical layout left → right: BenQ, middle (ASUS primary or Kamvas), ASUS secondary.
 BENQ_SERIAL="ETN5N03598SL0"
 ASUS_PRIMARY_SERIAL="N7LMQS030618"
 ASUS_SECONDARY_SERIAL="N7LMQS030621"
+KAMVAS_MAKE="HAT"
+KAMVAS_MODEL="Kamvas 22plus"
+OTD_ARTIST="0:0:OpenTabletDriver_Virtual_Artist_Tablet"
+OTD_POINTER="0:0:OpenTabletDriver_Virtual_Tablet"
 
 resolve_output() {
     local serial="$1"
@@ -17,11 +22,28 @@ resolve_output() {
         .[] | select(.serial == $s) | .name' | head -n1
 }
 
+resolve_output_by_model() {
+    local make="$1"
+    local model="$2"
+    swaymsg -t get_outputs | jq -r --arg make "$make" --arg model "$model" '
+        .[] | select(.make == $make and .model == $model) | .name' | head -n1
+}
+
 external_active="$(swaymsg -t get_outputs | jq '[.[] | select(.name | test("^DP-")) | select(.active)] | length')"
 
 left="$(resolve_output "$BENQ_SERIAL")"
-mid="$(resolve_output "$ASUS_PRIMARY_SERIAL")"
-right="$(resolve_output "$ASUS_SECONDARY_SERIAL")"
+asus_primary="$(resolve_output "$ASUS_PRIMARY_SERIAL")"
+asus_secondary="$(resolve_output "$ASUS_SECONDARY_SERIAL")"
+kamvas="$(resolve_output_by_model "$KAMVAS_MAKE" "$KAMVAS_MODEL")"
+if [[ -n "$kamvas" ]]; then
+    mid="$kamvas"
+else
+    mid="$asus_primary"
+fi
+right="$asus_secondary"
+if [[ -z "$right" && -n "$asus_primary" && "$mid" != "$asus_primary" ]]; then
+    right="$asus_primary"
+fi
 
 if [[ "$external_active" -ge 3 && -n "$left" && -n "$mid" && -n "$right" ]]; then
     swaymsg output "$left" enable dpms on mode 1920x1080@60Hz position 0 0
@@ -29,7 +51,7 @@ if [[ "$external_active" -ge 3 && -n "$left" && -n "$mid" && -n "$right" ]]; the
     swaymsg output "$right" enable dpms on mode 1920x1080@60Hz position 3840 0
     swaymsg output eDP-1 disable
 elif [[ "$external_active" -ge 2 && -n "$left" ]]; then
-    # Partial MST: keep BenQ left, whichever ASUS is present in the middle.
+    # Partial MST: keep BenQ left, Kamvas or whichever ASUS is present in the middle.
     swaymsg output "$left" enable dpms on mode 1920x1080@60Hz position 0 0
     if [[ -n "$mid" ]]; then
         swaymsg output "$mid" enable dpms on mode 1920x1080@60Hz position 1920 0
@@ -37,7 +59,14 @@ elif [[ "$external_active" -ge 2 && -n "$left" ]]; then
         swaymsg output "$right" enable dpms on mode 1920x1080@60Hz position 1920 0
     fi
     swaymsg output eDP-1 disable
-    echo "sway-docked-layout: partial dock (missing ASUS serial mid=${mid:--} right=${right:--})" >&2
+    echo "sway-docked-layout: partial dock (missing output mid=${mid:--} right=${right:--})" >&2
 else
     swaymsg output eDP-1 enable mode 1920x1080@144Hz position 0 0
+fi
+
+# OpenTabletDriver Artist Mode lets Sway map the virtual tablet. Bind it to
+# the Kamvas so the pen covers that screen 1:1 instead of the whole desktop.
+if [[ -n "$kamvas" ]]; then
+    swaymsg input "$OTD_ARTIST" map_to_output "$kamvas"
+    swaymsg input "$OTD_POINTER" map_to_output "$kamvas"
 fi
