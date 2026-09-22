@@ -161,10 +161,13 @@ profile_example:
   #     laptop: { match: eDP-1, mode: 1920x1080@60Hz }
   #     devices:
   #       left: { description: "Make Model SERIAL", serial: SERIAL, mode: 1920x1080@60Hz }
+  #       tablet: { description: "Make Model", make: Make, model: Model, map_tablet: true }
   #     layouts:
   #       - name: docked
   #         laptop: disable
   #         arrange: [{ device: left, x: 0, y: 0 }]
+  #     # Devices without serial need make+model: kanshi matches "Make Model "
+  #     # (trailing space). A description without that space will not match.
   displays:
     laptop:
       match: eDP-1

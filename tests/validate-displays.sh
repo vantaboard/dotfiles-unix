@@ -52,4 +52,19 @@ else
   echo "SKIP: chezmoi not available for kanshi template render"
 fi
 
+# Kanshi matches empty-serial heads as "make model " (trailing space).
+if command -v chezmoi >/dev/null 2>&1 && [[ -f "$REPO_ROOT/home/.chezmoidata/profile.yaml" ]]; then
+  rendered="$(chezmoi execute-template < "$REPO_ROOT/home/dot_config/kanshi/config.tmpl")"
+  if grep -q 'Kamvas' <<<"$rendered"; then
+    grep -q 'output "HAT Kamvas 22plus " enable' <<<"$rendered" || {
+      echo "FAIL: kanshi Kamvas match must be \"HAT Kamvas 22plus \" (trailing space)"
+      grep 'Kamvas' <<<"$rendered" || true
+      exit 1
+    }
+    echo "OK: kanshi Kamvas match uses trailing space for empty serial"
+  else
+    echo "SKIP: profile.yaml has no Kamvas device"
+  fi
+fi
+
 echo "=== displays validation passed ==="

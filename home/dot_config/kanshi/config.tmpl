@@ -20,6 +20,11 @@
 # (make/model/serial), not DRM connector names: NVIDIA MST renumbers DP-*.
 # Empty layouts yield laptop-only. Host-specific devices live in gitignored
 # profile.yaml / profile-host.yaml.
+# Kanshi builds the identifier as "make model serial". A missing serial is
+# the empty string (not "Unknown"), so the match is "make model " with a
+# trailing space — otherwise the profile lists 4 outputs, 4 heads are
+# connected, and nothing matches (laptop stays on, order is whatever Sway
+# defaulted to).
 {{- range $layouts }}
 {{- if and (ne .name "undocked") (ne .laptop "enable") }}
 
@@ -27,7 +32,12 @@ profile {{ .name }} {
     output {{ $laptopMatch }} disable
 {{- range .arrange }}
 {{- $dev := index $devices .device }}
-    output {{ $dev.description | quote }} enable{{ if index $dev "mode" }} mode {{ index $dev "mode" }}{{ end }} position {{ .x }},{{ .y }}
+{{- $serial := index $dev "serial" | default "" }}
+{{- $kanshi := index $dev "description" }}
+{{- if and (eq $serial "") (index $dev "make") (index $dev "model") }}
+{{-   $kanshi = printf "%s %s " (index $dev "make") (index $dev "model") }}
+{{- end }}
+    output {{ $kanshi | quote }} enable{{ if index $dev "mode" }} mode {{ index $dev "mode" }}{{ end }} position {{ .x }},{{ .y }}
 {{- end }}
     exec $HOME/.config/kanshi/postswitch.d/10-sway
 }

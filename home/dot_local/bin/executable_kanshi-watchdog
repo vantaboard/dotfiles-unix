@@ -99,7 +99,13 @@ while sleep 5; do
         mismatch=0
     fi
     if (( mismatch >= 2 )); then
-        restart_kanshi "dp_connected=${dp_conn} dp_active=${dp_active} edp_active=${edp_active}"
+        reason="dp_connected=${dp_conn} dp_active=${dp_active} edp_active=${edp_active}"
+        # sway-displays matches by make/model/serial from JSON, so it still
+        # works when kanshi rejects a head with an empty EDID serial.
+        log "applying sway-displays ($reason)"
+        "$HOME/.local/bin/sway-displays" apply 2>/dev/null || true
+        "$HOME/.config/kanshi/postswitch.d/10-sway" >/dev/null 2>&1 || true
+        restart_kanshi "$reason"
         mismatch=0
         # Give kanshi time to apply before judging again.
         sleep 15
