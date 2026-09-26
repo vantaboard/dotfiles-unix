@@ -1,12 +1,21 @@
 {{- if eq .chezmoi.os "darwin" }}
 dot_config/sway
+dot_config/sway/**
 dot_config/sway/config.tmpl
 dot_config/sway/displays.json.tmpl
 dot_config/sway/dot_input-devices.conf.tmpl
+.config/sway
+.config/sway/**
+.config/sway/config
+.config/sway/displays.json
+.config/sway/.input-devices.conf
 dot_config/swaylock
 dot_config/kanshi
-dot_config/kanshi/config.tmpl
+dot_config/kanshi/**
+.config/kanshi
+.config/kanshi/**
 dot_config/environment.d/wayland.conf
+.config/environment.d/wayland.conf
 dot_local/bin/executable_sway-wallpaper
 dot_local/bin/executable_rofi-emoji
 dot_local/bin/executable_bemenu-drun
@@ -21,13 +30,22 @@ system/
 
 {{- if not $swayOn }}
 dot_config/sway
+dot_config/sway/**
 dot_config/sway/config.tmpl
 dot_config/sway/displays.json.tmpl
 dot_config/sway/dot_input-devices.conf.tmpl
+.config/sway
+.config/sway/**
+.config/sway/config
+.config/sway/displays.json
+.config/sway/.input-devices.conf
 dot_config/swaylock
 dot_config/kanshi
-dot_config/kanshi/config.tmpl
+dot_config/kanshi/**
+.config/kanshi
+.config/kanshi/**
 dot_config/environment.d/wayland.conf
+.config/environment.d/wayland.conf
 dot_local/bin/executable_sway-wallpaper
 dot_local/bin/executable_rofi-emoji
 dot_local/bin/executable_bemenu-drun
