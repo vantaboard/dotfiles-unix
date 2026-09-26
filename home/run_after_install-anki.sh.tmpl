@@ -156,11 +156,13 @@ if ! tar xaf "$cached" -C "$tmpdir" 2>/dev/null; then
   fi
 fi
 
-install_dir="$tmpdir/anki-linux"
-if [[ ! -x "$install_dir/install.sh" ]]; then
+# Older releases used anki-linux/; 26.09+ uses anki-<pep440>-linux-<arch>.tar/.
+install_sh="$(find "$tmpdir" -maxdepth 3 -type f -name install.sh -print -quit)"
+if [[ -z "$install_sh" || ! -x "$install_sh" ]]; then
   echo "WARN: Anki install.sh missing after extract; skipping"
   exit 0
 fi
+install_dir="$(dirname "$install_sh")"
 
 echo "Installing Anki to /usr/local..."
 (
