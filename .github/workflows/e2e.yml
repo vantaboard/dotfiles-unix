@@ -74,7 +74,7 @@ jobs:
             exit 1
           fi
           echo "OK: sway config not deployed"
-          features="$(chezmoi execute-template '{{ $p := includeTemplate "profile.tpl" . | fromYaml }}desktop_sway={{ index $p.features "desktop_sway" }} wayland_session={{ index $p.features "wayland_session" }} wl_clipboard={{ index $p.features "wl_clipboard" }}')"
+          features="$(chezmoi execute-template --source "$GITHUB_WORKSPACE" '{{ $p := includeTemplate "profile.tpl" . | fromYaml }}desktop_sway={{ index $p.features "desktop_sway" }} wayland_session={{ index $p.features "wayland_session" }} wl_clipboard={{ index $p.features "wl_clipboard" }}')"
           echo "effective: $features"
           [[ "$features" == *"desktop_sway=false"* ]] || { echo "FAIL: desktop_sway should be false"; exit 1; }
           [[ "$features" == *"wayland_session=false"* ]] || { echo "FAIL: wayland_session should be false"; exit 1; }
