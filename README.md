@@ -1,6 +1,6 @@
 # dotfiles-unix
 
-Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting Ubuntu 24.04 and Termux (Android).
+Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), targeting Ubuntu 24.04, Termux (Android), WSL (headless), and macOS (Homebrew).
 
 ## Fresh install
 
@@ -31,7 +31,7 @@ git clone git@github.com:vantaboard/dotfiles-unix.git /tmp/dotfiles-unix
 
 The wizard lets you choose feature categories (shell, desktop, dev, system), individual packages and zsh plugins, and whether to save a global profile, host-specific overrides, or both. Selections are written to gitignored `profile.yaml` files and drive conditional templates so disabled plugins never get sourced.
 
-**Profile auto-selection:** When no `profile.yaml` exists, chezmoi picks a base profile from the environment: [profile.example.yaml](home/.chezmoidata/profile.example.yaml) on Linux, [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) when `.chezmoi.os == "android"`. Explicit `profile.yaml`, `CHEZMOI_CI=1`, or `profile-host.yaml` overrides still take precedence (see [profile.tpl](home/.chezmoitemplates/profile.tpl)). Machine-specific values belong in the gitignored profile, not in tracked files:
+**Profile auto-selection:** When no `profile.yaml` exists, chezmoi picks a base profile from the environment: [profile.example.yaml](home/.chezmoidata/profile.example.yaml) on Linux, [profile.wsl.example.yaml](home/.chezmoidata/profile.wsl.example.yaml) on WSL, [profile.macos.example.yaml](home/.chezmoidata/profile.macos.example.yaml) on macOS, and [profile.termux.example.yaml](home/.chezmoidata/profile.termux.example.yaml) when `.chezmoi.os == "android"`. Explicit `profile.yaml`, `CHEZMOI_CI=1`, or `profile-host.yaml` overrides still take precedence (see [profile.tpl](home/.chezmoitemplates/profile.tpl)). On WSL and macOS, Wayland / GDM / Sway and other graphical-session features stay off even if a Linux `profile.yaml` is copied over. Machine-specific values belong in the gitignored profile, not in tracked files:
 
 - `identity.git_email` / `identity.git_ssh_key` — used by `gctp` via `~/.env`
 - `displays.devices` / `displays.layouts` — kanshi + sway output layout (empty → laptop panel only)
@@ -70,7 +70,7 @@ chezmoi update         # Pull upstream and re-apply
 | Step | Script | Action |
 |------|--------|--------|
 | Setup wizard | `scripts/dotfiles-setup` | Writes `profile.yaml` from [setup-catalog.yaml](home/.chezmoidata/setup-catalog.yaml) |
-| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `apt full-upgrade` + `apt install` (Android/Termux); Linux also installs `apt_manual` packages marked `install`; Termux also installs `pkg_manual` packages marked `install` |
+| Before dotfiles | `run_onchange_before_install-packages` | `apt install` (Linux) or `apt full-upgrade` + `apt install` (Android/Termux) or `brew install` (macOS); Linux also installs `apt_manual` packages marked `install`; Termux also installs `pkg_manual` packages marked `install`. WSL skips Wayland/GDM/graphical apt packages. |
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_onchange_after_set-default-shell` | Termux: `chsh -s zsh` when zsh is enabled in profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
@@ -107,6 +107,29 @@ After installing packages by hand, run [scripts/apt-manual-sync](scripts/apt-man
 Entries are **append-only** (status changes, never deleted). Packages marked `install` are appended to chezmoi's `apt install` on apply. `ignore` keeps them tracked but out of automated install. Already-managed packages (`packages.yaml`, profiles) are skipped on scan.
 
 On Termux, use [scripts/pkg-manual-sync](scripts/pkg-manual-sync) the same way — it writes [pkg-manual.yaml](home/.chezmoidata/pkg-manual.yaml) and `install` entries are appended on `chezmoi apply` (Android branch of `run_onchange_before_install-packages`).
+
+## macOS
+
+On macOS, chezmoi reports `.chezmoi.os == "darwin"`. The [macOS profile](home/.chezmoidata/profile.macos.example.yaml) is selected automatically. Packages install with Homebrew (`brew install`); the wizard records brew formula names (`fd`, not `fd-find`).
+
+Wayland, GDM, Sway, and other graphical-session features default to off and are force-disabled in the effective profile. Linux-only installers (Cursor AppImage, NVIDIA, llama-swap, SwayFX builds) are no-ops.
+
+```bash
+# Homebrew (if this Mac does not already have it)
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+eval "$(/opt/homebrew/bin/brew shellenv)"   # Apple Silicon
+brew install chezmoi bash git
+
+git clone git@github.com:vantaboard/dotfiles-unix.git ~/Code/dotfiles-unix
+cd ~/Code/dotfiles-unix
+./scripts/dotfiles-setup --apply
+```
+
+The setup wizard needs Bash 4+ (`brew install bash`). On a recommended or `--yes` run it leaves desktop/Wayland features off.
+
+## WSL
+
+WSL is detected from `WSL_DISTRO_NAME` / `WSL_INTEROP` or `microsoft` in `/proc/version`. The [WSL profile](home/.chezmoidata/profile.wsl.example.yaml) keeps CLI apt tools and turns off Sway, Wayland session helpers, GDM (`sway_session`), `wl-clipboard`, and display-session deploy. The wizard prints the same recommendation and defaults those features off.
 
 ## Termux / Android
 
@@ -159,7 +182,7 @@ docker build -f Dockerfile.test -t dotfiles-e2e .
 docker run --rm dotfiles-e2e
 ```
 
-CI uses the committed minimal profile in [profile-ci.yaml](home/.chezmoidata/profile-ci.yaml).
+CI uses the committed minimal profile in [profile-ci.yaml](home/.chezmoidata/profile-ci.yaml) for the Ubuntu Docker job, and [profile-ci-macos.yaml](home/.chezmoidata/profile-ci-macos.yaml) on `macos-latest`.
 
 ## System config and VPN
 

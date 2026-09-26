@@ -1,13 +1,28 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
+
+if [[ -z "${BASH_VERSION:-}" ]] || (( BASH_VERSINFO[0] < 4 )); then
+  for _dotfiles_bash in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+    if [[ -x "$_dotfiles_bash" ]]; then
+      exec "$_dotfiles_bash" "$0" "$@"
+    fi
+  done
+  echo "This wizard needs Bash 4+. On macOS: brew install bash" >&2
+  exit 1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CATALOG_FILE="$REPO_ROOT/home/.chezmoidata/setup-catalog.yaml"
 PROFILE_DIR="$REPO_ROOT/home/.chezmoidata"
 
+source "$SCRIPT_DIR/lib/host.sh"
 source "$SCRIPT_DIR/lib/setup-ui.sh"
 source "$SCRIPT_DIR/lib/setup-catalog.sh"
+
+if [[ "$(dotfiles_host_kind)" == "darwin" ]]; then
+  export DOTFILES_PACKAGE_BACKEND=brew
+fi
 
 APPLY=0
 DRY_RUN=0
@@ -94,10 +109,13 @@ ensure_chezmoi_source_config() {
   fi
 
   if [[ -f "$config_file" ]] && grep -q '^sourceDir' "$config_file"; then
-    sed -i \
+    local tmp
+    tmp="$(mktemp)"
+    sed \
       -e "s|^sourceDir = .*|sourceDir = \"${repo_root}\"|" \
       -e "s|^workingTree = .*|workingTree = \"${repo_root}\"|" \
-      "$config_file"
+      "$config_file" > "$tmp"
+    mv "$tmp" "$config_file"
   elif [[ -f "$config_file" ]]; then
     local tmp
     tmp="$(mktemp)"
@@ -142,6 +160,12 @@ load_defaults() {
       ENABLED[$fid]=1
     fi
   done
+  if dotfiles_host_is_headless; then
+    local gfid
+    for gfid in $(dotfiles_graphical_features); do
+      ENABLED[$gfid]=0
+    done
+  fi
 }
 
 collect_profile_arrays() {
@@ -248,16 +272,28 @@ run_wizard() {
   load_defaults
 
   if [[ "$NON_INTERACTIVE" == "1" ]]; then
+    if dotfiles_host_is_headless; then
+      echo "Host $(dotfiles_host_kind): leaving Wayland/GDM/graphical features off."
+    fi
     catalog_resolve_features ENABLED
     return
   fi
 
   setup_ui_ensure_gum
 
+  local host_kind
+  host_kind="$(dotfiles_host_kind)"
+
   echo "=== Dotfiles setup wizard ==="
+  echo "Host: $host_kind"
   echo "Catalog: $CATALOG_FILE"
   echo "Profile dir: $PROFILE_DIR"
   echo
+  if dotfiles_host_is_headless; then
+    echo "This host looks like ${host_kind}."
+    echo "Wayland, GDM, Sway, and other graphical-session features are not recommended here and default to off."
+    echo
+  fi
 
   local setup_mode scope save_global=0 save_host=0
   setup_mode="$(setup_ui_choose_one "Setup mode:" $'recommended (catalog defaults)\ncustom (choose categories and features)')"
@@ -342,6 +378,23 @@ run_wizard() {
       ENABLED[$fid]=1
     done <<< "$selected_feats"
   done <<< "$selected_cats"
+
+  if dotfiles_host_is_headless; then
+    local enabled_graphical=()
+    local gfid
+    for gfid in $(dotfiles_graphical_features); do
+      [[ "${ENABLED[$gfid]:-0}" == "1" ]] && enabled_graphical+=("$gfid")
+    done
+    if ((${#enabled_graphical[@]})); then
+      echo "Graphical features selected: ${enabled_graphical[*]}"
+      if ! setup_ui_confirm "Enable Wayland/GDM/graphical features on ${host_kind} anyway?"; then
+        for gfid in "${enabled_graphical[@]}"; do
+          ENABLED[$gfid]=0
+        done
+        echo "Left graphical features off."
+      fi
+    fi
+  fi
 
   catalog_resolve_features ENABLED
   fi

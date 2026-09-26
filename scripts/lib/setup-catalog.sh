@@ -64,14 +64,25 @@ catalog_get_requires() {
   ' "$CATALOG_FILE"
 }
 
-catalog_get_packages() {
+catalog_feature_has_field() {
   local feat="$1"
-  awk -v f="$feat" '
+  local field="$2"
+  awk -v f="$feat" -v field="$field" '
     $0 ~ "^    "f":$"{found=1; next}
     found && /^    [a-z_]/ && $0 !~ "^      "{exit}
-    found && /^      packages: \[/{
+    found && $0 ~ "^      "field":" {print "true"; exit}
+  ' "$CATALOG_FILE"
+}
+
+catalog_get_list_field() {
+  local feat="$1"
+  local field="$2"
+  awk -v f="$feat" -v field="$field" '
+    $0 ~ "^    "f":$"{found=1; next}
+    found && /^    [a-z_]/ && $0 !~ "^      "{exit}
+    found && $0 ~ "^      "field": \\[" {
       line = $0
-      sub(/^      packages: \[/, "", line)
+      sub("^      "field": \\[", "", line)
       sub(/\].*$/, "", line)
       n = split(line, arr, ", ")
       for (i = 1; i <= n; i++) {
@@ -80,8 +91,23 @@ catalog_get_packages() {
       }
       next
     }
-    found && /^      packages:/{getline; while(/^        - /){if($2!="") print $2; getline}}
+    found && $0 ~ "^      "field":" {
+      getline
+      while (/^        - /) {
+        if ($2 != "") print $2
+        getline
+      }
+    }
   ' "$CATALOG_FILE"
+}
+
+catalog_get_packages() {
+  local feat="$1"
+  if [[ "${DOTFILES_PACKAGE_BACKEND:-}" == "brew" ]] && [[ "$(catalog_feature_has_field "$feat" "brew")" == "true" ]]; then
+    catalog_get_list_field "$feat" "brew"
+    return
+  fi
+  catalog_get_list_field "$feat" "packages"
 }
 
 catalog_all_feature_ids() {

@@ -1,9 +1,6 @@
 include /etc/sway/config.d/*
 
-{{ $p := .profile_example -}}
-{{- if index . "profile" -}}{{- $p = .profile -}}{{- end -}}
-{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{- $f := $p.features -}}
 {{- $swayfxEnabled := false -}}
 {{- if eq (index $f "swayfx") true -}}

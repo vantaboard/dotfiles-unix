@@ -59,18 +59,21 @@ setup_catalog:
       label: fd-find
       default: true
       packages: [fd-find]
+      brew: [fd]
     trash_cli:
       category: shell_core
       label: trash-cli
       default: true
       install_tools: true
       packages: [python3-venv]
-      description: Git clone + Python venv; trash-* wrappers in ~/.local/bin
+      brew: [trash]
+      description: Git clone + Python venv on Linux/Termux; Homebrew trash on macOS
     wl_clipboard:
       category: shell_core
       label: wl-clipboard
       default: true
       packages: [wl-clipboard]
+      brew: []
     keychain:
       category: shell_core
       label: keychain
@@ -118,16 +121,18 @@ setup_catalog:
     vivid:
       category: shell_extras
       label: vivid
-      description: LS_COLORS via vivid dracula; .deb on Linux, pkg on Termux (install-tools)
+      description: LS_COLORS via vivid dracula; .deb on Linux, pkg on Termux, brew on macOS
       default: true
       export_block: vivid
       install_tools: true
+      brew: [vivid]
     mise:
       category: shell_extras
       label: mise
-      description: Runtime version manager (Termux pkg on Android; mise.run on Linux)
+      description: Runtime version manager (Termux pkg on Android; mise.run on Linux; brew on macOS)
       default: true
       install_tools: true
+      brew: [mise]
       zshrc_block: mise
     direnv:
       category: shell_extras
@@ -235,6 +240,7 @@ setup_catalog:
       default: true
       requires: [keychain]
       packages: [pinentry-curses, pinentry-gnome3]
+      brew: [pinentry-mac]
       config_paths: [private_dot_gnupg]
       zshrc_block: gpg_keychain
 
@@ -244,6 +250,7 @@ setup_catalog:
       label: Sway window manager
       default: true
       packages: [sway, swaylock, swayidle, swaybg, waybar, grim, slurp, wl-clipboard, py3status]
+      brew: []
       config_paths: [dot_config/sway, dot_config/swaylock, dot_config/waybar, dot_config/environment.d/wayland.conf, dot_config/py3status]
       system_deploy: sway_session
     hyprpicker:
@@ -349,6 +356,7 @@ setup_catalog:
       label: kanshi
       default: true
       packages: [kanshi]
+      brew: []
       config_paths: [dot_config/kanshi]
     wayland_session:
       category: desktop
@@ -367,11 +375,13 @@ setup_catalog:
       label: dunst notifications
       default: true
       packages: [dunst]
+      brew: []
     rofi:
       category: desktop
       label: rofi + bemenu launchers
       default: true
       packages: [rofi, bemenu, libbemenu-wayland, j4-dmenu-desktop]
+      brew: []
       config_paths: [dot_config/rofi]
       description: bemenu ($mod+d drun via j4-dmenu-desktop) is a horizontal full-width top bar; rofi handles $mod+z run mode
     desktop_utils:
@@ -380,6 +390,7 @@ setup_catalog:
       description: brightness, playerctl, network, audio
       default: true
       packages: [playerctl, brightnessctl, acpi, libnotify-bin, network-manager, network-manager-gnome, pipewire-pulse]
+      brew: []
     dropbox:
       category: desktop
       label: Dropbox
@@ -417,6 +428,7 @@ setup_catalog:
       description: Caps→Escape and Alt+hjkl navigation via keyd
       default: true
       packages: [keyd]
+      brew: []
       system_deploy: keyd
       systemd_unit: keyd.service
 
@@ -457,6 +469,7 @@ setup_catalog:
       label: Clang toolchain
       default: true
       packages: [clang]
+      brew: []
       zshrc_block: clang_exports
     unreal:
       category: dev
@@ -483,23 +496,27 @@ setup_catalog:
       category: dev
       label: yt-dlp
       default: true
+      brew: [yt-dlp]
       description: Video/audio downloader; latest GitHub release binary in ~/.local/bin (enable ffmpeg for merge/post-process)
     doctl:
       category: dev
       label: doctl
       default: true
+      brew: [doctl]
       description: DigitalOcean CLI; latest GitHub release binary in ~/.local/bin
     diff_so_fancy:
       category: dev
       label: diff-so-fancy
       default: true
       install_tools: true
+      brew: [diff-so-fancy]
       description: Git pager helper; release binary in ~/.local/bin (v1.4.10)
     flatpak:
       category: dev
       label: Flatpak
       default: true
       packages: [flatpak]
+      brew: []
 
     # --- system ---
     ssh_hardening:
@@ -507,12 +524,14 @@ setup_catalog:
       label: SSH hardening (port 9701 pubkey-only)
       default: true
       packages: [openssh-server]
+      brew: []
       system_deploy: ssh
     grub:
       category: system
       label: GRUB config
       default: true
       packages: [grub-common, grub-efi-amd64, grub-efi-amd64-signed]
+      brew: []
       system_deploy: grub
     displays_resume:
       category: system
@@ -531,6 +550,7 @@ setup_catalog:
       default: true
       description: udev rules disarming lid/keyboard/touchpad/USB/Thunderbolt/AC wake and Wake-on-LAN so s2idle suspend is not resumed instantly
       packages: [ethtool]
+      brew: []
       system_deploy: wake_sources
     hibernate:
       category: system
@@ -550,10 +570,12 @@ setup_catalog:
       label: earlyoom
       default: true
       packages: [earlyoom]
+      brew: []
       systemd_unit: earlyoom.service
     thermald:
       category: system
       label: thermald
       default: true
       packages: [thermald]
+      brew: []
       systemd_unit: thermald.service

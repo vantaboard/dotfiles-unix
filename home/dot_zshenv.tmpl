@@ -20,19 +20,15 @@ DEBIAN_PREVENT_KEYBOARD_CHANGES=yes
 if [[ -d "$HOME/.local/bin" ]]; then
   export PATH="$HOME/.local/bin${PATH:+:$PATH}"
 fi
+{{- if eq .chezmoi.os "darwin" }}
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+{{- end }}
 
-{{- $p := .profile_example -}}
-{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}
-{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
-{{-   else -}}{{- $p = .profile -}}
-{{-   end -}}
-{{- end -}}
-{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
-{{- if eq .chezmoi.os "android" -}}
-{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
-{{- end -}}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{- $f := $p.features -}}
 {{- if index $f "mise" }}
 if command -v mise >/dev/null 2>&1 && mise --version >/dev/null 2>&1; then

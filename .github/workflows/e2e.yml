@@ -21,6 +21,9 @@ jobs:
         run: |
           bash tests/validate-profile.sh home/.chezmoidata/profile.example.yaml
           bash tests/validate-profile.sh home/.chezmoidata/profile-ci.yaml
+          bash tests/validate-profile.sh home/.chezmoidata/profile.macos.example.yaml
+          bash tests/validate-profile.sh home/.chezmoidata/profile.wsl.example.yaml
+          bash tests/validate-profile.sh home/.chezmoidata/profile-ci-macos.yaml
 
       - name: Validate display layout templates
         run: bash tests/validate-displays.sh
@@ -36,3 +39,69 @@ jobs:
         run: |
           docker build -f Dockerfile.test -t dotfiles-e2e .
           docker run --rm dotfiles-e2e
+
+  e2e-macos:
+    runs-on: macos-latest
+    env:
+      CHEZMOI_CI: "1"
+      CHEZMOI_SKIP_SYSTEM_DEPLOY: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install chezmoi and bash
+        run: brew install chezmoi bash
+
+      - name: Apply dotfiles
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
+          chezmoi init --source "$GITHUB_WORKSPACE" --working-tree "$GITHUB_WORKSPACE" --apply
+
+      - name: zsh smoke tests
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
+          bash tests/zsh-smoke.sh
+          bash tests/zsh-smoke-minimal.sh
+
+      - name: Assert headless macOS profile
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
+          if [[ -d "$HOME/.config/sway" ]]; then
+            echo "FAIL: ~/.config/sway was deployed on macOS"
+            exit 1
+          fi
+          echo "OK: sway config not deployed"
+          features="$(chezmoi execute-template '{{ $p := includeTemplate "profile.tpl" . | fromYaml }}desktop_sway={{ index $p.features "desktop_sway" }} wayland_session={{ index $p.features "wayland_session" }} wl_clipboard={{ index $p.features "wl_clipboard" }}')"
+          echo "effective: $features"
+          [[ "$features" == *"desktop_sway=false"* ]] || { echo "FAIL: desktop_sway should be false"; exit 1; }
+          [[ "$features" == *"wayland_session=false"* ]] || { echo "FAIL: wayland_session should be false"; exit 1; }
+          [[ "$features" == *"wl_clipboard=false"* ]] || { echo "FAIL: wl_clipboard should be false"; exit 1; }
+          echo "OK: graphical features off"
+
+      - name: Wizard dry-run defaults to headless
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
+          out="$(./scripts/dotfiles-setup --yes --dry-run)"
+          echo "$out"
+          echo "$out" | grep -q 'Host darwin: leaving Wayland/GDM/graphical features off.' \
+            || { echo "FAIL: wizard did not recommend against graphical features"; exit 1; }
+          echo "$out" | grep -q 'desktop_sway: false' \
+            || { echo "FAIL: wizard dry-run left desktop_sway on"; exit 1; }
+          echo "$out" | grep -q 'wayland_session: false' \
+            || { echo "FAIL: wizard dry-run left wayland_session on"; exit 1; }
+          echo "$out" | grep -q 'wl_clipboard: false' \
+            || { echo "FAIL: wizard dry-run left wl_clipboard on"; exit 1; }
+          echo "OK: wizard dry-run is headless"
+
+      - name: Homebrew CI formulae installed
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
+          missing=0
+          for formula in zsh git curl keychain fzf ripgrep fd jq neovim zoxide eza bat vivid; do
+            if brew list --formula "$formula" >/dev/null 2>&1; then
+              echo "OK: brew $formula"
+            else
+              echo "FAIL: missing brew formula $formula"
+              missing=1
+            fi
+          done
+          exit "$missing"

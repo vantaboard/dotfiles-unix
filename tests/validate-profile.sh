@@ -25,7 +25,7 @@ while IFS= read -r line; do
     val="${val// /}"
     [[ "$val" == "true" ]] && ENABLED[$fid]=1 || ENABLED[$fid]=0
   fi
-done < <(awk '/^(profile|profile_example|profile_ci|profile_termux_example):/{f=1;next} f && /^[a-z_]/ && !/^  /{f=0} f' "$PROFILE")
+done < <(awk '/^(profile|profile_example|profile_ci|profile_termux_example|profile_macos_example|profile_wsl_example|profile_ci_macos):/{f=1;next} f && /^[a-z_]/ && !/^  /{f=0} f' "$PROFILE")
 
 for fid in $(catalog_all_feature_ids); do
   if [[ -z "${ENABLED[$fid]:-}" ]]; then
@@ -66,6 +66,6 @@ while IFS= read -r excluded; do
     echo "FAIL: $PROFILE lists apt package '$excluded' but it is in packages.yaml apt_exclude (custom install only)"
     exit 1
   fi
-done < <(awk '/^    apt_exclude:/{f=1; next} f && /^    apt:/{exit} f && /^      - /{print $2}' "$PACKAGES_FILE")
+done < <(awk '/^    apt_exclude:/{f=1; next} f && /^    [a-z_]+:/{exit} f && /^      - /{print $2}' "$PACKAGES_FILE")
 
 echo "OK: profile validates against catalog"

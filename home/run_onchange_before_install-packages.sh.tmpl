@@ -5,17 +5,7 @@ set -eu
 # hash: {{ .packages.termux.pkg | toYaml | sha256sum }}
 # hash: {{ include ".chezmoidata/pkg-manual.yaml" | sha256sum }}
 
-{{ $p := .profile_termux_example }}
-{{ if index . "profile" }}
-{{   $p = mergeOverwrite $p .profile }}
-{{ end }}
-{{ if env "CHEZMOI_CI" }}
-{{   $p = .profile_ci }}
-{{ end }}
-{{ if index . "profile_host" }}
-{{   $p = mergeOverwrite $p .profile_host }}
-{{ end }}
-{{ $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) }}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{ $f := $p.features }}
 
 # hash: {{ index $f "llama" }}
@@ -61,20 +51,10 @@ set -euo pipefail
 # hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/setup-catalog.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/profile.example.yaml" | sha256sum }}
+# hash: {{ include ".chezmoidata/profile.wsl.example.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/apt-manual.yaml" | sha256sum }}
 
-{{- $p := .profile_example -}}
-{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}
-{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
-{{-   else -}}{{- $p = .profile -}}
-{{-   end -}}
-{{- end -}}
-{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
-{{- if eq .chezmoi.os "android" -}}
-{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
-{{- end -}}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{- $aptExclude := default (list) .packages.ubuntu.apt_exclude -}}
 {{- $aptExcludeMap := dict -}}
 {{- range $aptExclude -}}
@@ -109,6 +89,33 @@ if ! command -v apt >/dev/null 2>&1; then
 fi
 
 export DEBIAN_FRONTEND=noninteractive
+
+is_wsl() {
+  [[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" ]] && return 0
+  [[ -r /proc/version ]] && grep -qi microsoft /proc/version && return 0
+  return 1
+}
+
+headless_skip_pkg() {
+  case "$1" in
+{{- range (default (list) .packages.ubuntu.apt_headless_exclude) }}
+    {{ . }}) return 0 ;;
+{{- end }}
+  esac
+  return 1
+}
+
+drop_wsl_graphical_pkgs() {
+  local pkg
+  local kept=()
+  for pkg in "${available_pkgs[@]}"; do
+    if headless_skip_pkg "$pkg"; then
+      continue
+    fi
+    kept+=("$pkg")
+  done
+  available_pkgs=("${kept[@]}")
+}
 
 apt_pkg_candidate() {
   # awk exits after the first match; without `|| true`, pipefail turns apt-cache's
@@ -226,6 +233,10 @@ done
 if ((${#unavailable_pkgs[@]})); then
   echo "Skipping ${#unavailable_pkgs[@]} core package(s) with no install candidate (install-tools may provide fallbacks): ${unavailable_pkgs[*]}"
 fi
+if is_wsl; then
+  echo "WSL detected: skipping Wayland, GDM, and other graphical-session packages"
+  drop_wsl_graphical_pkgs
+fi
 if ((${#available_pkgs[@]})); then
   sudo apt install -y -qq --no-install-recommends "${available_pkgs[@]}"
 fi
@@ -259,6 +270,9 @@ done
 if ((${#unavailable_pkgs[@]})); then
   echo "Skipping ${#unavailable_pkgs[@]} manual package(s) with no install candidate (third-party repo not configured?): ${unavailable_pkgs[*]}"
 fi
+if is_wsl; then
+  drop_wsl_graphical_pkgs
+fi
 if ((${#available_pkgs[@]})); then
   sudo apt install -y -qq --no-install-recommends "${available_pkgs[@]}" \
     || echo "WARN: one or more manual packages failed to install"
@@ -276,4 +290,72 @@ fi
 {{- end }}
 
 echo "apt packages installed"
+{{ else if eq .chezmoi.os "darwin" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# hash: {{ include ".chezmoidata/setup-catalog.yaml" | sha256sum }}
+# hash: {{ include ".chezmoidata/profile.macos.example.yaml" | sha256sum }}
+# hash: {{ include ".chezmoidata/profile-ci-macos.yaml" | sha256sum }}
+
+{{- $p := includeTemplate "profile.tpl" . | fromYaml }}
+
+ensure_brew() {
+  if command -v brew >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    return 0
+  fi
+  if [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    return 0
+  fi
+  echo "Homebrew not found; installing (NONINTERACTIVE=1)"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+  command -v brew >/dev/null 2>&1
+}
+
+ensure_brew
+
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ENV_HINTS=1
+
+formulae=(
+{{- if env "CHEZMOI_CI" }}
+{{- range .packages.darwin.brew_ci }}
+  {{ . }}
+{{- end }}
+{{- else if $p.packages }}
+{{- range $p.packages }}
+  {{ . }}
+{{- end }}
+{{- else }}
+{{- range .packages.darwin.brew }}
+  {{ . }}
+{{- end }}
+{{- end }}
+)
+
+to_install=()
+for formula in "${formulae[@]}"; do
+  if brew list --formula "$formula" >/dev/null 2>&1; then
+    echo "brew: $formula already installed"
+  else
+    to_install+=("$formula")
+  fi
+done
+if ((${#to_install[@]})); then
+  echo "Installing Homebrew formulae: ${to_install[*]}"
+  brew install --formula "${to_install[@]}"
+fi
+
+echo "Homebrew formulae installed"
 {{ end -}}

@@ -2,18 +2,7 @@
 #!/bin/bash
 set -euo pipefail
 
-{{- $p := .profile_example -}}
-{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}
-{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
-{{-   else -}}{{- $p = .profile -}}
-{{-   end -}}
-{{- end -}}
-{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
-{{- if eq .chezmoi.os "android" -}}
-{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
-{{- end -}}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{- $deploy := $p.system_deploy | default list }}
 
 SOURCE="{{ .chezmoi.sourceDir }}/system"
@@ -60,8 +49,22 @@ if [[ "${CHEZMOI_SKIP_SYSTEM_DEPLOY:-}" == "1" ]]; then
   exit 0
 fi
 
+is_wsl() {
+  [[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" ]] && return 0
+  [[ -r /proc/version ]] && grep -qi microsoft /proc/version && return 0
+  return 1
+}
+
 has_deploy() {
   local key="$1"
+  if is_wsl; then
+    case "$key" in
+      sway_session|displays_resume|hdmi_audio)
+        echo "WSL: skipping $key (Wayland/GDM/graphical session deploy is not recommended)"
+        return 1
+        ;;
+    esac
+  fi
 {{- if $deploy }}
   case "$key" in
 {{- range $deploy }}
@@ -70,6 +73,9 @@ has_deploy() {
   esac
   return 1
 {{- else }}
+  if is_wsl; then
+    return 1
+  fi
   return 0
 {{- end }}
 }

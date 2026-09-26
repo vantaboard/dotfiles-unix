@@ -6,6 +6,41 @@ packages:
       - wezterm
       # xrandr hotplug tool; conflicts with kanshi on sway Wayland (never install).
       - autorandr
+    # Never install these on WSL (no Wayland session, GDM, or desktop stack).
+    apt_headless_exclude:
+      - sway
+      - swaylock
+      - swayidle
+      - swaybg
+      - waybar
+      - kanshi
+      - grim
+      - slurp
+      - wl-clipboard
+      - py3status
+      - dunst
+      - rofi
+      - bemenu
+      - libbemenu-wayland
+      - j4-dmenu-desktop
+      - playerctl
+      - brightnessctl
+      - acpi
+      - libnotify-bin
+      - keyd
+      - network-manager
+      - network-manager-gnome
+      - pipewire-pulse
+      - libwayland-dev
+      - libwayland-bin
+      - wayland-protocols
+      - gdm
+      - gdm3
+      - ubuntu-desktop
+      - ubuntu-desktop-minimal
+      - grub-common
+      - grub-efi-amd64
+      - grub-efi-amd64-signed
     apt:
       # Shell and core CLI
       - zsh
@@ -110,3 +145,46 @@ packages:
       - python
       - vivid
       - termux-api
+  darwin:
+    # Homebrew formulae (no casks, no Wayland). Used on macOS when the
+    # profile does not list packages.
+    brew:
+      - zsh
+      - git
+      - curl
+      - keychain
+      - fzf
+      - ripgrep
+      - fd
+      - trash
+      - jq
+      - htop
+      - fastfetch
+      - tmux
+      - zoxide
+      - eza
+      - bat
+      - vivid
+      - mise
+      - direnv
+      - neovim
+      - gh
+      - glab
+      - ffmpeg
+      - yt-dlp
+      - doctl
+    brew_ci:
+      # Minimal set for macOS GitHub Actions E2E
+      - zsh
+      - git
+      - curl
+      - keychain
+      - fzf
+      - ripgrep
+      - fd
+      - jq
+      - neovim
+      - zoxide
+      - eza
+      - bat
+      - vivid

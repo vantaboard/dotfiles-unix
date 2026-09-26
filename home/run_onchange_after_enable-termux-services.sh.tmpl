@@ -4,17 +4,7 @@ set -euo pipefail
 
 # hash: termux-services-v3
 
-{{ $p := .profile_termux_example }}
-{{ if index . "profile" }}
-{{   $p = mergeOverwrite $p .profile }}
-{{ end }}
-{{ if env "CHEZMOI_CI" }}
-{{   $p = .profile_ci }}
-{{ end }}
-{{ if index . "profile_host" }}
-{{   $p = mergeOverwrite $p .profile_host }}
-{{ end }}
-{{ $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) }}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{ $f := $p.features }}
 
 # hash: {{ index $f "llama" }}

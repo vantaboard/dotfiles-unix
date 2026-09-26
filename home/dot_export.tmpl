@@ -1,15 +1,4 @@
-{{- $p := .profile_example -}}
-{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}
-{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
-{{-   else -}}{{- $p = .profile -}}
-{{-   end -}}
-{{- end -}}
-{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
-{{- if eq .chezmoi.os "android" -}}
-{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
-{{- end -}}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{- $f := $p.features -}}
 #!/usr/bin/sh
 {{- if index $f "vivid" }}
@@ -34,6 +23,10 @@ notify_user() {
     echo "$1"
   fi
 }
+{{- else if eq .chezmoi.os "darwin" }}
+clip_copy() { pbcopy; }
+clip_paste() { pbpaste; }
+notify_user() { echo "$1"; }
 {{- else if index $f "wl_clipboard" }}
 clip_copy() { wl-copy; }
 clip_paste() { wl-paste 2>/dev/null; }

@@ -1,15 +1,4 @@
-{{- $p := .profile_example -}}
-{{- if eq .chezmoi.os "android" -}}{{- $p = .profile_termux_example -}}{{- end -}}
-{{- if index . "profile" -}}
-{{-   if eq .chezmoi.os "android" -}}{{- $p = mergeOverwrite $p .profile -}}
-{{-   else -}}{{- $p = .profile -}}
-{{-   end -}}
-{{- end -}}
-{{- if env "CHEZMOI_CI" -}}{{- $p = .profile_ci -}}{{- end -}}
-{{- if index . "profile_host" -}}{{- $p = mergeOverwrite $p .profile_host -}}{{- end -}}
-{{- if eq .chezmoi.os "android" -}}
-{{- $p = mergeOverwrite $p (dict "features" (mergeOverwrite $p.features .profile_termux_example.features)) -}}
-{{- end -}}
+{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
 {{- $wake := index $p "wake_usb" | default list -}}
 # This laptop suspends via s2idle (firmware reports Low-power S0, so the kernel
 # never picks deep/S3). In s2idle the OS stays in a polling loop and *any* armed

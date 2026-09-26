@@ -35,7 +35,7 @@ setup_ui_install_gum() {
   local tmp extracted
   url="$(setup_ui_gum_download_url "$os" "$arch")" || return 1
   tmp="$(mktemp -d)"
-  if ! curl -fsSL "$url" | tar -xz -C "$tmp" --wildcards '*/gum'; then
+  if ! curl -fsSL "$url" | tar -xz -C "$tmp"; then
     rm -rf "$tmp"
     return 1
   fi
