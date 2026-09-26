@@ -55,6 +55,10 @@ jobs:
         run: |
           eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
           chezmoi init --source "$GITHUB_WORKSPACE" --working-tree "$GITHUB_WORKSPACE" --apply
+          echo "=== chezmoiignore ==="
+          chezmoi execute-template -f "$GITHUB_WORKSPACE/home/.chezmoiignore.tmpl"
+          echo "=== managed sway ==="
+          chezmoi managed | grep -i sway || echo "(none)"
 
       - name: zsh smoke tests
         run: |
