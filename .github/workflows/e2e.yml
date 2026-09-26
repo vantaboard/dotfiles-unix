@@ -84,8 +84,8 @@ jobs:
       - name: Wizard dry-run defaults to headless
         run: |
           eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
-          out="$(./scripts/dotfiles-setup --yes --dry-run)"
-          echo "$out"
+          out="$(./scripts/dotfiles-setup --yes --dry-run 2>&1)"
+          printf '%s\n' "$out"
           echo "$out" | grep -q 'Host darwin: leaving Wayland/GDM/graphical features off.' \
             || { echo "FAIL: wizard did not recommend against graphical features"; exit 1; }
           echo "$out" | grep -q 'desktop_sway: false' \

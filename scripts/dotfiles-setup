@@ -207,7 +207,9 @@ write_profile_yaml() {
   local outfile="$1"
   local key="$2"
   local existing=""
-  mkdir -p "$(dirname "$outfile")"
+  if [[ "$outfile" != /dev/stdout && "$outfile" != "-" ]]; then
+    mkdir -p "$(dirname "$outfile")"
+  fi
   collect_profile_arrays
   if [[ -f "$outfile" && "$outfile" != /dev/stdout && "$outfile" != "-" ]]; then
     existing="$(mktemp)"
