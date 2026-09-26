@@ -203,54 +203,69 @@ extract_profile_section() {
   ' "$file"
 }
 
+emit_profile_yaml() {
+  local key="$1"
+  local existing="${2:-}"
+  echo "$key:"
+  echo "  features:"
+  local fid
+  for fid in $(catalog_all_feature_ids | sort); do
+    if [[ "${ENABLED[$fid]:-0}" == "1" ]]; then
+      echo "    $fid: true"
+    else
+      echo "    $fid: false"
+    fi
+  done
+  echo "  packages:"
+  for pkg in "${PACKAGES[@]+"${PACKAGES[@]}"}"; do
+    echo "    - $pkg"
+  done
+  echo "  systemd_units:"
+  for unit in "${SYSTEMD_UNITS[@]+"${SYSTEMD_UNITS[@]}"}"; do
+    echo "    - $unit"
+  done
+  echo "  system_deploy:"
+  for deploy in "${SYSTEM_DEPLOY[@]+"${SYSTEM_DEPLOY[@]}"}"; do
+    echo "    - $deploy"
+  done
+  echo "  identity:"
+  echo "    git_email: \"${GIT_EMAIL:-}\""
+  echo "    git_ssh_key: \"${GIT_SSH_KEY:-}\""
+  echo "  secrets:"
+  echo "    git_gpg_key: \"${GIT_GPG_KEY:-}\""
+  if [[ -n "$existing" ]]; then
+    local extra
+    for extra in unreal_engine_path input_devices displays wake_usb; do
+      extract_profile_section "$existing" "$extra"
+    done
+  fi
+}
+
 write_profile_yaml() {
   local outfile="$1"
   local key="$2"
   local existing=""
-  if [[ "$outfile" != /dev/stdout && "$outfile" != "-" ]]; then
+  local to_stdout=0
+  if [[ "$outfile" == /dev/stdout || "$outfile" == "-" ]]; then
+    to_stdout=1
+  else
     mkdir -p "$(dirname "$outfile")"
   fi
   collect_profile_arrays
-  if [[ -f "$outfile" && "$outfile" != /dev/stdout && "$outfile" != "-" ]]; then
+  if [[ "$to_stdout" -eq 0 && -f "$outfile" ]]; then
     existing="$(mktemp)"
     cp "$outfile" "$existing"
   fi
-  {
-    echo "$key:"
-    echo "  features:"
-    local fid
-    for fid in $(catalog_all_feature_ids | sort); do
-      if [[ "${ENABLED[$fid]:-0}" == "1" ]]; then
-        echo "    $fid: true"
-      else
-        echo "    $fid: false"
-      fi
-    done
-    echo "  packages:"
-    for pkg in "${PACKAGES[@]}"; do
-      echo "    - $pkg"
-    done
-    echo "  systemd_units:"
-    for unit in "${SYSTEMD_UNITS[@]}"; do
-      echo "    - $unit"
-    done
-    echo "  system_deploy:"
-    for deploy in "${SYSTEM_DEPLOY[@]}"; do
-      echo "    - $deploy"
-    done
-    echo "  identity:"
-    echo "    git_email: \"${GIT_EMAIL:-}\""
-    echo "    git_ssh_key: \"${GIT_SSH_KEY:-}\""
-    echo "  secrets:"
-    echo "    git_gpg_key: \"${GIT_GPG_KEY:-}\""
-    if [[ -n "$existing" ]]; then
-      local extra
-      for extra in unreal_engine_path input_devices displays wake_usb; do
-        extract_profile_section "$existing" "$extra"
-      done
-    fi
-  } > "$outfile"
-  [[ -n "$existing" ]] && rm -f "$existing"
+  # Reopening /dev/stdout with '>' uses O_TRUNC and fails on macOS when
+  # stdout is a pipe (command substitution / GHA capture).
+  if [[ "$to_stdout" -eq 1 ]]; then
+    emit_profile_yaml "$key" "$existing"
+  else
+    emit_profile_yaml "$key" "$existing" > "$outfile"
+  fi
+  if [[ -n "$existing" ]]; then
+    rm -f "$existing"
+  fi
 }
 
 print_summary() {
