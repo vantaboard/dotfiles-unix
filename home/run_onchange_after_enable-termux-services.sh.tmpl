@@ -4,7 +4,7 @@ set -euo pipefail
 
 # hash: termux-services-v3
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{ $f := $p.features }}
 
 # hash: {{ index $f "llama" }}

@@ -5,7 +5,7 @@ set -eu
 # hash: {{ .packages.termux.pkg | toYaml | sha256sum }}
 # hash: {{ include ".chezmoidata/pkg-manual.yaml" | sha256sum }}
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{ $f := $p.features }}
 
 # hash: {{ index $f "llama" }}
@@ -54,7 +54,7 @@ set -euo pipefail
 # hash: {{ include ".chezmoidata/profile.wsl.example.yaml" | sha256sum }}
 # hash: {{ include ".chezmoidata/apt-manual.yaml" | sha256sum }}
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $aptExclude := default (list) .packages.ubuntu.apt_exclude -}}
 {{- $aptExcludeMap := dict -}}
 {{- range $aptExclude -}}

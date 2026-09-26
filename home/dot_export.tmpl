@@ -1,4 +1,4 @@
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 #!/usr/bin/sh
 {{- if index $f "vivid" }}

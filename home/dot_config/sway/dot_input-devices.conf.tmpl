@@ -1,6 +1,6 @@
 # Per-device input settings (Wayland / Sway).
 # Pointer acceleration also mirrored in system/libinput/local-overrides.quirks.
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $inputDevices := index $p "input_devices" | default dict -}}
 {{- $pointers := index $inputDevices "pointers" | default list -}}
 {{- range $pointers }}

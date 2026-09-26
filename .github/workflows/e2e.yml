@@ -65,8 +65,10 @@ jobs:
       - name: Assert headless macOS profile
         run: |
           eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
-          if [[ -d "$HOME/.config/sway" ]]; then
-            echo "FAIL: ~/.config/sway was deployed on macOS"
+          echo "chezmoi.os=$(chezmoi execute-template '{{ .chezmoi.os }}')"
+          if [[ -e "$HOME/.config/sway/config" || -e "$HOME/.config/sway/displays.json" ]]; then
+            echo "FAIL: Sway config was deployed on macOS"
+            ls -la "$HOME/.config/sway" || true
             exit 1
           fi
           echo "OK: sway config not deployed"

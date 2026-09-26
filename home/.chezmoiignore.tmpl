@@ -1,10 +1,14 @@
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
+{{- $swayOn := eq (index $f "desktop_sway") true -}}
 system/
 
-{{- if not (index $f "desktop_sway") }}
+{{- if or (eq .chezmoi.os "darwin") (not $swayOn) }}
+dot_config/sway
 dot_config/sway/**
+dot_config/swaylock
 dot_config/swaylock/**
+dot_config/kanshi
 dot_config/kanshi/**
 dot_config/environment.d/wayland.conf
 dot_local/bin/executable_sway-wallpaper

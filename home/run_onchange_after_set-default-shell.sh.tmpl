@@ -1,5 +1,5 @@
 {{ if eq .chezmoi.os "android" -}}
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 {{- if index $f "zsh" -}}
 #!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}

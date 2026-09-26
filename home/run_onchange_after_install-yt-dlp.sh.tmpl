@@ -1,5 +1,5 @@
 {{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 {{- if index $f "yt_dlp" -}}
 {{ if eq .chezmoi.os "android" -}}
@@ -8,7 +8,7 @@ set -euo pipefail
 {{ else -}}
 #!/bin/bash
 set -euo pipefail
-{{ end -}}
+{{ end }}
 
 # hash: yt-dlp-v1
 

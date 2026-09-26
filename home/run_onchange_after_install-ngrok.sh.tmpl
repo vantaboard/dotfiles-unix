@@ -1,5 +1,5 @@
 {{ if and (eq .chezmoi.os "linux") -}}
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 {{- if index $f "ngrok" -}}
 #!/bin/bash

@@ -1,6 +1,6 @@
 include /etc/sway/config.d/*
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 {{- $swayfxEnabled := false -}}
 {{- if eq (index $f "swayfx") true -}}

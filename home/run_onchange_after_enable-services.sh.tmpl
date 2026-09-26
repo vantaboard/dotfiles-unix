@@ -2,7 +2,7 @@
 #!/bin/bash
 set -euo pipefail
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 
 # hash: {{ $p.systemd_units | toYaml | sha256sum }}
 

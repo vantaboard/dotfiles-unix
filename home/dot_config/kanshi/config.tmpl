@@ -1,4 +1,4 @@
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $displays := index $p "displays" | default dict -}}
 {{- $laptop := index $displays "laptop" | default dict -}}
 {{- $laptopMatch := index $laptop "match" | default "eDP-1" -}}

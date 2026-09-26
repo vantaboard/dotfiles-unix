@@ -1,4 +1,4 @@
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $identity := index $p "identity" | default dict -}}
 {{- $secrets := index $p "secrets" | default dict -}}
 export GIT_GPG_KEY="{{ index $secrets "git_gpg_key" | default "" }}"

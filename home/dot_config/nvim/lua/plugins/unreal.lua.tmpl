@@ -1,4 +1,4 @@
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 {{- if index $f "unreal" -}}
 {{- $engine := $p.unreal_engine_path | default "" -}}

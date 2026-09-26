@@ -5,9 +5,9 @@ set -euo pipefail
 {{ else -}}
 #!/bin/bash
 set -euo pipefail
-{{ end -}}
+{{ end }}
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features }}
 
 # hash: tools-v33-aichat-cli-tools

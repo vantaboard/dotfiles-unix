@@ -1,4 +1,4 @@
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $wake := index $p "wake_usb" | default list -}}
 # This laptop suspends via s2idle (firmware reports Low-power S0, so the kernel
 # never picks deep/S3). In s2idle the OS stays in a polling loop and *any* armed

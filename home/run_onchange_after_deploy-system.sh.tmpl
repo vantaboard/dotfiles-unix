@@ -2,7 +2,7 @@
 #!/bin/bash
 set -euo pipefail
 
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $deploy := $p.system_deploy | default list }}
 
 SOURCE="{{ .chezmoi.sourceDir }}/system"

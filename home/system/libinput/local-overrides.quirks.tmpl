@@ -1,5 +1,5 @@
 # Pointer acceleration overrides (libinput; Sway per-device settings in input-devices.conf).
-{{- $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $inputDevices := index $p "input_devices" | default dict -}}
 {{- $pointers := index $inputDevices "pointers" | default list -}}
 {{- range $i, $ptr := $pointers }}
