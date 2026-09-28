@@ -9,7 +9,7 @@ set -euo pipefail
 export BEMENU_BACKEND=wayland
 
 bemenu_cmd="bemenu -i -p 'run' \
-  --fn 'FixedsysExcelsior Nerd Font Mono 10' \
+  --fn 'FiraMono Nerd Font Mono 10' \
   --tb '#0f0a05' --tf '#84c137' \
   --fb '#0f0a05' --ff '#84c137' \
   --nb '#0f0a05' --nf '#84c137' \

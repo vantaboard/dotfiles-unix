@@ -1,6 +1,6 @@
 configuration {
     location:            2;
-    font:                "FixedsysExcelsior Nerd Font Mono 10";
+    font:                "FiraMono Nerd Font Mono 10";
     show-icons:          false;
     display-drun:        "    run    ";
     drun-display-format: "{name}";
