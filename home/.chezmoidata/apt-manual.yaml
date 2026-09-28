@@ -44,7 +44,8 @@ apt_manual:
       status: install
       first_seen: "2026-06-14"
     blender:
-      status: install
+      # Installed via snap (Blender Foundation 5.2 LTS); Ubuntu apt is 4.0.
+      status: ignore
       first_seen: "2026-06-16"
     blueman:
       status: install
