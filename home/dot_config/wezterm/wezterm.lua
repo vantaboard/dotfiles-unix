@@ -46,7 +46,7 @@ config.color_schemes = {
 }
 
 config.color_scheme = "Hipster Green"
-config.font = wezterm.font("FixedsysExcelsior Nerd Font Mono")
+config.font = wezterm.font("FiraMono Nerd Font Mono")
 config.font_size = 10.0
 config.line_height = 1.0
 
