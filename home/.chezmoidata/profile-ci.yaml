@@ -65,6 +65,7 @@ profile_ci:
     onlyoffice: false
     anki: false
     freecad: false
+    kicad: false
     earlyoom: false
     thermald: false
   packages:

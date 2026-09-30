@@ -69,6 +69,7 @@ dropbox
 onlyoffice
 anki
 freecad
+kicad
 sunshine
 keyd
 wl_clipboard

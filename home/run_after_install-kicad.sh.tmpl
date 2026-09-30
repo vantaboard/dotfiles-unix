@@ -1,0 +1,241 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
+{{- $f := $p.features -}}
+{{- if index $f "kicad" -}}
+#!/bin/bash
+set -euo pipefail
+
+# KiCad 10: https://www.kicad.org/download/linux/
+# PPA: https://launchpad.net/~kicad/+archive/ubuntu/kicad-10.0-releases
+# MCP server: https://github.com/mixelpixx/KiCAD-MCP-Server (stable)
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping KiCad install"
+  exit 0
+fi
+
+HOME_DIR="{{ .chezmoi.homeDir }}"
+INSTALL_DIR="$HOME_DIR/.local/opt/kicad-mcp"
+MCP_REPO="https://github.com/mixelpixx/KiCAD-MCP-Server.git"
+MCP_BRANCH="stable"
+REV_FILE="$INSTALL_DIR/version"
+CURSOR_MCP_JSON="$HOME_DIR/.cursor/mcp.json"
+KICAD_PPA="ppa:kicad/kicad-10.0-releases"
+MIN_KICAD_MAJOR=10
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping KiCad install"
+  exit 0
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "WARN: jq not found; skipping KiCad install"
+  exit 0
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "WARN: git not found; skipping KiCad install"
+  exit 0
+fi
+
+ubuntu_like() {
+  local id id_like
+  [[ -r /etc/os-release ]] || return 1
+  id="$(. /etc/os-release && printf '%s' "${ID:-}")"
+  id_like="$(. /etc/os-release && printf '%s' "${ID_LIKE:-}")"
+  case "$id" in
+    ubuntu|pop|linuxmint|neon|zorin) return 0 ;;
+  esac
+  [[ "$id_like" == *ubuntu* ]]
+}
+
+kicad_version() {
+  local raw
+  raw="$(kicad-cli version 2>/dev/null || true)"
+  grep -oE '[0-9]+\.[0-9]+\.[0-9]+' <<<"$raw" | head -1
+}
+
+kicad_new_enough() {
+  local ver major
+  command -v kicad-cli >/dev/null 2>&1 || return 1
+  ver="$(kicad_version)"
+  [[ -n "$ver" ]] || return 1
+  major="${ver%%.*}"
+  [[ "$major" -ge "$MIN_KICAD_MAJOR" ]]
+}
+
+apt_install() {
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt-get update
+  sudo apt-get install -y "$@"
+}
+
+ensure_kicad() {
+  local missing=()
+
+  if ! ubuntu_like; then
+    if kicad_new_enough; then
+      echo "KiCad $(kicad_version) already installed (non-Ubuntu; leaving the package manager alone)"
+      return 0
+    fi
+    echo "WARN: KiCad ${MIN_KICAD_MAJOR}+ PPA install is for Ubuntu; kicad-cli not found"
+    return 1
+  fi
+
+  if ! command -v sudo >/dev/null 2>&1; then
+    echo "WARN: sudo not found; skipping KiCad package install"
+    return 1
+  fi
+
+  if ! sudo -n true 2>/dev/null; then
+    echo "KiCad install needs sudo (PPA and apt)."
+    sudo true
+  fi
+
+  dpkg-query -W -f='${Status}' python3-venv 2>/dev/null | grep -q 'install ok installed' || missing+=(python3-venv)
+  dpkg-query -W -f='${Status}' python3-pip 2>/dev/null | grep -q 'install ok installed' || missing+=(python3-pip)
+  dpkg-query -W -f='${Status}' libcairo2 2>/dev/null | grep -q 'install ok installed' || missing+=(libcairo2)
+
+  if kicad_new_enough && [[ ${#missing[@]} -eq 0 ]]; then
+    echo "KiCad $(kicad_version) already installed"
+    return 0
+  fi
+
+  if ! kicad_new_enough; then
+    if ! command -v add-apt-repository >/dev/null 2>&1; then
+      apt_install software-properties-common
+    fi
+    if ! grep -Rqs "kicad/kicad-10.0-releases" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null; then
+      echo "Adding $KICAD_PPA..."
+      sudo add-apt-repository --yes "$KICAD_PPA"
+    fi
+    missing+=(kicad)
+  fi
+
+  echo "Installing ${missing[*]}..."
+  apt_install "${missing[@]}"
+
+  if ! kicad_new_enough; then
+    echo "WARN: kicad-cli is not KiCad ${MIN_KICAD_MAJOR}+ after apt install"
+    kicad-cli version 2>/dev/null || true
+    return 1
+  fi
+
+  echo "KiCad $(kicad_version) installed"
+}
+
+resolve_node() {
+  local candidate
+  if command -v node >/dev/null 2>&1; then
+    command -v node
+    return 0
+  fi
+  for candidate in \
+    "$HOME_DIR/.local/share/mise/shims/node" \
+    "$HOME_DIR/.local/share/mise/installs/node/latest/bin/node"; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+install_mcp() {
+  local node_bin npm_bin rev current_rev tmp_mcp
+
+  echo "Installing KiCAD MCP Server ($MCP_BRANCH)..."
+  mkdir -p "$(dirname "$INSTALL_DIR")"
+  if [[ -d "$INSTALL_DIR/.git" ]]; then
+    git -C "$INSTALL_DIR" fetch --depth 1 origin "$MCP_BRANCH"
+    git -C "$INSTALL_DIR" reset --hard FETCH_HEAD
+  else
+    rm -rf "$INSTALL_DIR"
+    git clone --depth 1 --branch "$MCP_BRANCH" "$MCP_REPO" "$INSTALL_DIR"
+  fi
+
+  rev="$(git -C "$INSTALL_DIR" rev-parse HEAD)"
+  current_rev=""
+  [[ -f "$REV_FILE" ]] && current_rev="$(cat "$REV_FILE")"
+
+  if ! node_bin="$(resolve_node)"; then
+    echo "WARN: node not found; skipping KiCAD MCP build"
+    return 0
+  fi
+  npm_bin="$(dirname "$node_bin")/npm"
+  if [[ ! -x "$npm_bin" ]]; then
+    echo "WARN: npm not found next to $node_bin; skipping KiCAD MCP build"
+    return 0
+  fi
+
+  if [[ ! -x /usr/bin/python3 ]]; then
+    echo "WARN: /usr/bin/python3 not found; KiCad's pcbnew module needs the distro interpreter"
+    return 0
+  fi
+
+  if [[ ! -x "$INSTALL_DIR/venv/bin/python" ]]; then
+    /usr/bin/python3 -m venv --system-site-packages "$INSTALL_DIR/venv"
+  fi
+
+  if [[ "$current_rev" != "$rev" || ! -f "$INSTALL_DIR/dist/index.js" ]]; then
+    echo "Building KiCAD MCP Server $rev..."
+    (
+      cd "$INSTALL_DIR"
+      "$npm_bin" ci
+      "$npm_bin" run build
+    )
+    "$INSTALL_DIR/venv/bin/python" -m pip install --upgrade pip
+    "$INSTALL_DIR/venv/bin/python" -m pip install -r "$INSTALL_DIR/requirements.txt"
+    printf '%s\n' "$rev" > "$REV_FILE"
+  else
+    echo "KiCAD MCP Server $rev already built"
+  fi
+
+  if ! "$INSTALL_DIR/venv/bin/python" -c 'import pcbnew' >/dev/null 2>&1; then
+    echo "WARN: pcbnew is not importable from $INSTALL_DIR/venv (KiCad scripting will fail)"
+  else
+    echo "pcbnew OK: $("$INSTALL_DIR/venv/bin/python" -c 'import pcbnew; print(pcbnew.GetBuildVersion())')"
+  fi
+
+  mkdir -p "$(dirname "$CURSOR_MCP_JSON")"
+  if [[ ! -f "$CURSOR_MCP_JSON" ]]; then
+    printf '%s\n' '{"mcpServers":{}}' > "$CURSOR_MCP_JSON"
+  fi
+
+  # The server prefers $INSTALL_DIR/venv, created with --system-site-packages so
+  # pcbnew is visible without PYTHONPATH (that variable would shadow venv wheels
+  # with distro copies).
+  tmp_mcp="$(mktemp)"
+  if ! jq --arg cmd "$node_bin" --arg script "$INSTALL_DIR/dist/index.js" '
+      .mcpServers = (.mcpServers // {})
+      | .mcpServers.kicad = {
+          command: $cmd,
+          args: [$script],
+          env: {
+            NODE_ENV: "production",
+            LOG_LEVEL: "info"
+          }
+        }
+    ' "$CURSOR_MCP_JSON" > "$tmp_mcp"; then
+    rm -f "$tmp_mcp"
+    echo "WARN: failed to update $CURSOR_MCP_JSON"
+    return 0
+  fi
+  mv "$tmp_mcp" "$CURSOR_MCP_JSON"
+  chmod 600 "$CURSOR_MCP_JSON"
+  echo "Registered Cursor MCP server kicad -> $node_bin $INSTALL_DIR/dist/index.js"
+}
+
+if ! ensure_kicad; then
+  echo "WARN: KiCad package install did not finish; still attempting the MCP server if pcbnew imports"
+fi
+
+if ! /usr/bin/python3 -c 'import pcbnew' >/dev/null 2>&1; then
+  echo "WARN: /usr/bin/python3 cannot import pcbnew; skipping KiCAD MCP Server"
+  exit 0
+fi
+
+install_mcp
+echo "KiCad $(kicad_version) ready; MCP server at $INSTALL_DIR"
+{{- end -}}
+{{ end -}}

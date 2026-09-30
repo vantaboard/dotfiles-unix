@@ -415,6 +415,12 @@ setup_catalog:
       default: false
       packages: [jq, git]
       config_paths: [dot_local/share/applications/freecad.desktop]
+    kicad:
+      category: desktop
+      label: KiCad
+      description: KiCad 10 from ppa:kicad/kicad-10.0-releases; clones mixelpixx/KiCAD-MCP-Server stable into ~/.local/opt/kicad-mcp and registers kicad in ~/.cursor/mcp.json
+      default: false
+      packages: [jq, git, python3-venv, python3-pip, libcairo2]
     sunshine:
       category: desktop
       label: Sunshine (Moonlight host)

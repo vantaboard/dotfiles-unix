@@ -50,6 +50,7 @@ profile_ci_macos:
     onlyoffice: false
     anki: false
     freecad: false
+    kicad: false
     sunshine: false
     keyd: false
     cursor: false

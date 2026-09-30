@@ -15,6 +15,7 @@ profile_example:
     onlyoffice: true
     anki: true
     freecad: false
+    kicad: false
     dunst: true
     earlyoom: true
     eza: true

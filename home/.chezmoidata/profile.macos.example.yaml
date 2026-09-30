@@ -51,6 +51,7 @@ profile_macos_example:
     onlyoffice: false
     anki: false
     freecad: false
+    kicad: false
     sunshine: false
     keyd: false
     neovim: true

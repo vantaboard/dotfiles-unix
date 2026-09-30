@@ -65,6 +65,7 @@ profile_termux_example:
     onlyoffice: false
     anki: false
     freecad: false
+    kicad: false
     earlyoom: false
     thermald: false
   packages: []
