@@ -72,6 +72,11 @@ private_dot_gnupg
 {{- if not (index $f "dropbox") }}
 dot_config/systemd/user/dropbox.service.tmpl
 {{- end }}
+{{- if not (index $f "dunst") }}
+dot_config/systemd/user/dunst.service.d
+dot_config/systemd/user/dunst.service.d/**
+dot_local/share/dbus-1/services/org.freedesktop.Notifications.service
+{{- end }}
 {{- if not (index $f "unreal") }}
 dot_config/nvim/lua/plugins/unreal.lua
 {{- end }}
