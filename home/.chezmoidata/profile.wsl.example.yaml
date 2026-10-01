@@ -76,6 +76,7 @@ profile_wsl_example:
     llama: false
     earlyoom: false
     thermald: false
+    tailscale: false
   packages:
     - zsh
     - git

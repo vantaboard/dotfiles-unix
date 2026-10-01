@@ -60,6 +60,7 @@ profile_example:
     ssh_hardening: true
     sunshine: true
     thermald: true
+    tailscale: false
     tmux: true
     trash_cli: true
     unreal: false

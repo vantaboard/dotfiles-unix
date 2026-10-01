@@ -68,6 +68,7 @@ profile_ci:
     kicad: false
     earlyoom: false
     thermald: false
+    tailscale: false
   packages:
     - zsh
     - git

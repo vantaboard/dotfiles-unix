@@ -75,6 +75,7 @@ profile_ci_macos:
     llama: false
     earlyoom: false
     thermald: false
+    tailscale: false
   packages:
     - zsh
     - git

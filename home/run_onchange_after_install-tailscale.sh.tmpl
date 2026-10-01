@@ -1,0 +1,50 @@
+{{ if eq .chezmoi.os "linux" -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
+{{- $f := $p.features -}}
+{{- if index $f "tailscale" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: tailscale-v1
+# https://tailscale.com/docs/install/linux
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Tailscale install"
+  exit 0
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "WARN: curl not found; skipping Tailscale install"
+  exit 0
+fi
+
+if ! command -v sudo >/dev/null 2>&1; then
+  echo "WARN: sudo not found; skipping Tailscale install"
+  exit 0
+fi
+
+if ! command -v tailscale >/dev/null 2>&1; then
+  echo "Installing Tailscale..."
+  curl -fsSL https://tailscale.com/install.sh | sh
+fi
+
+if ! command -v tailscale >/dev/null 2>&1; then
+  echo "WARN: Tailscale install did not produce a tailscale binary"
+  exit 0
+fi
+
+echo "Tailscale installed: $(tailscale version)"
+
+if command -v systemctl >/dev/null 2>&1; then
+  sudo systemctl enable --now tailscaled
+  echo "tailscaled enabled"
+fi
+
+if tailscale status >/dev/null 2>&1; then
+  echo "Tailscale is logged in"
+  tailscale status
+else
+  echo "Tailscale is installed but not logged in. Authenticate with: sudo tailscale up"
+fi
+{{- end -}}
+{{ end -}}

@@ -585,3 +585,9 @@ setup_catalog:
       packages: [thermald]
       brew: []
       systemd_unit: thermald.service
+    tailscale:
+      category: system
+      label: Tailscale
+      default: false
+      brew: [tailscale]
+      description: Official Linux client from https://tailscale.com/install.sh; enables tailscaled. Login with sudo tailscale up

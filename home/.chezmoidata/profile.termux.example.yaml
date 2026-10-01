@@ -68,6 +68,7 @@ profile_termux_example:
     kicad: false
     earlyoom: false
     thermald: false
+    tailscale: false
   packages: []
   systemd_units: []
   system_deploy: []
