@@ -31,6 +31,7 @@ profile_example:
     glab: true
     gpg_signing: false
     grub: true
+    iwlwifi_recover: true
     htop: false
     hyprpicker: true
     still: true
@@ -138,6 +139,7 @@ profile_example:
     - earlyoom.service
     - llama-swap.service
     - thermald.service
+    - iwlwifi-recover.service
   system_deploy:
     - keyd
     - displays_resume
@@ -150,6 +152,7 @@ profile_example:
     - llama
     - ssh
     - hdmi_audio
+    - iwlwifi_recover
   identity:
     git_email: ""
     git_ssh_key: ""

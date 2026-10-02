@@ -1,0 +1,14 @@
+[Unit]
+Description=Re-probe Intel Wi-Fi if the CNVi card timed out in reset
+After=systemd-modules-load.service bluetooth.service
+Before=NetworkManager.service
+ConditionVirtualization=!container
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/iwlwifi-recover
+RemainAfterExit=yes
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target

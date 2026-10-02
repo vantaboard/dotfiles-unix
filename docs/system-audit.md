@@ -11,6 +11,7 @@ Review of system-level configuration for Ubuntu 24.04. This is a **public** repo
 | Item | Location in repo | Deployed to |
 |------|------------------|-------------|
 | displays-resume sleep hook | `home/system/systemd-sleep/displays-resume.tmpl` | `/usr/lib/systemd/system-sleep/displays-resume` |
+| Intel Wi-Fi probe recovery | `home/system/bin/iwlwifi-recover`, `home/system/systemd/iwlwifi-recover.service`, `home/system/systemd-sleep/iwlwifi-recover` | `/usr/local/bin/iwlwifi-recover`, `/etc/systemd/system/iwlwifi-recover.service`, `/usr/lib/systemd/system-sleep/iwlwifi-recover` |
 | GRUB defaults | `home/system/grub/default` | `/etc/default/grub` |
 | SSH pubkey-only config | `home/system/ssh/sshd_config.d/99-keyonly-port.conf` | `/etc/ssh/sshd_config.d/` |
 | SSH socket port override | `home/system/ssh/ssh.socket.d/port.conf` | `/etc/systemd/system/ssh.socket.d/` |
@@ -46,6 +47,7 @@ These units are enabled automatically on `chezmoi apply` (when the unit file exi
 | `docker.service` | Docker daemon |
 | `llama-swap.service` | Local LLM proxy (llama.cpp + model hot-swap) |
 | `displays-resume` (systemd-sleep) | Re-apply sway layout after suspend/hibernate |
+| `iwlwifi-recover.service` | Re-probe Intel CNVi Wi-Fi when the card times out in reset at boot; the same script runs from systemd-sleep on wake |
 
 ---
 

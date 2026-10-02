@@ -564,6 +564,13 @@ setup_catalog:
       default: true
       description: derives resume=UUID and resume_offset from the active swap file into a GRUB drop-in plus initramfs conf
       system_deploy: hibernate
+    iwlwifi_recover:
+      category: system
+      label: Intel Wi-Fi probe recovery
+      default: true
+      description: Re-probes an Intel CNVi card when iwlwifi times out in reset at boot or wake, so a power cycle is not required to get Wi-Fi back
+      system_deploy: iwlwifi_recover
+      systemd_unit: iwlwifi-recover.service
     llama:
       category: system
       label: llama.cpp + llama-swap LLM service

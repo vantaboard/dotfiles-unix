@@ -1,0 +1,12 @@
+#!/bin/bash
+# systemd-sleep invokes this as: iwlwifi-recover <pre|post> <suspend|hibernate|...>
+# The same CNVi reset timeout that drops Wi-Fi at boot can happen on wake.
+set -euo pipefail
+
+case "${1:-}" in
+  post)
+    /usr/local/bin/iwlwifi-recover post || true
+    ;;
+esac
+
+exit 0

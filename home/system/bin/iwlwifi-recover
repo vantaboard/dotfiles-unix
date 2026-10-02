@@ -1,0 +1,131 @@
+#!/bin/bash
+# Re-probe an Intel CNVi Wi-Fi card when iwlwifi's first probe times out.
+#
+# On the AX201 (PCI 00:14.3 and the same family), a boot can leave the
+# function in reset: the kernel logs "CSR_RESET = 0x10" and
+# "probe with driver iwlwifi failed with error -110", and no wlan
+# interface is created. Ethernet with no link then means the machine has
+# no path onto the LAN. A second probe after the shared Bluetooth
+# firmware load finishes usually succeeds; that is what a power cycle
+# happens to do. This script does the re-probe itself.
+#
+# Invoked with no arguments by iwlwifi-recover.service, and as
+# "post <mode>" by the systemd-sleep hook. A missing card is not an
+# error. A failed recovery exits 0 so boot and resume are not blocked.
+set -euo pipefail
+
+if [[ "${1:-}" == "pre" ]]; then
+  exit 0
+fi
+
+log() {
+  printf 'iwlwifi-recover: %s\n' "$*"
+  logger -t iwlwifi-recover -- "$*" 2>/dev/null || true
+}
+
+wifi_present() {
+  local iface driver
+  shopt -s nullglob
+  for iface in /sys/class/net/*; do
+    [[ -d "${iface}/device" ]] || continue
+    driver="$(basename "$(readlink -f "${iface}/device/driver")" 2>/dev/null || true)"
+    [[ "${driver}" == "iwlwifi" ]] && return 0
+  done
+  return 1
+}
+
+# Intel network controllers (class 0x028000). Ethernet is 0x020000 and
+# must not be reset.
+intel_cnvi_bdfs() {
+  local dev vendor class
+  shopt -s nullglob
+  for dev in /sys/bus/pci/devices/*; do
+    vendor="$(cat "${dev}/vendor" 2>/dev/null || true)"
+    class="$(cat "${dev}/class" 2>/dev/null || true)"
+    [[ "${vendor}" == "0x8086" && "${class}" == "0x028000" ]] || continue
+    basename "${dev}"
+  done
+  return 0
+}
+
+sysfs_write() {
+  local path="$1" value="$2"
+  [[ -w "${path}" ]] || return 1
+  echo "${value}" > "${path}"
+}
+
+reprobe() {
+  local bdf path
+  modprobe iwlwifi 2>/dev/null || true
+  for bdf in "$@"; do
+    path="/sys/bus/pci/devices/${bdf}"
+    [[ -e "${path}" ]] || continue
+    if [[ -e "${path}/driver" ]]; then
+      sysfs_write /sys/bus/pci/drivers/iwlwifi/unbind "${bdf}" || true
+    fi
+    # Function-level reset is the closest software equivalent of cycling
+    # the card. The device node exists even when the driver failed to bind.
+    if sysfs_write "${path}/reset" 1; then
+      sleep 1
+    fi
+    sysfs_write /sys/bus/pci/drivers/iwlwifi/bind "${bdf}" || true
+  done
+  sleep 1
+  if wifi_present; then
+    return 0
+  fi
+
+  # The function can stay wedged after a failed probe. Drop it off the
+  # bus and rescan so the driver attaches to a freshly enumerated device.
+  modprobe -r iwlmvm 2>/dev/null || true
+  modprobe -r iwlwifi 2>/dev/null || true
+  for bdf in "$@"; do
+    path="/sys/bus/pci/devices/${bdf}"
+    sysfs_write "${path}/remove" 1 || true
+  done
+  sleep 1
+  sysfs_write /sys/bus/pci/rescan 1 || true
+  modprobe iwlwifi 2>/dev/null || true
+  sleep 2
+}
+
+main() {
+  if wifi_present; then
+    exit 0
+  fi
+
+  mkdir -p /run/lock
+  exec 9>/run/lock/iwlwifi-recover.lock
+  if ! flock -w 40 9; then
+    log "another recovery is in progress"
+    exit 0
+  fi
+
+  # Recheck after taking the lock. Bluetooth firmware on the same CNVi
+  # can still be loading when this starts; give that a moment before
+  # deciding the probe failed.
+  sleep 2
+  if wifi_present; then
+    exit 0
+  fi
+
+  local -a devs=()
+  mapfile -t devs < <(intel_cnvi_bdfs)
+  if ((${#devs[@]} == 0)); then
+    exit 0
+  fi
+
+  log "no iwlwifi interface; re-probing ${devs[*]}"
+  local attempt
+  for attempt in 1 2 3; do
+    reprobe "${devs[@]}"
+    if wifi_present; then
+      log "interface is up after attempt ${attempt}"
+      exit 0
+    fi
+  done
+  log "still no interface after 3 attempts"
+  exit 0
+}
+
+main

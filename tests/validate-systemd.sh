@@ -6,6 +6,9 @@ echo "=== systemd unit validation ==="
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SLEEP_HOOK="${REPO_ROOT}/home/system/systemd-sleep/displays-resume.tmpl"
 LLAMA_UNIT="${REPO_ROOT}/home/system/systemd/llama-swap.service.tmpl"
+IWLWIFI_SCRIPT="${REPO_ROOT}/home/system/bin/iwlwifi-recover"
+IWLWIFI_HOOK="${REPO_ROOT}/home/system/systemd-sleep/iwlwifi-recover"
+IWLWIFI_UNIT="${REPO_ROOT}/home/system/systemd/iwlwifi-recover.service"
 
 if ! command -v systemd-analyze >/dev/null 2>&1; then
   echo "SKIP: systemd-analyze not available"
@@ -27,6 +30,21 @@ bash -n "$TMP_HOOK"
 rm -f "$TMP_HOOK"
 [[ -n "$FAKE_HOME" ]] && rm -rf "$FAKE_HOME"
 echo "OK: systemd-sleep/displays-resume validates"
+
+bash -n "$IWLWIFI_SCRIPT"
+bash -n "$IWLWIFI_HOOK"
+IWLWIFI_BIN_STUB=false
+if ! [[ -x /usr/local/bin/iwlwifi-recover ]]; then
+  sudo mkdir -p /usr/local/bin
+  printf '#!/bin/sh\nexit 0\n' | sudo tee /usr/local/bin/iwlwifi-recover >/dev/null
+  sudo chmod +x /usr/local/bin/iwlwifi-recover
+  IWLWIFI_BIN_STUB=true
+fi
+systemd-analyze verify "$IWLWIFI_UNIT"
+if [[ "$IWLWIFI_BIN_STUB" == true ]]; then
+  sudo rm -f /usr/local/bin/iwlwifi-recover
+fi
+echo "OK: iwlwifi-recover validates"
 
 if [[ -f "$LLAMA_UNIT" ]]; then
   LLAMA_BIN_STUB=false

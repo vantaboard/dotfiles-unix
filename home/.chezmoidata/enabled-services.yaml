@@ -6,3 +6,4 @@ enabled_services:
   - thermald.service
   - docker.service
   - llama-swap.service
+  - iwlwifi-recover.service
