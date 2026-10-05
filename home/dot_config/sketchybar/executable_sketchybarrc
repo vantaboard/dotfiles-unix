@@ -41,7 +41,8 @@ sketchybar --default \
   padding_right=4
 
 ##### Workspaces (AeroSpace) ###################################################
-# Items 1–9 stay in order. The watcher shows only workspaces that have windows.
+# Items 1–9 stay in order. The watcher shows a workspace only on the monitor
+# that owns it, and only when it has windows or is the visible workspace there.
 sketchybar --add event aerospace_workspace_change
 
 if command -v aerospace >/dev/null 2>&1; then

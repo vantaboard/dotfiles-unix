@@ -391,7 +391,7 @@ setup_catalog:
       label: SketchyBar
       default: false
       requires: [aerospace]
-      description: Status bar (Waybar stand-in); FelixKratz/formulae sketchybar + AeroSpace workspaces
+      description: Status bar (Waybar stand-in); FelixKratz/formulae sketchybar + AeroSpace workspaces. Each monitor shows only the workspaces on that screen
       config_paths: [dot_config/sketchybar]
     dunst:
       category: desktop
