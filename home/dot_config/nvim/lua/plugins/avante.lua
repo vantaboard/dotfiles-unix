@@ -1,3 +1,24 @@
+-- Avante inserts into its log-level table while iterating that same table.
+-- On Neovim 0.12 the loop sometimes skips WARN (level 3) and startup errors.
+-- Upstream iterates the original table instead; keep installed copies aligned.
+do
+  local log_lua = vim.fs.joinpath(
+    vim.fn.stdpath("data"),
+    "site/pack/core/opt/avante.nvim/lua/avante/utils/log.lua"
+  )
+  if vim.fn.filereadable(log_lua) == 1 then
+    local text = table.concat(vim.fn.readfile(log_lua), "\n")
+    local fixed, replacements = text:gsub(
+      "for levelstr, levelnr in pairs%(log_levels%) do",
+      "for levelstr, levelnr in pairs(vim.log.levels) do",
+      1
+    )
+    if replacements > 0 then
+      vim.fn.writefile(vim.split(fixed, "\n", { plain = true }), log_lua)
+    end
+  end
+end
+
 require("avante").setup({
   provider = "openai",
   providers = {
