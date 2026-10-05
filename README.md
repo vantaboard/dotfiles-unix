@@ -74,7 +74,7 @@ chezmoi update         # Pull upstream and re-apply
 | Dotfiles | chezmoi | Apply home config; fetch externals per profile |
 | After dotfiles | `run_onchange_after_set-default-shell` | Termux: `chsh -s zsh` when zsh is enabled in profile |
 | After dotfiles | `run_after_install-fzf` | Sync `~/.fzf/bin` with the git external (if fzf enabled) |
-| After dotfiles | `run_onchange_after_install-tools` | mise (Termux `pkg` on Android, `mise.run` on Linux), fzf-tab (OMZ plugin), zsh-abbr (v6.3.3), trash-cli (git + venv), aichat + llm-functions (web_search / locate_binary / command_help / man_page) when `llama` enabled, vivid (`.deb` on Linux / `pkg` on Termux); Linux also rust/zoxide via cargo when mise enabled |
+| After dotfiles | `run_onchange_after_install-tools` | mise (Termux `pkg` on Android, `mise.run` on Linux/macOS), fzf-tab (OMZ plugin), zsh-abbr (v6.3.3), trash-cli (git + venv), aichat + llm-functions (web_search / locate_binary / command_help / man_page) when `llama` enabled, vivid (`.deb` on Linux / `pkg` on Termux; Homebrew on macOS); Linux also rust/zoxide via cargo when mise enabled |
 | After dotfiles | `run_after_install-cursor` | Cursor dev/Nightly AppImage resolved from Cursor's update API → `~/.local/opt/cursor-dev/Cursor.AppImage` with `cursor` in `~/.local/bin`; registers `cursor://` URL handler for MCP OAuth (when `cursor` enabled; Linux x64 only) |
 | After dotfiles | `run_after_install-neovim` | Neovim [nightly tarball](https://github.com/neovim/neovim/releases/tag/nightly) resolved from GitHub Releases API → `~/.local/opt/nvim-linux-*` with `nvim` in `~/.local/bin` (when `neovim` enabled; Linux only) |
 | After dotfiles | `run_after_install-godot` | Godot [latest stable](https://github.com/godotengine/godot/releases/latest) Linux zip from GitHub Releases → `~/.local/opt/godot` with `godot` in `~/.local/bin`; configures editor settings + `godotdev`/`godot-nvr` helpers for NeoVim (when `godot` enabled; Linux only) |
@@ -114,7 +114,7 @@ On Termux, use [scripts/pkg-manual-sync](scripts/pkg-manual-sync) the same way �
 
 On macOS, chezmoi reports `.chezmoi.os == "darwin"`. The [macOS profile](home/.chezmoidata/profile.macos.example.yaml) is selected automatically. Packages install with Homebrew (`brew install`); the wizard records brew formula names (`fd`, not `fd-find`).
 
-Wayland, GDM, Sway, and other graphical-session features default to off and are force-disabled in the effective profile. Linux-only installers (Cursor AppImage, NVIDIA, llama-swap, SwayFX builds) are no-ops.
+Wayland, GDM, Sway, and other graphical-session features default to off and are force-disabled in the effective profile. Linux-only installers (Cursor AppImage, NVIDIA, llama-swap, SwayFX builds) are no-ops. Shell plugins that Oh My Zsh expects (`fzf-tab`, `zsh-abbr`) still install via `run_onchange_after_install-tools`.
 
 ```bash
 # Homebrew (if this Mac does not already have it)

@@ -1,4 +1,4 @@
-{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") -}}
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "android") (eq .chezmoi.os "darwin") -}}
 {{ if eq .chezmoi.os "android" -}}
 #!{{ joinPath (dir .chezmoi.homeDir) "usr/bin/bash" }}
 set -euo pipefail
@@ -10,7 +10,7 @@ set -euo pipefail
 {{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features }}
 
-# hash: tools-v33-aichat-cli-tools
+# hash: tools-v34-darwin-fzf-tab
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping custom tool installs (use apt/pkg packages)"
@@ -130,8 +130,10 @@ install_mise() {
   echo "Installing mise via mise.run..."
   if curl -fsSL --retry 3 --retry-delay 2 --retry-all-errors https://mise.run | sh; then
     :
+{{- if eq .chezmoi.os "linux" }}
   elif install_mise_from_github; then
     :
+{{- end }}
   else
     echo "WARN: mise install failed (network); skipping — re-run chezmoi apply when connectivity is stable"
     rm -f "$MISE_BIN" 2>/dev/null || true
@@ -254,7 +256,7 @@ install_psutil_termux() {
 }
 {{- end }}
 
-{{- if eq .chezmoi.os "linux" }}
+{{- if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") }}
 ensure_python3_venv() {
   local probe tmp_venv pyver
 
@@ -273,7 +275,7 @@ ensure_python3_venv() {
   fi
 
   if ! command -v apt >/dev/null 2>&1; then
-    echo "WARN: python3 venv support missing and apt not available"
+    echo "WARN: python3 venv support missing"
     return 1
   fi
 
@@ -1250,7 +1252,7 @@ install_trash_cli
 {{- if index $f "vivid" }}
 {{- if eq .chezmoi.os "android" }}
 install_vivid_termux
-{{- else }}
+{{- else if eq .chezmoi.os "linux" }}
 install_vivid_linux
 {{- end }}
 {{- end }}
