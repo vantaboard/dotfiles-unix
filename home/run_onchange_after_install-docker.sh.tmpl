@@ -1,17 +1,158 @@
-{{ if and (eq .chezmoi.os "linux") -}}
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") -}}
 {{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
 {{- if index $f "docker" -}}
 #!/bin/bash
 set -euo pipefail
 
-# hash: docker-v1
+# hash: docker-v2-darwin-cask
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping docker install"
   exit 0
 fi
 
+{{- if eq .chezmoi.os "darwin" }}
+# Docker Desktop via Homebrew cask. The cask links the CLI to /usr/local/bin/docker.
+# `install --accept-license` records the Docker Subscription Service Agreement so
+# the first launch does not wait on the GUI prompt.
+
+ensure_brew() {
+  if command -v brew >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    return 0
+  fi
+  if [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    return 0
+  fi
+  echo "WARN: Homebrew not found; cannot install Docker Desktop"
+  return 1
+}
+
+docker_app() {
+  if [[ -d /Applications/Docker.app ]]; then
+    printf '%s\n' /Applications/Docker.app
+    return 0
+  fi
+  if [[ -d "$HOME/Applications/Docker.app" ]]; then
+    printf '%s\n' "$HOME/Applications/Docker.app"
+    return 0
+  fi
+  return 1
+}
+
+docker_cli() {
+  export PATH="/usr/local/bin:${HOME}/.docker/bin:${PATH}"
+  if command -v docker >/dev/null 2>&1; then
+    command -v docker
+    return 0
+  fi
+  return 1
+}
+
+docker_daemon_ready() {
+  local bin
+  bin="$(docker_cli 2>/dev/null || true)"
+  [[ -n "$bin" ]] && "$bin" info >/dev/null 2>&1
+}
+
+docker_cask_installed() {
+  brew list --cask docker-desktop >/dev/null 2>&1 && return 0
+  brew list --cask docker >/dev/null 2>&1 && return 0
+  docker_app >/dev/null 2>&1
+}
+
+docker_configured() {
+  [[ -d "$HOME/Library/Group Containers/group.com.docker" ]]
+}
+
+accept_docker_license() {
+  local app install_bin
+  app="$(docker_app 2>/dev/null || true)"
+  install_bin="${app}/Contents/MacOS/install"
+  if [[ -z "$app" || ! -x "$install_bin" ]]; then
+    echo "WARN: Docker install helper not found"
+    return 0
+  fi
+  if docker_configured; then
+    return 0
+  fi
+  echo "Accepting the Docker Subscription Service Agreement..."
+  if sudo -n "$install_bin" --accept-license --user="$(id -un)"; then
+    return 0
+  fi
+  echo "WARN: could not run Docker install --accept-license"
+  echo "  Open Docker Desktop and accept the agreement if it is still pending."
+}
+
+start_docker_app() {
+  if pgrep -q com.docker.backend; then
+    return 0
+  fi
+  local app
+  app="$(docker_app 2>/dev/null || true)"
+  if [[ -z "$app" ]]; then
+    echo "WARN: Docker.app not found"
+    return 0
+  fi
+  echo "Starting Docker Desktop..."
+  open -a "$app"
+}
+
+wait_for_docker() {
+  local i bin
+  bin="$(docker_cli 2>/dev/null || true)"
+  if [[ -z "$bin" ]]; then
+    echo "WARN: docker CLI not on PATH yet"
+    return 1
+  fi
+  echo "Waiting for the Docker daemon..."
+  for i in $(seq 1 90); do
+    if "$bin" info >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
+}
+
+ensure_brew || exit 0
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ENV_HINTS=1
+export NONINTERACTIVE=1
+export PATH="/usr/local/bin:${HOME}/.docker/bin:${PATH}"
+
+if docker_daemon_ready; then
+  echo "docker already installed: $(docker --version)"
+  exit 0
+fi
+
+if docker_cask_installed; then
+  echo "Docker Desktop already installed"
+else
+  echo "Installing Docker Desktop via Homebrew cask..."
+  if ! brew install --cask docker-desktop; then
+    echo "WARN: Docker Desktop install failed"
+    echo "  Run: brew install --cask docker-desktop"
+    exit 0
+  fi
+fi
+
+accept_docker_license
+start_docker_app
+
+if wait_for_docker; then
+  echo "docker installed: $(docker --version)"
+else
+  echo "WARN: Docker Desktop is installed but the daemon is not ready yet."
+  echo "  Open Docker Desktop, finish any remaining prompt, then run: docker info"
+  exit 0
+fi
+{{- else }}
 if command -v docker >/dev/null 2>&1; then
   echo "docker already installed: $(docker --version)"
   exit 0
@@ -20,5 +161,6 @@ fi
 echo "Installing Docker via get.docker.com..."
 curl -fsSL https://get.docker.com | sh
 echo "docker installed: $(docker --version)"
+{{- end }}
 {{- end -}}
 {{ end -}}

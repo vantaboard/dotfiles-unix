@@ -468,7 +468,7 @@ setup_catalog:
       category: dev
       label: Docker
       default: true
-      description: Installed via get.docker.com when missing; skips if docker-ce is already present
+      description: Linux via get.docker.com when missing; macOS via Homebrew cask docker-desktop. Skips when the docker CLI is already present
       systemd_unit: docker.service
     clang:
       category: dev

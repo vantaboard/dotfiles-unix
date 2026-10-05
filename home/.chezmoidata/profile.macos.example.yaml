@@ -58,7 +58,7 @@ profile_macos_example:
     cursor: false
     gh_cli: true
     glab: true
-    docker: false
+    docker: true
     clang: false
     unreal: false
     godot: false

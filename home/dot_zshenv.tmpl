@@ -59,5 +59,14 @@ if [[ ! -o interactive ]] && command -v direnv >/dev/null 2>&1; then
     eval "$(direnv export zsh 2>/dev/null)"
 fi
 {{- end }}
+{{- if and (eq .chezmoi.os "darwin") (index $f "docker") }}
+# Docker Desktop's user-level CLI. The Homebrew cask also links docker to /usr/local/bin.
+if [[ -d "$HOME/.docker/bin" ]]; then
+  case ":$PATH:" in
+    *":$HOME/.docker/bin:"*) ;;
+    *) export PATH="$HOME/.docker/bin:$PATH" ;;
+  esac
+fi
+{{- end }}
 
 # Dotfiles are managed by chezmoi. Use `chezmoi edit` to modify tracked files.
