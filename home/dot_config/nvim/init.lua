@@ -1,5 +1,23 @@
 require("compat")
 
+-- Cursor and other GUI apps on macOS launch Neovim without the login-shell
+-- PATH, so Homebrew binaries such as gh are missing when octo.nvim starts.
+if vim.fn.has("mac") == 1 then
+  local function prepend_path(dir)
+    if vim.fn.isdirectory(dir) ~= 1 then
+      return
+    end
+    local path = vim.env.PATH or ""
+    if not (":" .. path .. ":"):find(":" .. dir .. ":", 1, true) then
+      vim.env.PATH = dir .. (path ~= "" and (":" .. path) or "")
+    end
+  end
+
+  prepend_path("/opt/homebrew/bin")
+  prepend_path("/usr/local/bin")
+  prepend_path(vim.fs.joinpath(vim.env.HOME, ".local", "bin"))
+end
+
 local hooks = function(ev)
   local name, kind = ev.data.spec.name, ev.data.kind
   local path = ev.data.path
