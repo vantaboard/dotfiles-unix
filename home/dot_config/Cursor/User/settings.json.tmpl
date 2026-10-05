@@ -1,3 +1,13 @@
+{{- $chrome := "eb" -}}
+{{- $vibrancyType := "acrylic" -}}
+{{- $vibrancyOpacity := "0.92" -}}
+{{- $gpu := "on" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{- $chrome = "73" -}}
+{{- $vibrancyType = "under-window" -}}
+{{- $vibrancyOpacity = "0.45" -}}
+{{- $gpu = "off" -}}
+{{- end -}}
 {
   "window.autoDetectColorScheme": false,
   "editor.fontFamily": "'FiraMono Nerd Font Mono', monospace",
@@ -16,8 +26,8 @@
   "clangd.path": "${userHome}/.config/Cursor/User/globalStorage/llvm-vs-code-extensions.vscode-clangd/install/22.1.0/clangd_22.1.0/bin/clangd",
   "go.toolsManagement.autoUpdate": true,
   "terminal.integrated.fontLigatures.enabled": true,
-  "vscode_vibrancy.type": "acrylic",
-  "vscode_vibrancy.opacity": 0.92,
+  "vscode_vibrancy.type": "{{ $vibrancyType }}",
+  "vscode_vibrancy.opacity": {{ $vibrancyOpacity }},
   "vscode_vibrancy.imports": [
     "{{ .chezmoi.homeDir }}/.config/cursor/vibrancy.css",
     "{{ .chezmoi.homeDir }}/.config/cursor/cursor.css"
@@ -36,15 +46,15 @@
     "panelStickyScroll.background": "#1e1e1e00",
     "tab.activeBackground": "#1e1e1e00",
     "tab.unfocusedActiveBackground": "#1e1e1e00",
-    "sideBar.background": "#1e1e1eeb",
-    "sideBarTitle.background": "#1e1e1eeb",
-    "sideBarStickyScroll.background": "#1e1e1eeb",
-    "activityBar.background": "#1e1e1eeb",
-    "editor.background": "#1e1e1eeb",
-    "editorStickyScroll.background": "#1e1e1eeb",
-    "editorStickyScrollGutter.background": "#1e1e1eeb",
-    "tab.inactiveBackground": "#1e1e1eeb",
-    "tab.unfocusedInactiveBackground": "#1e1e1eeb",
+    "sideBar.background": "#1e1e1e{{ $chrome }}",
+    "sideBarTitle.background": "#1e1e1e{{ $chrome }}",
+    "sideBarStickyScroll.background": "#1e1e1e{{ $chrome }}",
+    "activityBar.background": "#1e1e1e{{ $chrome }}",
+    "editor.background": "#1e1e1e{{ $chrome }}",
+    "editorStickyScroll.background": "#1e1e1e{{ $chrome }}",
+    "editorStickyScrollGutter.background": "#1e1e1e{{ $chrome }}",
+    "tab.inactiveBackground": "#1e1e1e{{ $chrome }}",
+    "tab.unfocusedInactiveBackground": "#1e1e1e{{ $chrome }}",
     "inlineChat.background": "#1e1e1ee6",
     "editorWidget.background": "#1e1e1ee6",
     "editorHoverWidget.background": "#1e1e1ee6",
@@ -54,9 +64,12 @@
     "menu.background": "#1e1e1ee6",
     "quickInput.background": "#1e1e1ee6",
     "window.activeBorder": "#00000000",
-    "window.inactiveBorder": "#00000000"
+    "window.inactiveBorder": "#00000000",
+    "terminalStickyScroll.background": "#1e1e1e{{ $chrome }}",
+    "minimap.background": "#1e1e1e{{ $chrome }}",
+    "editor.lineHighlightBorder": "#00000000"
   },
-  "terminal.integrated.gpuAcceleration": "on",
+  "terminal.integrated.gpuAcceleration": "{{ $gpu }}",
   "window.controlsStyle": "custom",
   "yaml.disableSchemaDetection": [
     "**/.github/workflows/*.yml",
@@ -67,5 +80,9 @@
     "**/.forgejo/workflows/*.yaml"
   ],
   "terminal.integrated.fontLigatures.featureSettings": "\"calt\" on, \"liga\" on, \"ss03\"",
-  "terminal.integrated.enableImages": true
+  "terminal.integrated.enableImages": true,
+  "window.systemColorTheme": "dark",
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  }
 }

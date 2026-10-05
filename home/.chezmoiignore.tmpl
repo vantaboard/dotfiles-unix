@@ -102,3 +102,6 @@ dot_local/bin/executable_aichat
 dot_local/share/aichat
 dot_config/aichat
 {{- end }}
+{{- if ne .chezmoi.os "darwin" }}
+Library/Application Support/Cursor/User/settings.json
+{{- end }}
