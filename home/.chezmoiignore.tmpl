@@ -60,6 +60,15 @@ dot_config/kanshi/config.tmpl
 {{- if not (index $f "wezterm") }}
 dot_config/wezterm
 {{- end }}
+{{- if not (index $f "aerospace") }}
+dot_config/aerospace
+{{- end }}
+{{- if not (index $f "karabiner") }}
+dot_config/karabiner
+{{- end }}
+{{- if not (index $f "sketchybar") }}
+dot_config/sketchybar
+{{- end }}
 {{- if not (index $f "neovim") }}
 dot_config/nvim
 {{- end }}

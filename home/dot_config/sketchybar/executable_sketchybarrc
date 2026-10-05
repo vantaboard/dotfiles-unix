@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# SketchyBar — Waybar stand-in (Hipster Green)
+# Colors match ~/.config/waybar/style.css + wezterm Hipster Green.
+
+CONFIG_DIR="${CONFIG_DIR:-${HOME}/.config/sketchybar}"
+PLUGIN_DIR="${CONFIG_DIR}/plugins"
+
+# Hipster Green
+BG=0xff0f0a05
+FG=0xff84c137
+FG_DIM=0xff666666
+FG_FOCUS=0xffeeeeee
+BG_FOCUS=0xff083905
+BORDER=0xff84c137
+
+sketchybar --bar \
+  position=bottom \
+  height=26 \
+  color="$BG" \
+  border_color="$BORDER" \
+  border_width=0 \
+  margin=0 \
+  y_offset=0 \
+  padding_left=8 \
+  padding_right=8 \
+  sticky=on \
+  topmost=on \
+  display=all \
+  font_smoothing=on
+
+sketchybar --default \
+  updates=when_shown \
+  icon.font="FiraMono Nerd Font Mono:Regular:12.0" \
+  icon.color="$FG" \
+  label.font="FiraMono Nerd Font Mono:Regular:12.0" \
+  label.color="$FG" \
+  background.color="$BG" \
+  background.corner_radius=0 \
+  background.height=22 \
+  padding_left=4 \
+  padding_right=4
+
+##### Workspaces (AeroSpace) ###################################################
+# Items 1–9 stay in order. The watcher shows only workspaces that have windows.
+sketchybar --add event aerospace_workspace_change
+
+if command -v aerospace >/dev/null 2>&1; then
+  for sid in 1 2 3 4 5 6 7 8 9; do
+    sketchybar --add item "space.${sid}" left \
+      --set "space.${sid}" \
+        drawing=off \
+        icon.drawing=off \
+        label="${sid}" \
+        label.padding_left=6 \
+        label.padding_right=6 \
+        background.drawing=off \
+        background.color="$BG_FOCUS" \
+        label.color="$FG_DIM" \
+        click_script="aerospace workspace ${sid}"
+  done
+
+  # Hidden items inherit updates=when_shown and stop running their script,
+  # which froze the highlight on the workspace that was active at startup.
+  sketchybar --add item spaces.watcher left \
+    --set spaces.watcher \
+      drawing=on \
+      updates=on \
+      update_freq=1 \
+      label.drawing=off \
+      icon.drawing=off \
+      background.drawing=off \
+      padding_left=0 \
+      padding_right=0 \
+      script="${PLUGIN_DIR}/aerospace.sh" \
+    --subscribe spaces.watcher aerospace_workspace_change
+fi
+
+##### Right side ###############################################################
+sketchybar --add item volume right \
+  --set volume \
+    update_freq=5 \
+    script="${PLUGIN_DIR}/volume.sh" \
+    label.color="$FG" \
+  --subscribe volume volume_change
+
+sketchybar --add item battery right \
+  --set battery \
+    update_freq=30 \
+    script="${PLUGIN_DIR}/battery.sh" \
+    label.color="$FG"
+
+sketchybar --add item clock right \
+  --set clock \
+    update_freq=10 \
+    script="${PLUGIN_DIR}/clock.sh" \
+    label.color="$FG_FOCUS"
+
+sketchybar --update

@@ -43,7 +43,10 @@ profile_macos_example:
     swappy: false
     kanshi: false
     wayland_session: false
-    wezterm: false
+    wezterm: true
+    karabiner: true
+    aerospace: true
+    sketchybar: true
     dunst: false
     rofi: false
     desktop_utils: false

@@ -1,0 +1,139 @@
+{{ $p := includeTemplate "profile.tpl" . | fromYaml -}}
+{{- $f := $p.features -}}
+# AeroSpace — i3-like tiling for macOS (Hipster Green desktop stack)
+# https://nikitabobko.github.io/AeroSpace/guide
+
+config-version = 2
+
+{{- if index $f "sketchybar" }}
+after-startup-command = [
+  'exec-and-forget sketchybar',
+]
+exec-on-workspace-change = [
+  '/bin/bash',
+  '-c',
+  'sketchybar --trigger aerospace_workspace_change',
+]
+on-focus-changed = [
+  'exec-and-forget sketchybar --trigger aerospace_workspace_change',
+]
+{{- else }}
+after-startup-command = []
+{{- end }}
+
+start-at-login = true
+auto-reload-config = true
+
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+# Width of the strip that shows the other windows in accordion (tabbed/stacked).
+accordion-padding = 48
+default-root-container-layout = 'tiles'
+# Wide laptop: split left/right so windows keep full height.
+# A vertical stack makes Slack/Notion/Claude overlap — their minimum
+# height is taller than a slice of the screen.
+default-root-container-orientation = 'horizontal'
+
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+automatically-unhide-macos-hidden-apps = false
+
+# Keep numbered workspaces alive (SketchyBar workspace strip).
+persistent-workspaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+on-mode-changed = []
+focus-follows-mouse.enabled = false
+key-mapping.preset = 'qwerty'
+
+gaps.inner.horizontal = 8
+gaps.inner.vertical = 8
+gaps.outer.left = 8
+gaps.outer.right = 8
+gaps.outer.top = 8
+{{- if index $f "sketchybar" }}
+# Room for bottom SketchyBar (Waybar height ≈ 26).
+gaps.outer.bottom = 34
+{{- else }}
+gaps.outer.bottom = 8
+{{- end }}
+
+[mode.main.binding]
+{{- if index $f "wezterm" }}
+alt-enter = 'exec-and-forget open -na WezTerm'
+{{- end }}
+
+alt-slash = 'layout tiles horizontal vertical'
+alt-comma = 'layout accordion horizontal vertical'
+
+# Same roles as Sway: Mod+w tabbed, Mod+s stacking, Mod+e toggle split.
+alt-w = 'layout h_accordion'
+alt-s = 'layout v_accordion'
+alt-e = 'layout tiles horizontal vertical'
+
+# H/L walk windows, then continue onto the monitor in that direction.
+alt-h = 'focus --boundaries all-monitors-outer-frame --boundaries-action stop left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus --boundaries all-monitors-outer-frame --boundaries-action stop right'
+
+# Reorder the focused window (tabs in an accordion, tiles otherwise).
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+
+# Move the focused window to the previous or next workspace.
+alt-ctrl-shift-h = 'move-node-to-workspace prev --wrap-around --focus-follows-window'
+alt-ctrl-shift-l = 'move-node-to-workspace next --wrap-around --focus-follows-window'
+
+alt-minus = 'resize smart -50'
+alt-equal = 'resize smart +50'
+
+# Sway: $mod+r enters resize mode, then hjkl resize, Escape/Return leaves.
+alt-r = 'mode resize'
+
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8'
+alt-9 = 'workspace 9'
+
+alt-shift-1 = 'move-node-to-workspace 1 --focus-follows-window'
+alt-shift-2 = 'move-node-to-workspace 2 --focus-follows-window'
+alt-shift-3 = 'move-node-to-workspace 3 --focus-follows-window'
+alt-shift-4 = 'move-node-to-workspace 4 --focus-follows-window'
+alt-shift-5 = 'move-node-to-workspace 5 --focus-follows-window'
+alt-shift-6 = 'move-node-to-workspace 6 --focus-follows-window'
+alt-shift-7 = 'move-node-to-workspace 7 --focus-follows-window'
+alt-shift-8 = 'move-node-to-workspace 8 --focus-follows-window'
+alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
+
+alt-tab = 'workspace-back-and-forth'
+alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+# Leave Option+Left/Right free. Karabiner sends Ctrl+Left/Right as those
+# chords so apps can move by word. Option+H/L already crosses monitors.
+
+alt-shift-semicolon = 'mode service'
+
+[mode.resize.binding]
+h = 'resize width -50'
+j = 'resize height +50'
+k = 'resize height -50'
+l = 'resize width +50'
+enter = 'mode main'
+esc = 'mode main'
+
+[mode.service.binding]
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main']
+f = ['layout floating tiling', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+alt-shift-h = ['join-with left', 'mode main']
+alt-shift-j = ['join-with down', 'mode main']
+alt-shift-k = ['join-with up', 'mode main']
+alt-shift-l = ['join-with right', 'mode main']

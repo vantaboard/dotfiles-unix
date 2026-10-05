@@ -1,0 +1,109 @@
+{{ if eq .chezmoi.os "darwin" -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
+{{- $f := $p.features -}}
+{{- if or (index $f "karabiner") (index $f "aerospace") (index $f "sketchybar") -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: macos-desktop-v5-wallpapers
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping macOS desktop installs"
+  exit 0
+fi
+
+ensure_brew() {
+  if command -v brew >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    return 0
+  fi
+  if [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    return 0
+  fi
+  echo "WARN: Homebrew not found; cannot install macOS desktop apps"
+  return 1
+}
+
+# Homebrew 5+ requires explicit trust for third-party taps.
+ensure_brew_tap() {
+  local tap="$1"
+  if ! brew tap | grep -qx "$tap"; then
+    echo "Tapping ${tap}..."
+    brew tap "$tap" || {
+      echo "WARN: could not tap ${tap}"
+      return 1
+    }
+  fi
+  if brew trust --help >/dev/null 2>&1; then
+    brew trust "$tap" >/dev/null 2>&1 || true
+  fi
+}
+
+ensure_brew || exit 0
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ENV_HINTS=1
+
+{{- if index $f "karabiner" }}
+if brew list --cask karabiner-elements >/dev/null 2>&1 \
+  || [[ -d /Applications/Karabiner-Elements.app ]]; then
+  echo "karabiner-elements already installed"
+else
+  echo "Installing karabiner-elements via Homebrew cask..."
+  if ! brew install --cask karabiner-elements; then
+    echo "WARN: karabiner-elements install failed."
+    echo "  Run: brew install --cask karabiner-elements"
+  fi
+fi
+{{- end }}
+
+{{- if index $f "aerospace" }}
+ensure_brew_tap nikitabobko/tap || true
+if command -v aerospace >/dev/null 2>&1 \
+  || [[ -d /Applications/AeroSpace.app ]]; then
+  echo "aerospace already installed"
+else
+  echo "Installing AeroSpace via Homebrew cask..."
+  if ! brew install --cask nikitabobko/tap/aerospace; then
+    echo "WARN: aerospace install failed"
+  fi
+fi
+{{- end }}
+
+{{- if index $f "sketchybar" }}
+ensure_brew_tap felixkratz/formulae || true
+if command -v sketchybar >/dev/null 2>&1 \
+  || brew list --formula sketchybar >/dev/null 2>&1; then
+  echo "sketchybar already installed"
+else
+  echo "Installing sketchybar..."
+  if ! brew install sketchybar; then
+    echo "WARN: sketchybar install failed"
+  fi
+fi
+# Ensure the Nerd Font used by the bar (also installed with wezterm).
+if ! brew list --cask font-fira-mono-nerd-font >/dev/null 2>&1; then
+  echo "Installing FiraMono Nerd Font for SketchyBar..."
+  brew install --cask font-fira-mono-nerd-font || \
+    echo "WARN: could not install font-fira-mono-nerd-font"
+fi
+
+# Bottom SketchyBar sits under the Dock otherwise — autohide like a Sway session.
+echo "Autohiding macOS Dock so SketchyBar stays visible..."
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide-delay -float 0.0
+defaults write com.apple.dock autohide-time-modifier -float 0.25
+killall Dock 2>/dev/null || true
+{{- end }}
+
+if [[ -x "$HOME/.local/bin/macos-wallpaper" ]]; then
+  "$HOME/.local/bin/macos-wallpaper" || echo "WARN: wallpaper apply failed"
+fi
+
+echo "macOS desktop tools ready"
+echo "  Open Karabiner-Elements / AeroSpace once and grant Accessibility if prompted."
+{{- end -}}
+{{ end -}}

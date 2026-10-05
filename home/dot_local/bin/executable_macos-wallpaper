@@ -1,0 +1,53 @@
+#!/bin/bash
+# Same images and left-to-right order as sway-wallpaper (kanshi post-switch).
+# Scale proportionally (fit): the photo keeps its aspect ratio, with a dark
+# mat where the display shape does not match.
+set -euo pipefail
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  exit 0
+fi
+
+WALL_DIR="${HOME}/.wallpapers"
+paths=(
+  "$WALL_DIR/pexels-pachon-in-motion-426015731-18337644.jpg"
+  "$WALL_DIR/pexels-pachon-in-motion-426015731-18545010.jpg"
+  "$WALL_DIR/pexels-vahapdmr-18515329.jpg"
+)
+
+for path in "${paths[@]}"; do
+  if [[ ! -f "$path" ]]; then
+    echo "macos-wallpaper: missing $path" >&2
+    exit 0
+  fi
+done
+
+osascript -l JavaScript - "${paths[@]}" <<'JS'
+function run(argv) {
+ObjC.import("AppKit");
+var paths = argv.filter(function (p) { return p; });
+var all = $.NSScreen.screens;
+var screens = [];
+for (var i = 0; i < all.count; i++) screens.push(all.objectAtIndex(i));
+screens.sort(function (a, b) { return a.frame.origin.x - b.frame.origin.x; });
+var ws = $.NSWorkspace.sharedWorkspace;
+for (var i = 0; i < screens.length; i++) {
+  var path = paths[Math.min(i, paths.length - 1)];
+  var opts = $.NSMutableDictionary.alloc.init;
+  // scaleProportionallyUpOrDown, no clipping: fit, do not stretch or crop.
+  opts.setObjectForKey($.NSNumber.numberWithInt(3), $.NSWorkspaceDesktopImageScalingKey);
+  opts.setObjectForKey($.NSNumber.numberWithBool(false), $.NSWorkspaceDesktopImageAllowClippingKey);
+  opts.setObjectForKey(
+    $.NSColor.colorWithSRGBRedGreenBlueAlpha(15 / 255, 10 / 255, 5 / 255, 1),
+    $.NSWorkspaceDesktopImageFillColorKey
+  );
+  var ok = ws.setDesktopImageURLForScreenOptionsError(
+    $.NSURL.fileURLWithPath(path),
+    screens[i],
+    opts,
+    $()
+  );
+  console.log(screens[i].localizedName.js + " <- " + path.split("/").pop() + " ok=" + ok);
+}
+}
+JS

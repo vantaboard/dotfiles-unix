@@ -18,6 +18,10 @@ setup_catalog:
       label: Desktop / Sway
       description: Sway, wezterm, kanshi, waybar, display tooling
       default: true
+    - id: macos_desktop
+      label: macOS desktop
+      description: AeroSpace, SketchyBar, Karabiner-Elements (macOS only)
+      default: false
     - id: dev
       label: Development
       description: Neovim, gh, glab, doctl, docker, clang
@@ -368,8 +372,27 @@ setup_catalog:
       label: WezTerm terminal
       default: true
       install_tools: true
-      description: Installed via apt.fury.io wezterm package; terminfo in ~/.terminfo
+      description: Linux via apt.fury.io; macOS via brew cask; terminfo in ~/.terminfo
       config_paths: [dot_config/wezterm]
+    karabiner:
+      category: macos_desktop
+      label: Karabiner-Elements
+      default: false
+      description: Keyboard customizer; brew cask karabiner-elements. Control and Command are swapped, except Ctrl+Tab cycles tabs and Command+Tab switches apps. Ctrl+Arrow moves by word (Option+Arrow). Caps Lock is Escape, Left Command+hjkl are arrows, Command+Ctrl+H/L move by word, Option+D opens Spotlight, Option+Shift+Q quits the focused app. Tap Command for compose mode, then --- is an em dash.
+      config_paths: [dot_config/karabiner]
+    aerospace:
+      category: macos_desktop
+      label: AeroSpace
+      default: false
+      description: i3-like tiling WM for macOS; brew cask nikitabobko/tap/aerospace
+      config_paths: [dot_config/aerospace]
+    sketchybar:
+      category: macos_desktop
+      label: SketchyBar
+      default: false
+      requires: [aerospace]
+      description: Status bar (Waybar stand-in); FelixKratz/formulae sketchybar + AeroSpace workspaces
+      config_paths: [dot_config/sketchybar]
     dunst:
       category: desktop
       label: dunst notifications

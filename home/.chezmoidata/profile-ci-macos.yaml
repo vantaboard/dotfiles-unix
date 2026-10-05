@@ -41,6 +41,9 @@ profile_ci_macos:
     swayfx: false
     swappy: false
     wezterm: false
+    karabiner: false
+    aerospace: false
+    sketchybar: false
     dunst: false
     kanshi: false
     wayland_session: false
