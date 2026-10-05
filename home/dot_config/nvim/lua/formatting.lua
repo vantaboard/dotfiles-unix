@@ -146,6 +146,9 @@ local function setup_clipboard()
             -- yanks to + itself, so Chrome/other-app copies never appear on paste.
             cache_enabled = 0,
         }
+    elseif vim.fn.has("mac") == 1 and vim.fn.executable("pbcopy") == 1 and vim.fn.executable("pbpaste") == 1 then
+        -- Builtin provider: pbcopy/pbpaste, cache off so other apps' copies show up on paste.
+        vim.g.clipboard = "pbcopy"
     else
         return
     end
