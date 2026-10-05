@@ -51,6 +51,7 @@ dotfiles_host_is_headless() {
 
 # Desktop / session features that should stay off on WSL and macOS.
 # Matches the desktop catalog category plus clipboard and display-session extras.
+# WezTerm is only forced off on WSL — on macOS it is a native Homebrew cask.
 dotfiles_graphical_features() {
   cat <<'EOF'
 desktop_sway
@@ -61,7 +62,6 @@ swayfx
 swappy
 kanshi
 wayland_session
-wezterm
 dunst
 rofi
 desktop_utils
@@ -76,6 +76,9 @@ wl_clipboard
 displays_resume
 hdmi_audio
 EOF
+  if [[ "$(dotfiles_host_kind)" == "wsl" ]]; then
+    printf '%s\n' wezterm
+  fi
 }
 
 dotfiles_is_graphical_feature() {

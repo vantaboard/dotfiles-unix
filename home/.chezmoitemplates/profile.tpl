@@ -11,8 +11,9 @@
 
   CHEZMOI_CI selects profile_ci (Linux) or profile_ci_macos (Darwin).
   profile.yaml / profile-host.yaml then merge. Termux and WSL/macOS
-  force-off desktop / Wayland / GDM features so a copied Linux profile
-  cannot enable a graphical session on those hosts.
+  force-off Wayland / GDM / Sway features so a copied Linux profile
+  cannot enable a graphical session on those hosts. WezTerm stays
+  available on macOS; WSL still force-disables it.
 */}}
 {{- $os := .chezmoi.os -}}
 {{- $kernel := "" -}}
@@ -25,6 +26,8 @@
 {{- $isAndroid := or (eq $os "android") (eq $hostKindOverride "android") -}}
 {{- $isDarwin := or (eq $os "darwin") (eq $hostKindOverride "darwin") -}}
 {{- $isWSL := and (not $isDarwin) (not $isAndroid) (or (eq $hostKindOverride "wsl") (and (eq $os "linux") (or $wslEnv $kernelWSL))) -}}
+{{- /* Wayland/desktop session stack — keep off on Darwin/WSL. WezTerm is
+       allowed on macOS (Homebrew cask); WSL keeps it off via its profile. */ -}}
 {{- $graphicalOff := dict
       "desktop_sway" false
       "hyprpicker" false
@@ -34,7 +37,6 @@
       "swappy" false
       "kanshi" false
       "wayland_session" false
-      "wezterm" false
       "dunst" false
       "rofi" false
       "desktop_utils" false
@@ -48,6 +50,9 @@
       "displays_resume" false
       "hdmi_audio" false
 -}}
+{{- if $isWSL -}}
+{{-   $graphicalOff = mergeOverwrite $graphicalOff (dict "wezterm" false) -}}
+{{- end -}}
 {{- $p := .profile_example -}}
 {{- if $isAndroid -}}{{- $p = .profile_termux_example -}}{{- end -}}
 {{- if $isDarwin -}}{{- $p = .profile_macos_example -}}{{- end -}}

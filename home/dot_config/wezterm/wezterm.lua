@@ -86,4 +86,19 @@ config.set_environment_variables = {
 }
 config.term = "wezterm"
 
+local act = wezterm.action
+config.keys = {
+  -- Control is swapped with Command, so these are the physical Ctrl chords.
+  {
+    key = "c",
+    mods = "SUPER",
+    action = act.ClearScrollback("ScrollbackAndViewport"),
+  },
+  {
+    key = "c",
+    mods = "SUPER|SHIFT",
+    action = act.CopyTo("Clipboard"),
+  },
+}
+
 return config
