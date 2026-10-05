@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# One-shot: grant the current admin user passwordless sudo via /etc/sudoers.d.
+# macOS already includes /etc/sudoers.d (see @includedir in /etc/sudoers).
+set -euo pipefail
+
+USER_NAME="${SUDO_USER:-$(id -un)}"
+DROP_IN="/etc/sudoers.d/${USER_NAME}"
+TMP="$(mktemp)"
+
+cleanup() { rm -f "$TMP"; }
+trap cleanup EXIT
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "This script is for macOS only." >&2
+  exit 1
+fi
+
+if ! dseditgroup -o checkmember -m "$USER_NAME" admin >/dev/null 2>&1 \
+  && ! groups "$USER_NAME" | grep -qw admin; then
+  echo "User '$USER_NAME' is not in the admin group; refusing." >&2
+  exit 1
+fi
+
+cat >"$TMP" <<EOF
+# Managed by scripts/macos-nopasswd-sudo — passwordless sudo for ${USER_NAME}
+${USER_NAME} ALL=(ALL) NOPASSWD: ALL
+EOF
+
+echo "Installing ${DROP_IN} (will prompt for your password once)..."
+sudo install -m 0440 -o root -g wheel "$TMP" "$DROP_IN"
+sudo visudo -cf "$DROP_IN"
+sudo visudo -c
+
+if sudo -n true 2>/dev/null; then
+  echo "OK: passwordless sudo works for ${USER_NAME}"
+else
+  echo "WARN: drop-in installed but sudo -n still failed; check /etc/sudoers" >&2
+  exit 1
+fi
