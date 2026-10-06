@@ -99,6 +99,18 @@ config.keys = {
     mods = "SUPER|SHIFT",
     action = act.CopyTo("Clipboard"),
   },
+  -- Karabiner turns a bare Home/End into Command+Left/Right.
+  -- Physical Ctrl+Arrows are already Option+Arrows before they arrive here.
+  {
+    key = "LeftArrow",
+    mods = "SUPER",
+    action = act.SendString("\x01"),
+  },
+  {
+    key = "RightArrow",
+    mods = "SUPER",
+    action = act.SendString("\x05"),
+  },
 }
 
 return config

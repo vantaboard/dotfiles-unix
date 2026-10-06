@@ -5468,6 +5468,41 @@
                         ]
                     },
                     {
+                        "description": "Home and End move to the start and end of the line",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "home",
+                                    "modifiers": {
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "end",
+                                    "modifiers": {
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "description": "Ctrl+Arrows move by word (Option+Arrows). Control is Command after the swap, so match command.",
                         "manipulators": [
                             {

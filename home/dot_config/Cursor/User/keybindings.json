@@ -1,0 +1,14 @@
+[
+  {
+    "key": "cmd+left",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0001" },
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+right",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0005" },
+    "when": "terminalFocus"
+  }
+]
