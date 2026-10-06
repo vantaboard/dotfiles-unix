@@ -1,7 +1,13 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-export PATH="$HOME/.local/bin:/usr/bin:/bin${PATH:+:$PATH}"
+export PATH="$HOME/.local/bin:/usr/bin:/bin:/usr/sbin${PATH:+:$PATH}"
+
+# macOS: drag a region; the image goes to the clipboard and nowhere else.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  screencapture -i -s -c -x || exit 0
+  exit 0
+fi
 
 grim_bin="$(command -v grim || true)"
 slurp_bin="$(command -v slurp || true)"

@@ -89,6 +89,9 @@ alt-ctrl-shift-l = 'move-node-to-workspace next --wrap-around --focus-follows-wi
 alt-minus = 'resize smart -50'
 alt-equal = 'resize smart +50'
 
+# Sway: $mod+Shift+s copies a region screenshot to the clipboard.
+alt-shift-s = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/screenshot-region'
+
 # Sway: $mod+r enters resize mode, then hjkl resize, Escape/Return leaves.
 alt-r = 'mode resize'
 
