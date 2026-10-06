@@ -1,4 +1,7 @@
-# Use ~/.local/bin/gpg-pinentry to pick curses (TTY) or gnome3 (GUI).
+# Use ~/.local/bin/gpg-pinentry to pick a GUI or curses prompt.
 pinentry-program {{ .chezmoi.homeDir }}/.local/bin/gpg-pinentry
-default-cache-ttl 28800
-max-cache-ttl 86400
+# Seconds. Each use resets default-cache-ttl. max-cache-ttl is measured from
+# the moment the passphrase was entered and is not reset by use. 2592000 is
+# 30 days. The cache still clears if gpg-agent exits (reboot, or a reload).
+default-cache-ttl 2592000
+max-cache-ttl 2592000

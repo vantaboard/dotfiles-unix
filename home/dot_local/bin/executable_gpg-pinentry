@@ -1,11 +1,25 @@
 #!/bin/sh
 # Cursor/VS Code pseudo-TTYs report xterm-256color but pinentry-curses fails
-# with "Inappropriate ioctl for device". Prefer GUI pinentry when a display
+# with "Inappropriate ioctl for device". Prefer a GUI pinentry when a display
 # exists; reserve curses for headless SSH sessions without X/Wayland.
-if [ -n "${WAYLAND_DISPLAY:-}" ] || [ -n "${DISPLAY:-}" ]; then
-  exec /usr/bin/pinentry-gnome3 "$@"
+if [ "$(uname -s)" = "Darwin" ]; then
+  if [ -x /opt/homebrew/bin/pinentry-mac ]; then
+    exec /opt/homebrew/bin/pinentry-mac "$@"
+  fi
+  if [ -x /usr/local/bin/pinentry-mac ]; then
+    exec /usr/local/bin/pinentry-mac "$@"
+  fi
 fi
-if [ -t 0 ] && [ -n "${GPG_TTY:-}" ]; then
+if [ -n "${WAYLAND_DISPLAY:-}" ] || [ -n "${DISPLAY:-}" ]; then
+  if [ -x /usr/bin/pinentry-gnome3 ]; then
+    exec /usr/bin/pinentry-gnome3 "$@"
+  fi
+fi
+if [ -x /usr/bin/pinentry-curses ]; then
   exec /usr/bin/pinentry-curses "$@"
 fi
-exec /usr/bin/pinentry-curses "$@"
+if command -v pinentry-curses >/dev/null 2>&1; then
+  exec pinentry-curses "$@"
+fi
+echo "gpg-pinentry: no pinentry program found" >&2
+exit 1
