@@ -1,7 +1,7 @@
 #!/bin/bash
 # Same images and left-to-right order as sway-wallpaper (kanshi post-switch).
-# Scale proportionally (fit): the photo keeps its aspect ratio, with a dark
-# mat where the display shape does not match.
+# Each display gets its own picture. A closed laptop lid is listed after the
+# screens that are currently on.
 set -euo pipefail
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -22,32 +22,50 @@ for path in "${paths[@]}"; do
   fi
 done
 
-osascript -l JavaScript - "${paths[@]}" <<'JS'
-function run(argv) {
-ObjC.import("AppKit");
-var paths = argv.filter(function (p) { return p; });
-var all = $.NSScreen.screens;
-var screens = [];
-for (var i = 0; i < all.count; i++) screens.push(all.objectAtIndex(i));
-screens.sort(function (a, b) { return a.frame.origin.x - b.frame.origin.x; });
-var ws = $.NSWorkspace.sharedWorkspace;
-for (var i = 0; i < screens.length; i++) {
-  var path = paths[Math.min(i, paths.length - 1)];
-  var opts = $.NSMutableDictionary.alloc.init;
-  // scaleProportionallyUpOrDown, no clipping: fit, do not stretch or crop.
-  opts.setObjectForKey($.NSNumber.numberWithInt(3), $.NSWorkspaceDesktopImageScalingKey);
-  opts.setObjectForKey($.NSNumber.numberWithBool(false), $.NSWorkspaceDesktopImageAllowClippingKey);
-  opts.setObjectForKey(
-    $.NSColor.colorWithSRGBRedGreenBlueAlpha(15 / 255, 10 / 255, 5 / 255, 1),
-    $.NSWorkspaceDesktopImageFillColorKey
-  );
-  var ok = ws.setDesktopImageURLForScreenOptionsError(
-    $.NSURL.fileURLWithPath(path),
-    screens[i],
-    opts,
-    $()
-  );
-  console.log(screens[i].localizedName.js + " <- " + path.split("/").pop() + " ok=" + ok);
-}
+# NSWorkspace setDesktopImageURL:forScreen: writes the last image onto every
+# display. System Events can set each desktop's picture on its own.
+display_names=()
+while IFS= read -r name; do
+  [[ -n "$name" ]] || continue
+  display_names+=("$name")
+done < <(osascript -l JavaScript <<'JS'
+function run() {
+  ObjC.import("AppKit");
+  var all = $.NSScreen.screens;
+  var screens = [];
+  for (var i = 0; i < all.count; i++) screens.push(all.objectAtIndex(i));
+  screens.sort(function (a, b) { return a.frame.origin.x - b.frame.origin.x; });
+  var ordered = [];
+  var seen = {};
+  for (var i = 0; i < screens.length; i++) {
+    var name = screens[i].localizedName.js;
+    ordered.push(name);
+    seen[name] = true;
+  }
+  var se = Application("System Events");
+  var desks = se.desktops();
+  for (var i = 0; i < desks.length; i++) {
+    var name = desks[i].displayName();
+    if (!seen[name]) ordered.push(name);
+  }
+  return ordered.join("\n");
 }
 JS
+)
+
+last_path="${paths[$((${#paths[@]} - 1))]}"
+applescript='tell application "System Events"'
+assigned=0
+for name in "${display_names[@]}"; do
+  [[ -n "$name" ]] || continue
+  path="${paths[$assigned]:-$last_path}"
+  assigned=$((assigned + 1))
+  esc_name=${name//\\/\\\\}
+  esc_name=${esc_name//\"/\\\"}
+  esc_path=${path//\\/\\\\}
+  esc_path=${esc_path//\"/\\\"}
+  applescript+=$'\n'"try"$'\n'"set picture of (first desktop whose display name is \"${esc_name}\") to POSIX file \"${esc_path}\""$'\n'"end try"
+  echo "macos-wallpaper: ${name} <- $(basename "$path")"
+done
+applescript+=$'\n''end tell'
+osascript <<<"$applescript" >/dev/null
