@@ -1,0 +1,45 @@
+{{ if eq .chezmoi.os "darwin" -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
+{{- $f := $p.features -}}
+{{- if index $f "aerospace" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: {{ include "dot_local/share/cursor-hide/main.swift" | sha256sum }}
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping cursor-hide"
+  exit 0
+fi
+
+src="$HOME/.local/share/cursor-hide/main.swift"
+bin="$HOME/.local/bin/cursor-hide"
+
+if [[ ! -f "$src" ]]; then
+  echo "WARN: missing $src; cursor will not autohide"
+  exit 0
+fi
+
+if ! xcrun --find swiftc >/dev/null 2>&1; then
+  echo "WARN: swiftc not found; install the Xcode command line tools so the pointer can autohide"
+  exit 0
+fi
+
+mkdir -p "$HOME/.local/bin"
+echo "Compiling cursor-hide..."
+xcrun swiftc -O -framework Cocoa -o "$bin" "$src"
+
+plist="$HOME/Library/LaunchAgents/com.dotfiles.cursor-hide.plist"
+label="gui/$(id -u)/com.dotfiles.cursor-hide"
+if [[ -f "$plist" ]]; then
+  pkill -x cursor-hide 2>/dev/null || true
+  launchctl bootout "$label" 2>/dev/null || true
+  launchctl bootstrap "gui/$(id -u)" "$plist"
+  launchctl enable "$label" 2>/dev/null || true
+  launchctl kickstart -k "$label"
+  echo "cursor-hide running; pointer hides after 500ms idle"
+else
+  echo "WARN: missing $plist; cursor will not autohide"
+fi
+{{- end -}}
+{{ end -}}
