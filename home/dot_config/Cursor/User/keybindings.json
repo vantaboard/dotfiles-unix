@@ -10,5 +10,17 @@
     "command": "workbench.action.terminal.sendSequence",
     "args": { "text": "\u0005" },
     "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+up",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u001b<" },
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+down",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u001b>" },
+    "when": "terminalFocus"
   }
 ]
