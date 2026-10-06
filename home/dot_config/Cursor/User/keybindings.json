@@ -38,5 +38,16 @@
     "key": "cmd+shift+c",
     "command": "workbench.action.terminal.copySelection",
     "when": "terminalFocus && terminalTextSelected"
+  },
+  {
+    "key": "cmd+r",
+    "command": "-workbench.action.terminal.runRecentCommand",
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+r",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0012" },
+    "when": "terminalFocus"
   }
 ]

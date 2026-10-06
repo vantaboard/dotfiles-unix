@@ -89,11 +89,17 @@ config.term = "wezterm"
 local act = wezterm.action
 config.keys = {
   -- Control is swapped with Command, so these are the physical Ctrl chords.
-  -- Ctrl+C interrupts; Ctrl+Shift+C copies.
+  -- Ctrl+C interrupts; Ctrl+Shift+C copies. Ctrl+R is reverse history search
+  -- (the default SUPER+R reloads the config).
   {
     key = "c",
     mods = "SUPER",
     action = act.SendString("\x03"),
+  },
+  {
+    key = "r",
+    mods = "SUPER",
+    action = act.SendString("\x12"),
   },
   {
     key = "c",
