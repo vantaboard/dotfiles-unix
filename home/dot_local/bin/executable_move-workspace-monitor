@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Move the focused AeroSpace workspace to a monitor by horizontal position.
+# Usage: move-workspace-monitor left|middle|right
+#
+# middle is the center monitor. With one or two monitors it is the rightmost,
+# so Mod+Shift+M and Mod+Shift+, do the same thing on a two-screen desk.
+set -euo pipefail
+
+slot="${1:-}"
+case "$slot" in
+  left|middle|right) ;;
+  *)
+    echo "usage: move-workspace-monitor left|middle|right" >&2
+    exit 1
+    ;;
+esac
+
+if ! command -v aerospace >/dev/null 2>&1; then
+  echo "move-workspace-monitor: aerospace is required" >&2
+  exit 1
+fi
+
+geometry="$(osascript -l JavaScript -e '
+ObjC.import("AppKit");
+const screens = $.NSScreen.screens;
+const lines = [];
+for (let i = 0; i < screens.count; i++) {
+  const s = screens.objectAtIndex(i);
+  const name = ObjC.unwrap(s.localizedName);
+  const x = Math.round(s.frame.origin.x);
+  lines.push(name + "\t" + x);
+}
+lines.join("\n");
+')"
+
+monitors="$(aerospace list-monitors --format '%{monitor-id}|%{monitor-name}')"
+
+placed="$(
+  while IFS='|' read -r id name; do
+    [[ -n "$id" && -n "$name" ]] || continue
+    x="$(awk -F '\t' -v n="$name" '$1 == n { print $2; exit }' <<<"$geometry")"
+    [[ -n "$x" ]] || continue
+    printf '%s\t%s\n' "$x" "$id"
+  done <<<"$monitors" | sort -n -k1,1
+)"
+
+[[ -n "$placed" ]] || exit 0
+
+count="$(printf '%s\n' "$placed" | wc -l | tr -d ' ')"
+
+index=0
+case "$slot" in
+  left) index=0 ;;
+  right) index=$((count - 1)) ;;
+  middle)
+    if [[ "$count" -le 2 ]]; then
+      index=$((count - 1))
+    else
+      index=$(((count - 1) / 2))
+    fi
+    ;;
+esac
+
+id="$(printf '%s\n' "$placed" | awk -F '\t' -v line="$((index + 1))" 'NR == line { print $2; exit }')"
+[[ -n "$id" ]] || exit 0
+
+aerospace move-workspace-to-monitor -- "$id" || exit 0

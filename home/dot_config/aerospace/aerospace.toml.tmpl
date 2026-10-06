@@ -118,6 +118,13 @@ alt-shift-9 = 'move-node-to-workspace 9 --focus-follows-window'
 alt-tab = 'workspace-back-and-forth'
 alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
+# Sway: move the current workspace onto a monitor by position.
+# N is leftmost, comma is rightmost. M is the middle monitor, or the
+# rightmost when only two monitors are connected.
+alt-shift-n = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/move-workspace-monitor left'
+alt-shift-m = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/move-workspace-monitor middle'
+alt-shift-comma = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/move-workspace-monitor right'
+
 # Leave Option+Left/Right free. Karabiner sends Ctrl+Left/Right as those
 # chords so apps can move by word. Option+H/L already crosses monitors.
 
