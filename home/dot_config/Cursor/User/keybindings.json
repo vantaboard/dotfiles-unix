@@ -22,5 +22,21 @@
     "command": "workbench.action.terminal.sendSequence",
     "args": { "text": "\u001b>" },
     "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+c",
+    "command": "-workbench.action.terminal.copySelection",
+    "when": "terminalTextSelected && terminalFocus || terminalTextSelectedInFocused"
+  },
+  {
+    "key": "cmd+c",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0003" },
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+shift+c",
+    "command": "workbench.action.terminal.copySelection",
+    "when": "terminalFocus && terminalTextSelected"
   }
 ]

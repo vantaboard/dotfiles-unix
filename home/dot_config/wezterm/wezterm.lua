@@ -89,10 +89,11 @@ config.term = "wezterm"
 local act = wezterm.action
 config.keys = {
   -- Control is swapped with Command, so these are the physical Ctrl chords.
+  -- Ctrl+C interrupts; Ctrl+Shift+C copies.
   {
     key = "c",
     mods = "SUPER",
-    action = act.ClearScrollback("ScrollbackAndViewport"),
+    action = act.SendString("\x03"),
   },
   {
     key = "c",
