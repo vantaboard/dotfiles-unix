@@ -3,6 +3,12 @@
 # with "Inappropriate ioctl for device". Prefer a GUI pinentry when a display
 # exists; reserve curses for headless SSH sessions without X/Wayland.
 if [ "$(uname -s)" = "Darwin" ]; then
+  # pinentry-mac reads suite org.gpgtools.common. With UseKeychain on, the
+  # passphrase is stored in the login Keychain (service GnuPG) and reused
+  # after gpg-agent exits.
+  if command -v defaults >/dev/null 2>&1; then
+    defaults write org.gpgtools.common UseKeychain -bool true
+  fi
   if [ -x /opt/homebrew/bin/pinentry-mac ]; then
     exec /opt/homebrew/bin/pinentry-mac "$@"
   fi

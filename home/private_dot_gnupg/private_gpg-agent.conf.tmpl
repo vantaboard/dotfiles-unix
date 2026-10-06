@@ -2,6 +2,8 @@
 pinentry-program {{ .chezmoi.homeDir }}/.local/bin/gpg-pinentry
 # Seconds. Each use resets default-cache-ttl. max-cache-ttl is measured from
 # the moment the passphrase was entered and is not reset by use. 2592000 is
-# 30 days. The cache still clears if gpg-agent exits (reboot, or a reload).
+# 30 days. The in-memory cache clears if gpg-agent exits (reboot, or a reload).
+# On macOS, pinentry-mac keeps a second copy in the login Keychain, which
+# survives that. gpg-pinentry turns UseKeychain on before launching it.
 default-cache-ttl 2592000
 max-cache-ttl 2592000
