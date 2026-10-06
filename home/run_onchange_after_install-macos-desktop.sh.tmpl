@@ -1,11 +1,11 @@
 {{ if eq .chezmoi.os "darwin" -}}
 {{ $p := includeTemplate "profile.tpl" . | fromYaml }}
 {{- $f := $p.features -}}
-{{- if or (index $f "karabiner") (index $f "aerospace") (index $f "sketchybar") -}}
+{{- if or (index $f "karabiner") (index $f "aerospace") (index $f "sketchybar") (index $f "linearmouse") -}}
 #!/bin/bash
 set -euo pipefail
 
-# hash: macos-desktop-v5-wallpapers
+# hash: macos-desktop-v6-linearmouse
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping macOS desktop installs"
@@ -99,11 +99,24 @@ defaults write com.apple.dock autohide-time-modifier -float 0.25
 killall Dock 2>/dev/null || true
 {{- end }}
 
+{{- if index $f "linearmouse" }}
+if brew list --cask linearmouse >/dev/null 2>&1 \
+  || [[ -d /Applications/LinearMouse.app ]]; then
+  echo "linearmouse already installed"
+else
+  echo "Installing LinearMouse via Homebrew cask..."
+  if ! brew install --cask linearmouse; then
+    echo "WARN: linearmouse install failed."
+    echo "  Run: brew install --cask linearmouse"
+  fi
+fi
+{{- end }}
+
 if [[ -x "$HOME/.local/bin/macos-wallpaper" ]]; then
   "$HOME/.local/bin/macos-wallpaper" || echo "WARN: wallpaper apply failed"
 fi
 
 echo "macOS desktop tools ready"
-echo "  Open Karabiner-Elements / AeroSpace once and grant Accessibility if prompted."
+echo "  Open Karabiner-Elements, AeroSpace, or LinearMouse once and grant Accessibility if prompted."
 {{- end -}}
 {{ end -}}

@@ -1,0 +1,15 @@
+{
+  "schemes": [
+    {
+      "scrolling": {
+        "distance": {
+          "vertical": 3,
+          "horizontal": 3
+        }
+      },
+      "pointer": {
+        "disableAcceleration": true
+      }
+    }
+  ]
+}

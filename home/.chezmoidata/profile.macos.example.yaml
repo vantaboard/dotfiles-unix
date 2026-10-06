@@ -47,6 +47,7 @@ profile_macos_example:
     karabiner: true
     aerospace: true
     sketchybar: true
+    linearmouse: true
     dunst: false
     rofi: false
     desktop_utils: false

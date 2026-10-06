@@ -44,6 +44,7 @@ profile_ci_macos:
     karabiner: false
     aerospace: false
     sketchybar: false
+    linearmouse: false
     dunst: false
     kanshi: false
     wayland_session: false

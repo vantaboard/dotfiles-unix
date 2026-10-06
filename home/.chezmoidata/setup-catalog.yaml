@@ -20,7 +20,7 @@ setup_catalog:
       default: true
     - id: macos_desktop
       label: macOS desktop
-      description: AeroSpace, SketchyBar, Karabiner-Elements (macOS only)
+      description: AeroSpace, SketchyBar, Karabiner-Elements, LinearMouse (macOS only)
       default: false
     - id: dev
       label: Development
@@ -386,6 +386,12 @@ setup_catalog:
       default: false
       description: i3-like tiling WM for macOS; brew cask nikitabobko/tap/aerospace
       config_paths: [dot_config/aerospace]
+    linearmouse:
+      category: macos_desktop
+      label: LinearMouse
+      default: false
+      description: Mouse and trackpad scrolling by lines (3) and pointer acceleration off; brew cask linearmouse
+      config_paths: [dot_config/linearmouse]
     sketchybar:
       category: macos_desktop
       label: SketchyBar
