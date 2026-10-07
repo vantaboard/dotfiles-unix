@@ -49,5 +49,65 @@
     "command": "workbench.action.terminal.sendSequence",
     "args": { "text": "\u0012" },
     "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+d",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0004" },
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+u",
+    "command": "workbench.action.terminal.sendSequence",
+    "args": { "text": "\u0015" },
+    "when": "terminalFocus"
+  },
+  {
+    "key": "cmd+d",
+    "command": "-editor.action.addSelectionToNextFindMatch",
+    "when": "editorFocus"
+  },
+  {
+    "key": "cmd+d",
+    "command": "editor.action.addSelectionToNextFindMatch",
+    "when": "editorFocus && !neovim.init"
+  },
+  {
+    "key": "cmd+d",
+    "command": "vscode-neovim.ctrl-d",
+    "when": "editorTextFocus && neovim.init && neovim.mode != insert"
+  },
+  {
+    "key": "cmd+d",
+    "command": "vscode-neovim.send",
+    "args": "<C-d>",
+    "when": "editorTextFocus && neovim.init && neovim.mode == insert"
+  },
+  {
+    "key": "cmd+u",
+    "command": "-cursorUndo",
+    "when": "textInputFocus"
+  },
+  {
+    "key": "cmd+u",
+    "command": "cursorUndo",
+    "when": "textInputFocus && !neovim.init"
+  },
+  {
+    "key": "cmd+u",
+    "command": "vscode-neovim.ctrl-u",
+    "when": "editorTextFocus && neovim.init && neovim.mode != insert"
+  },
+  {
+    "key": "cmd+u",
+    "command": "vscode-neovim.send",
+    "args": "<C-u>",
+    "when": "editorTextFocus && neovim.init && neovim.mode == insert"
+  },
+  {
+    "key": "cmd+u",
+    "command": "vscode-neovim.send-cmdline",
+    "args": "<C-u>",
+    "when": "neovim.init && neovim.mode == cmdline"
   }
 ]

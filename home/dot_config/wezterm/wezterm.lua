@@ -90,16 +90,27 @@ local act = wezterm.action
 config.keys = {
   -- Control is swapped with Command, so these are the physical Ctrl chords.
   -- Ctrl+C interrupts; Ctrl+Shift+C copies. Ctrl+R is reverse history search
-  -- (the default SUPER+R reloads the config).
+  -- (the default SUPER+R reloads the config). Ctrl+D and Ctrl+U are Neovim's
+  -- half-page motions; unbound Super chords never reach the terminal.
   {
     key = "c",
     mods = "SUPER",
     action = act.SendString("\x03"),
   },
   {
+    key = "d",
+    mods = "SUPER",
+    action = act.SendString("\x04"),
+  },
+  {
     key = "r",
     mods = "SUPER",
     action = act.SendString("\x12"),
+  },
+  {
+    key = "u",
+    mods = "SUPER",
+    action = act.SendString("\x15"),
   },
   {
     key = "c",
