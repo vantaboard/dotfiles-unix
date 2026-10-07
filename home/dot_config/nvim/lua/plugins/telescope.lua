@@ -157,6 +157,10 @@ if vim.g.vscode then
     vim.keymap.set("n", "<leader>/", function()
         code.action('periscope.searchCurrentFile')
     end)
+
+    -- Telescope's window is invisible here. YankyRingHistory uses vim.ui.select,
+    -- which vscode-neovim shows as a Quick Pick, then pastes the chosen yank.
+    vim.keymap.set("n", "<leader>y", "<Cmd>YankyRingHistory<cr>")
 else
     -- ordinary Neovim
     local builtin = require("telescope.builtin")
