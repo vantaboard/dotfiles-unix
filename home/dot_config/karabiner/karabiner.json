@@ -49,6 +49,36 @@
                         ]
                     },
                     {
+                        "description": "Ctrl+Shift+Option+K locks the screen (alias for Ctrl+Command+Q). Control is Command after the swap, so match command.",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "k",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "option",
+                                            "shift"
+                                        ],
+                                        "optional": [
+                                            "caps_lock"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "q",
+                                        "modifiers": [
+                                            "left_control",
+                                            "left_command"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         "description": "Tap Command to enter compose mode, then type --- for an em dash.",
                         "manipulators": [
                             {
