@@ -5502,6 +5502,40 @@
                         "manipulators": [
                             {
                                 "type": "basic",
+                                "description": "Shift+Home selects to the start of the line",
+                                "from": {
+                                    "key_code": "home",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["left_command", "left_shift"]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "basic",
+                                "description": "Shift+End selects to the end of the line",
+                                "from": {
+                                    "key_code": "end",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["left_command", "left_shift"]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "basic",
                                 "from": {
                                     "key_code": "home",
                                     "modifiers": {
