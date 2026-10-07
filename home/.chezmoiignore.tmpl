@@ -71,6 +71,7 @@ dot_config/sketchybar
 {{- end }}
 {{- if not (index $f "linearmouse") }}
 dot_config/linearmouse
+Library/LaunchAgents/com.dotfiles.linearmouse.plist
 {{- end }}
 {{- if not (index $f "neovim") }}
 dot_config/nvim
@@ -109,4 +110,5 @@ dot_config/aichat
 Library/Application Support/Cursor/User/settings.json
 Library/Application Support/Cursor/User/keybindings.json
 Library/LaunchAgents/com.dotfiles.cursor-hide.plist
+Library/LaunchAgents/com.dotfiles.linearmouse.plist
 {{- end }}

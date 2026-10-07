@@ -390,8 +390,8 @@ setup_catalog:
       category: macos_desktop
       label: LinearMouse
       default: false
-      description: Mouse and trackpad scrolling by lines (3) and pointer acceleration off; brew cask linearmouse
-      config_paths: [dot_config/linearmouse]
+      description: Mouse and trackpad scrolling by lines (3) and pointer acceleration off; starts at login; brew cask linearmouse
+      config_paths: [dot_config/linearmouse, Library/LaunchAgents/com.dotfiles.linearmouse.plist]
     sketchybar:
       category: macos_desktop
       label: SketchyBar

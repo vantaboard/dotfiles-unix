@@ -5,7 +5,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# hash: macos-desktop-v6-linearmouse
+# hash: macos-desktop-v7-linearmouse-login
 
 if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
   echo "CHEZMOI_CI=1; skipping macOS desktop installs"
@@ -109,6 +109,16 @@ else
     echo "WARN: linearmouse install failed."
     echo "  Run: brew install --cask linearmouse"
   fi
+fi
+plist="$HOME/Library/LaunchAgents/com.dotfiles.linearmouse.plist"
+if [[ -d /Applications/LinearMouse.app && -f "$plist" ]]; then
+  label="gui/$(id -u)/com.dotfiles.linearmouse"
+  launchctl bootout "$label" 2>/dev/null || true
+  launchctl bootstrap "gui/$(id -u)" "$plist"
+  launchctl enable "$label" 2>/dev/null || true
+  echo "LinearMouse starts at login"
+else
+  echo "WARN: LinearMouse login agent not loaded"
 fi
 {{- end }}
 
