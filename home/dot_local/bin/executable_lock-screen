@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Immediate lock, the same one Control-Command-Q uses.
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "lock-screen: macOS only" >&2
+  exit 1
+fi
+
+/usr/bin/python3 -c 'import ctypes; ctypes.CDLL("/System/Library/PrivateFrameworks/login.framework/Versions/Current/login").SACLockScreenImmediate()'

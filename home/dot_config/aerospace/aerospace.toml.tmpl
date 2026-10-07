@@ -86,6 +86,9 @@ alt-shift-l = 'move right'
 alt-ctrl-shift-h = 'move-node-to-workspace prev --wrap-around --focus-follows-window'
 alt-ctrl-shift-l = 'move-node-to-workspace next --wrap-around --focus-follows-window'
 
+# Sway: $mod+Ctrl+Shift+k locks the screen.
+alt-ctrl-shift-k = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/lock-screen'
+
 alt-minus = 'resize smart -50'
 alt-equal = 'resize smart +50'
 
