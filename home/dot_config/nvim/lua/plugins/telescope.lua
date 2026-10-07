@@ -157,10 +157,69 @@ if vim.g.vscode then
     vim.keymap.set("n", "<leader>/", function()
         code.action('periscope.searchCurrentFile')
     end)
+ 
+    -- Telescope's window is invisible here. Open Cursor's Quick Pick directly.
+    -- ignoreFocusOut and the timeout keep the keypress that triggered this from
+    -- dismissing the picker before it is drawn.
+    local function yank_history()
+        local code = require("vscode")
+        local history = require("yanky.history").all()
+        if #history == 0 then
+            code.notify("Yank history is empty")
+            return
+        end
 
-    -- Telescope's window is invisible here. YankyRingHistory uses vim.ui.select,
-    -- which vscode-neovim shows as a Quick Pick, then pastes the chosen yank.
-    vim.keymap.set("n", "<leader>y", "<Cmd>YankyRingHistory<cr>")
+        local items = {}
+        for i, entry in ipairs(history) do
+            entry.history_index = i
+            local text = entry.regcontents or ""
+            if type(text) ~= "string" then
+                text = table.concat(text, " ")
+            end
+            text = text:gsub("%s+", " ")
+            if text == "" then
+                text = "(empty)"
+            elseif #text > 200 then
+                text = text:sub(1, 197) .. "..."
+            end
+            items[i] = { idx = i, label = text }
+        end
+
+        vim.schedule(function()
+            code.eval_async([[
+                return await new Promise((resolve) => {
+                    setTimeout(async () => {
+                        resolve(await vscode.window.showQuickPick(args.items, args.opts))
+                    }, 0)
+                })
+            ]], {
+                args = {
+                    items = items,
+                    opts = {
+                        title = "Yank history",
+                        placeHolder = "Paste a previous yank",
+                        ignoreFocusOut = true,
+                    },
+                },
+                callback = function(err, res)
+                    if err then
+                        code.notify(tostring(err), vim.log.levels.ERROR)
+                        return
+                    end
+                    if type(res) ~= "table" or res.idx == nil then
+                        return
+                    end
+                    local entry = history[res.idx]
+                    if entry == nil then
+                        return
+                    end
+                    require("yanky.picker").actions.put("p", false)(entry)
+                end,
+            })
+        end)
+    end
+
+    vim.keymap.set("n", "<leader>y", yank_history, { nowait = true })
 else
     -- ordinary Neovim
     local builtin = require("telescope.builtin")
