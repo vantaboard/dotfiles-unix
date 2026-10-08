@@ -32,8 +32,10 @@ sketchybar --default \
   updates=when_shown \
   icon.font="FiraMono Nerd Font Mono:Regular:12.0" \
   icon.color="$FG" \
+  icon.highlight_color="$FG" \
   label.font="FiraMono Nerd Font Mono:Regular:12.0" \
   label.color="$FG" \
+  label.highlight_color="$FG" \
   background.color="$BG" \
   background.corner_radius=0 \
   background.height=22 \
@@ -57,6 +59,7 @@ if command -v aerospace >/dev/null 2>&1; then
         background.drawing=off \
         background.color="$BG_FOCUS" \
         label.color="$FG_DIM" \
+        label.highlight_color="$FG_DIM" \
         click_script="aerospace workspace ${sid}"
   done
 
@@ -94,6 +97,7 @@ sketchybar --add item clock right \
   --set clock \
     update_freq=10 \
     script="${PLUGIN_DIR}/clock.sh" \
-    label.color="$FG_FOCUS"
+    label.color="$FG_FOCUS" \
+    label.highlight_color="$FG_FOCUS"
 
 sketchybar --update

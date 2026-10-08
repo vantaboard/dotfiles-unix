@@ -41,6 +41,7 @@ show_space() {
       background.drawing=on \
       background.color="$BG_FOCUS" \
       label.color="$FG_FOCUS" \
+      label.highlight_color="$FG_FOCUS" \
       label.padding_left=6 \
       label.padding_right=6
   else
@@ -49,6 +50,7 @@ show_space() {
       display="$display" \
       background.drawing=off \
       label.color="$FG_DIM" \
+      label.highlight_color="$FG_DIM" \
       label.padding_left=6 \
       label.padding_right=6
   fi
