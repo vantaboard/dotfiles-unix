@@ -100,4 +100,11 @@ sketchybar --add item clock right \
     label.color="$FG_FOCUS" \
     label.highlight_color="$FG_FOCUS"
 
+# macOS 27: a click on empty bar space raises the opaque bar background above
+# every item window, so the bar goes solid black until restarted. An invisible
+# bracket over all items takes that raise instead (SketchyBar issue #850).
+sketchybar --add bracket click_shield '/.*/' \
+  --set click_shield \
+    background.drawing=off
+
 sketchybar --update
