@@ -1,42 +1,82 @@
 #!/usr/bin/env bash
 # Usage: aerospace-focus left|right|up|down|dfs-next|dfs-prev
+#        aerospace-focus workspace <name>
 #
 # macOS activates an app's most recent window, which can live on another
-# AeroSpace workspace. After an in-workspace focus move, if focus lands on
-# another workspace, refocus that app's window on the workspace we started from.
-# left/right fall through to the neighboring monitor at the workspace edge.
+# AeroSpace workspace (e.g. the one shown on the other monitor). After a focus
+# move, if focus lands on the wrong workspace, refocus that app's window on the
+# workspace we meant to reach. left/right fall through to the neighboring
+# monitor at the workspace edge.
 set -uo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-direction="${1:?usage: aerospace-focus left|right|up|down|dfs-next|dfs-prev}"
+focused() {
+  aerospace list-windows --focused --format "$1" 2>/dev/null
+}
+
+# refocus <workspace...>: if focus is not on any of the given workspaces, focus
+# the focused app's first window on one of them.
+refocus() {
+  local ws app target
+  for _ in {1..6}; do
+    read -r ws app < <(focused '%{workspace} %{app-bundle-id}')
+    [[ -n "${ws:-}" ]] || return 0
+    if ! printf '%s\n' "$@" | grep -Fxq "$ws"; then
+      for want in "$@"; do
+        target="$(aerospace list-windows --workspace "$want" \
+          --app-bundle-id "$app" --format '%{window-id}' |
+          grep -Fxv "${origin_win:-none}" | head -1)"
+        [[ -n "$target" ]] && break
+      done
+      [[ -n "${target:-}" ]] || return 0
+      for _ in {1..3}; do
+        aerospace focus --window-id "$target"
+        [[ "$(focused '%{window-id}')" == "$target" ]] && return 0
+        sleep 0.05
+      done
+      return 0
+    fi
+    sleep 0.05
+  done
+}
+
+action="${1:?usage: aerospace-focus left|right|up|down|dfs-next|dfs-prev|workspace <name>}"
 
 origin_ws="$(aerospace list-workspaces --focused)"
-origin_win="$(aerospace list-windows --focused --format '%{window-id}' 2>/dev/null)"
+origin_win="$(focused '%{window-id}')"
 
-if ! aerospace focus --boundaries workspace --boundaries-action fail "$direction" 2>/dev/null; then
-  case "$direction" in
-    left | right)
-      exec aerospace focus --boundaries all-monitors-outer-frame \
-        --boundaries-action stop "$direction"
-      ;;
-  esac
+if [[ "$action" == workspace ]]; then
+  target_ws="${2:?usage: aerospace-focus workspace <name>}"
+  aerospace workspace "$target_ws" || exit $?
+  origin_win=""
+  refocus "$target_ws"
   exit 0
 fi
 
+if aerospace focus --boundaries workspace --boundaries-action fail "$action" 2>/dev/null; then
+  refocus "$origin_ws"
+  exit 0
+fi
+
+case "$action" in
+  left | right) ;;
+  *) exit 0 ;;
+esac
+
+aerospace focus --boundaries all-monitors-outer-frame \
+  --boundaries-action stop "$action" || exit $?
+
+# Crossing onto another monitor can bounce back to the same app's window on
+# the starting workspace; send it to one of the other visible workspaces.
+others="$(aerospace list-workspaces --monitor all --visible | grep -Fxv "$origin_ws")"
+[[ -n "$others" ]] || exit 0
 for _ in {1..6}; do
-  read -r ws app < <(aerospace list-windows --focused \
-    --format '%{workspace} %{app-bundle-id}')
-  if [[ -n "${ws:-}" && "$ws" != "$origin_ws" ]]; then
-    target="$(aerospace list-windows --workspace "$origin_ws" \
-      --app-bundle-id "$app" --format '%{window-id}' |
-      grep -Fxv "${origin_win:-none}" | head -1)"
-    [[ -n "$target" ]] || exit 0
-    for _ in {1..3}; do
-      aerospace focus --window-id "$target"
-      [[ "$(aerospace list-windows --focused --format '%{window-id}')" == "$target" ]] && exit 0
-      sleep 0.05
-    done
+  read -r ws win < <(focused '%{workspace} %{window-id}')
+  [[ "${ws:-}" == "$origin_ws" ]] || exit 0
+  if [[ "${win:-}" != "$origin_win" ]]; then
+    # shellcheck disable=SC2086
+    refocus $others
     exit 0
   fi
   sleep 0.05
