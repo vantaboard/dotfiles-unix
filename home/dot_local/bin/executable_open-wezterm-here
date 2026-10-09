@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+workspace="$(aerospace list-workspaces --focused | head -1)"
+before="$(aerospace list-windows --app-id com.github.wez.wezterm --format '%{window-id}')"
+
+# WezTerm may activate an existing window before its new window appears.
+# Remember the intended AeroSpace workspace, identify the new window, then
+# explicitly move and focus that window instead of following app activation.
+wezterm start >/dev/null 2>&1 &
+
+for _ in {1..100}; do
+  while IFS= read -r window_id; do
+    [[ -n "$window_id" ]] || continue
+    if ! grep -Fxq "$window_id" <<<"$before"; then
+      aerospace move-node-to-workspace --window-id "$window_id" "$workspace"
+      aerospace focus --window-id "$window_id"
+      exit 0
+    fi
+  done < <(
+    aerospace list-windows \
+      --app-id com.github.wez.wezterm \
+      --format '%{window-id}'
+  )
+  sleep 0.05
+done
+
+# If window detection timed out, undo any app-activation workspace jump.
+aerospace workspace "$workspace"
+exit 1

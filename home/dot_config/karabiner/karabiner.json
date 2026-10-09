@@ -5429,7 +5429,7 @@
                         ]
                     },
                     {
-                        "description": "Ctrl+Tab cycles tabs; Command+Tab switches apps",
+                        "description": "Ctrl+Tab cycles tabs; Command+Tab cycles AeroSpace windows on the current workspace",
                         "manipulators": [
                             {
                                 "type": "basic",
@@ -5474,8 +5474,7 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "tab",
-                                        "modifiers": ["left_command", "left_shift"]
+                                        "shell_command": "/opt/homebrew/bin/aerospace focus dfs-prev"
                                     }
                                 ]
                             },
@@ -5490,8 +5489,7 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "tab",
-                                        "modifiers": ["left_command"]
+                                        "shell_command": "/opt/homebrew/bin/aerospace focus dfs-next"
                                     }
                                 ]
                             }

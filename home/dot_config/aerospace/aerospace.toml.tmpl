@@ -59,7 +59,7 @@ gaps.outer.bottom = 8
 
 [mode.main.binding]
 {{- if index $f "wezterm" }}
-alt-enter = 'exec-and-forget open -na WezTerm'
+alt-enter = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/open-wezterm-here'
 {{- end }}
 
 alt-slash = 'layout tiles horizontal vertical'
