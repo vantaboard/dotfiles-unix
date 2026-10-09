@@ -3,13 +3,21 @@ set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
+wezterm_windows() {
+  aerospace list-windows --monitor all \
+    --app-bundle-id com.github.wez.wezterm \
+    --format '%{window-id}'
+}
+
 workspace="$(aerospace list-workspaces --focused | head -1)"
-before="$(aerospace list-windows --app-id com.github.wez.wezterm --format '%{window-id}')"
+before="$(wezterm_windows)"
 
 # WezTerm may activate an existing window before its new window appears.
 # Remember the intended AeroSpace workspace, identify the new window, then
 # explicitly move and focus that window instead of following app activation.
-wezterm start >/dev/null 2>&1 &
+if ! wezterm cli spawn --new-window >/dev/null 2>&1; then
+  open -a WezTerm
+fi
 
 for _ in {1..100}; do
   while IFS= read -r window_id; do
@@ -19,11 +27,7 @@ for _ in {1..100}; do
       aerospace focus --window-id "$window_id"
       exit 0
     fi
-  done < <(
-    aerospace list-windows \
-      --app-id com.github.wez.wezterm \
-      --format '%{window-id}'
-  )
+  done < <(wezterm_windows)
   sleep 0.05
 done
 
