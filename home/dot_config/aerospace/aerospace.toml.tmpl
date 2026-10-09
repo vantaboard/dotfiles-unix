@@ -71,10 +71,10 @@ alt-s = 'layout v_accordion'
 alt-e = 'layout tiles horizontal vertical'
 
 # H/L walk windows, then continue onto the monitor in that direction.
-alt-h = 'focus --boundaries all-monitors-outer-frame --boundaries-action stop left'
-alt-j = 'focus down'
-alt-k = 'focus up'
-alt-l = 'focus --boundaries all-monitors-outer-frame --boundaries-action stop right'
+alt-h = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/aerospace-focus left'
+alt-j = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/aerospace-focus down'
+alt-k = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/aerospace-focus up'
+alt-l = 'exec-and-forget {{ .chezmoi.homeDir }}/.local/bin/aerospace-focus right'
 
 # Reorder the focused window (tabs in an accordion, tiles otherwise).
 alt-shift-h = 'move left'

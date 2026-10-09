@@ -5474,7 +5474,7 @@
                                 },
                                 "to": [
                                     {
-                                        "shell_command": "/opt/homebrew/bin/aerospace focus dfs-prev"
+                                        "shell_command": "/Users/vantaboard/.local/bin/aerospace-focus dfs-prev"
                                     }
                                 ]
                             },
@@ -5489,7 +5489,7 @@
                                 },
                                 "to": [
                                     {
-                                        "shell_command": "/opt/homebrew/bin/aerospace focus dfs-next"
+                                        "shell_command": "/Users/vantaboard/.local/bin/aerospace-focus dfs-next"
                                     }
                                 ]
                             }
