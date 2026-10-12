@@ -69,4 +69,17 @@ if [[ -d "$HOME/.docker/bin" ]]; then
 fi
 {{- end }}
 
+# Cursor Agent runs each tool call in a persistent zsh session. After your
+# command it calls dump_zsh_state to serialize cwd, env, and options. That
+# helper is normally defined via stdin eval; when restore fails, the call
+# still runs and zsh prints "command not found". Load the helper early on
+# agent shells so dumps succeed and the error line stays gone.
+if [[ -n "${CURSOR_AGENT:-}" ]]; then
+  _cursor_dump_zsh="${XDG_CONFIG_HOME:-$HOME/.config}/cursor/dump_zsh_state.zsh"
+  if [[ -r "$_cursor_dump_zsh" ]]; then
+    source "$_cursor_dump_zsh"
+  fi
+  unset _cursor_dump_zsh
+fi
+
 # Dotfiles are managed by chezmoi. Use `chezmoi edit` to modify tracked files.
