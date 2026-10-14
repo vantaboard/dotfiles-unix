@@ -91,11 +91,17 @@ config.keys = {
   -- Control is swapped with Command, so these are the physical Ctrl chords.
   -- Ctrl+C interrupts; Ctrl+Shift+C copies. Ctrl+R is reverse history search
   -- (the default SUPER+R reloads the config). Ctrl+D and Ctrl+U are Neovim's
-  -- half-page motions; unbound Super chords never reach the terminal.
+  -- half-page motions. Ctrl+W is Neovim's window prefix (the default SUPER+W
+  -- closes the tab). Unbound Super chords never reach the terminal.
   {
     key = "c",
     mods = "SUPER",
     action = act.SendString("\x03"),
+  },
+  {
+    key = "w",
+    mods = "SUPER",
+    action = act.SendString("\x17"),
   },
   {
     key = "d",
