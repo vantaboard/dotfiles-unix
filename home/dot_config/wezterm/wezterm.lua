@@ -125,16 +125,17 @@ config.keys = {
   },
   -- Karabiner turns a bare Home/End into Command+Left/Right, and Page Up/Down
   -- into Command+Up/Down. Physical Ctrl+Arrows are already Option+Arrows
-  -- before they arrive here.
+  -- before they arrive here. Home/End go out as real escape sequences because
+  -- zsh binds Ctrl+A to copy-path.
   {
     key = "LeftArrow",
     mods = "SUPER",
-    action = act.SendString("\x01"),
+    action = act.SendString("\x1b[H"),
   },
   {
     key = "RightArrow",
     mods = "SUPER",
-    action = act.SendString("\x05"),
+    action = act.SendString("\x1b[F"),
   },
   {
     key = "UpArrow",

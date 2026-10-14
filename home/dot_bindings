@@ -51,3 +51,7 @@ bindkey ^u fzf-dir
 bindkey ^j autosuggest-accept
 bindkey '^[OA' up-line-or-history
 bindkey '^[OB' down-line-or-history
+bindkey '^[[H' beginning-of-line
+bindkey '^[OH' beginning-of-line
+bindkey '^[[F' end-of-line
+bindkey '^[OF' end-of-line
