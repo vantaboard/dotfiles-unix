@@ -147,6 +147,12 @@ config.keys = {
     mods = "SUPER",
     action = act.SendString("\x1b>"),
   },
+  -- Physical Ctrl+Delete deletes the word ahead of the cursor.
+  {
+    key = "Delete",
+    mods = "SUPER",
+    action = act.SendString("\x1b[3;5~"),
+  },
 }
 
 return config
