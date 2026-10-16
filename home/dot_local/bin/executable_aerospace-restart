@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Restart AeroSpace. A frozen process ignores a normal quit, and every
+# aerospace CLI call (including SketchyBar) hangs on it, so force-quit.
+set -uo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+app='/AeroSpace.app/Contents/MacOS/AeroSpace'
+
+# True when the given command exits within about two seconds.
+finishes() {
+  "$@" &
+  local pid=$!
+  local _
+  for _ in {1..20}; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      wait "$pid"
+      return $?
+    fi
+    sleep 0.1
+  done
+  kill -9 "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  return 1
+}
+
+pkill -f 'plugins/aerospace.sh' 2>/dev/null || true
+pkill -f '/aerospace-focus' 2>/dev/null || true
+pkill -x aerospace 2>/dev/null || true
+pkill -9 -f "$app" 2>/dev/null || true
+
+for _ in {1..20}; do
+  pgrep -f "$app" >/dev/null || break
+  sleep 0.1
+done
+if pgrep -f "$app" >/dev/null; then
+  echo "aerospace-restart: AeroSpace did not exit" >&2
+  exit 1
+fi
+
+if ! open -a AeroSpace; then
+  echo "aerospace-restart: failed to launch AeroSpace" >&2
+  exit 1
+fi
+
+for _ in {1..50}; do
+  if finishes aerospace list-workspaces --focused >/dev/null 2>&1; then
+    sketchybar --trigger aerospace_workspace_change 2>/dev/null || true
+    exit 0
+  fi
+  sleep 0.1
+done
+
+echo "aerospace-restart: AeroSpace did not respond" >&2
+exit 1
