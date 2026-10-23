@@ -392,6 +392,12 @@ setup_catalog:
       default: false
       description: Mouse and trackpad scrolling by lines (3) and pointer acceleration off; starts at login; brew cask linearmouse
       config_paths: [dot_config/linearmouse, Library/LaunchAgents/com.dotfiles.linearmouse.plist]
+    chrome_personal:
+      category: macos_desktop
+      label: Chrome Personal profile
+      default: false
+      description: "~/Applications/Chrome Personal.app and `chrome-personal` open Google Chrome with --profile-directory=Personal for a personal Google account alongside the work profile; installs brew cask google-chrome if missing"
+      config_paths: [Applications/Chrome Personal.app, dot_local/bin/executable_chrome-personal]
     sketchybar:
       category: macos_desktop
       label: SketchyBar

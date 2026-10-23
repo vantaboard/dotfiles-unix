@@ -1,0 +1,4 @@
+#!/bin/bash
+# Spotlight/Dock entry point for the Personal Chrome profile.
+# Delegates to ~/.local/bin/chrome-personal so the flags live in one place.
+exec "$HOME/.local/bin/chrome-personal" "$@"

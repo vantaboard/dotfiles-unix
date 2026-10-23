@@ -1,0 +1,51 @@
+{{ if eq .chezmoi.os "darwin" -}}
+{{ $p := includeTemplate "profile.tpl" . | fromYaml }}
+{{- $f := $p.features -}}
+{{- if index $f "chrome_personal" -}}
+#!/bin/bash
+set -euo pipefail
+
+# hash: {{ include "Applications/Chrome Personal.app/Contents/Info.plist" | sha256sum }}
+# hash: {{ include "Applications/Chrome Personal.app/Contents/MacOS/executable_chrome-personal" | sha256sum }}
+
+if [[ "${CHEZMOI_CI:-}" == "1" ]]; then
+  echo "CHEZMOI_CI=1; skipping Chrome Personal launcher"
+  exit 0
+fi
+
+app="$HOME/Applications/Chrome Personal.app"
+chrome="/Applications/Google Chrome.app"
+
+if [[ ! -d "$chrome" ]]; then
+  if command -v brew >/dev/null 2>&1 || [[ -x /opt/homebrew/bin/brew ]]; then
+    command -v brew >/dev/null 2>&1 || eval "$(/opt/homebrew/bin/brew shellenv)"
+    export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ENV_HINTS=1
+    echo "Installing Google Chrome via Homebrew cask..."
+    brew install --cask google-chrome || echo "WARN: google-chrome install failed"
+  else
+    echo "WARN: Google Chrome not found and Homebrew unavailable; Chrome Personal will not launch"
+  fi
+fi
+
+if [[ ! -d "$app" ]]; then
+  echo "WARN: missing $app; Chrome Personal launcher not registered"
+  exit 0
+fi
+
+# Borrow Chrome's own icon so the launcher is recognisable in Spotlight/Dock.
+icon="$chrome/Contents/Resources/app.icns"
+if [[ -f "$icon" ]]; then
+  mkdir -p "$app/Contents/Resources"
+  cp -f "$icon" "$app/Contents/Resources/app.icns"
+fi
+
+# LaunchServices caches bundle metadata; poke it so Spotlight sees the app.
+touch "$app"
+lsregister="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
+if [[ -x "$lsregister" ]]; then
+  "$lsregister" -f "$app" >/dev/null 2>&1 || true
+fi
+
+echo "Chrome Personal launcher ready: $app (CLI: chrome-personal)"
+{{- end -}}
+{{ end -}}

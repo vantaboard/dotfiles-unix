@@ -45,6 +45,7 @@ profile_ci_macos:
     aerospace: false
     sketchybar: false
     linearmouse: false
+    chrome_personal: false
     dunst: false
     kanshi: false
     wayland_session: false

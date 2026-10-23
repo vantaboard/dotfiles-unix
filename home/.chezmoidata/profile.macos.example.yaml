@@ -48,6 +48,7 @@ profile_macos_example:
     aerospace: true
     sketchybar: true
     linearmouse: true
+    chrome_personal: true
     dunst: false
     rofi: false
     desktop_utils: false

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Open Google Chrome in the "Personal" profile (macOS twin of
+# ~/.local/share/applications/chromium-personal.desktop).
+#
+# `open -n` forces a fresh Chrome process even when the work profile is
+# already running; that process hands the command line to the existing
+# instance, which opens a window for the Personal profile and exits.
+# Chrome creates the profile directory on first use. Any arguments
+# (URLs, extra flags) are passed through.
+set -euo pipefail
+
+if [[ ! -d "/Applications/Google Chrome.app" && ! -d "$HOME/Applications/Google Chrome.app" ]]; then
+  echo "chrome-personal: Google Chrome is not installed (brew install --cask google-chrome)" >&2
+  exit 1
+fi
+
+exec open -na "Google Chrome" --args --profile-directory=Personal "$@"

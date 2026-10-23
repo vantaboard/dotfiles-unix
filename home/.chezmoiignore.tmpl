@@ -73,6 +73,11 @@ dot_config/sketchybar
 dot_config/linearmouse
 Library/LaunchAgents/com.dotfiles.linearmouse.plist
 {{- end }}
+{{- if not (index $f "chrome_personal") }}
+Applications/Chrome Personal.app
+Applications/Chrome Personal.app/**
+.local/bin/chrome-personal
+{{- end }}
 {{- if not (index $f "neovim") }}
 dot_config/nvim
 {{- end }}
@@ -111,4 +116,7 @@ Library/Application Support/Cursor/User/settings.json
 Library/Application Support/Cursor/User/keybindings.json
 Library/LaunchAgents/com.dotfiles.cursor-hide.plist
 Library/LaunchAgents/com.dotfiles.linearmouse.plist
+Applications/Chrome Personal.app
+Applications/Chrome Personal.app/**
+.local/bin/chrome-personal
 {{- end }}
