@@ -71,21 +71,3 @@ for sid in 1 2 3 4 5 6 7 8 9; do
     hide_space "$sid"
   fi
 done
-
-# Workspaces outside 1–9 (for example after a move) appear only while occupied
-# or visible, and only on the monitor that owns them.
-if [[ -n "$occupied" || -n "$visible" ]]; then
-  while IFS= read -r sid; do
-    [[ -z "$sid" || "$sid" =~ ^[1-9]$ ]] && continue
-    if ! in_list "$sid" "$occupied" && ! in_list "$sid" "$visible"; then
-      continue
-    fi
-    sketchybar --add item "space.${sid}" left \
-      --set "space.${sid}" \
-        icon.drawing=off \
-        label="${sid}" \
-        click_script="aerospace workspace ${sid}" \
-      >/dev/null 2>&1 || true
-    show_space "$sid"
-  done <<<"$(printf '%s\n%s\n' "$occupied" "$visible" | awk 'NF && !seen[$0]++')"
-fi
