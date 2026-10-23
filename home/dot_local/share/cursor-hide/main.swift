@@ -28,10 +28,10 @@ private func enableBackgroundCursorHiding() {
 
 /// Hide the pointer after it has been still for this long. Matches Sway
 /// `seat * hide_cursor 500`.
-private let idleLimit: CFTimeInterval = 0.5
+private let idleLimit: TimeInterval = 0.5
 private let tick: TimeInterval = 0.05
 
-private let pointerEvents: [CGEventType] = [
+private let pointerEvents: NSEvent.EventTypeMask = [
     .mouseMoved,
     .leftMouseDragged,
     .rightMouseDragged,
@@ -43,18 +43,22 @@ private let pointerEvents: [CGEventType] = [
 /// pass, so hide and show must stay paired one-to-one.
 private var pointerHidden = false
 
-/// Seconds since the last pointer move, drag, or scroll. Event types that
-/// have never fired report a huge interval; types that wrongly report 0 are
-/// ignored so a still pointer can still hide.
-private func pointerIdle() -> CFTimeInterval {
-    var idle = CFTimeInterval.greatestFiniteMagnitude
-    for type in pointerEvents {
-        let since = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: type)
-        if since > 0, since < idle {
-            idle = since
-        }
-    }
-    return idle
+/// Uptime of the last pointer move, drag, or scroll we observed ourselves.
+///
+/// Do not replace this with CGEventSource.secondsSinceLastEventType: on
+/// macOS 26+ the HID system state only refreshes about once a second, so it
+/// reports 0.5-1.5s of idle while the mouse is actively moving. With a 500ms
+/// threshold that kept the pointer hidden mid-movement.
+private var lastPointerActivity = ProcessInfo.processInfo.systemUptime
+private var lastPointerLocation = NSEvent.mouseLocation
+
+private func notePointerActivity() {
+    lastPointerActivity = ProcessInfo.processInfo.systemUptime
+    showPointer()
+}
+
+private func pointerIdle() -> TimeInterval {
+    ProcessInfo.processInfo.systemUptime - lastPointerActivity
 }
 
 private func hidePointer() {
@@ -83,12 +87,25 @@ private func acquireSingleInstance() {
 private final class App: NSObject, NSApplicationDelegate {
     private var termSource: DispatchSourceSignal?
     private var intSource: DispatchSourceSignal?
+    private var pointerMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         enableBackgroundCursorHiding()
         termSource = signalSource(SIGTERM)
         intSource = signalSource(SIGINT)
+        // Global mouse monitors need no Accessibility grant (only keyboard
+        // monitors do) and fire for every pointer event in other apps.
+        pointerMonitor = NSEvent.addGlobalMonitorForEvents(matching: pointerEvents) { _ in
+            notePointerActivity()
+        }
         Timer.scheduledTimer(withTimeInterval: tick, repeats: true) { _ in
+            // Position polling backs up the monitor for pointer motion that
+            // does not reach it (e.g. apps that swallow events).
+            let location = NSEvent.mouseLocation
+            if location != lastPointerLocation {
+                lastPointerLocation = location
+                notePointerActivity()
+            }
             if pointerIdle() >= idleLimit {
                 hidePointer()
             } else {
