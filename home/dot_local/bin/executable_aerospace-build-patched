@@ -9,8 +9,12 @@
 #
 # Codesign: defaults to the self-signed identity "aerospace-codesign-certificate"
 # (Keychain Access → Certificate Assistant → Create a Certificate… → Code Signing).
-# Override with AEROSPACE_CODESIGN_IDENTITY (e.g. an Apple Development identity, or
-# "-" for ad-hoc). Non-notarized signatures need Accessibility re-granted once.
+# Trust it for code signing or `security find-identity -v -p codesigning` will
+# reject it (CSSMERR_TP_NOT_TRUSTED). Override with AEROSPACE_CODESIGN_IDENTITY.
+# Do not use "-" (ad-hoc): that designated requirement is the binary's cdhash, so
+# macOS treats every launch as a new app and Screen Recording prompts never stick.
+# A certificate requirement stays stable across rebuilds. Non-notarized signatures
+# need Accessibility re-granted once.
 set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -64,6 +68,9 @@ cli_dest() {
 echo "==> preflight"
 xcodebuild -version >/dev/null || die "xcodebuild not available"
 swift --version >/dev/null || die "swift not available"
+if [[ "$IDENTITY" == '-' ]]; then
+  echo "aerospace-build-patched: ad-hoc signatures make Screen Recording prompts repeat" >&2
+fi
 if [[ "$IDENTITY" != '-' ]]; then
   if ! security find-identity -v -p codesigning 2>/dev/null | grep -Fq "$IDENTITY"; then
     die "codesign identity not found: $IDENTITY
