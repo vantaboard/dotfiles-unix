@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# Build AeroSpace v0.21.3-Beta with PR #2342 applied (focus floating-window race).
+# https://github.com/nikitabobko/AeroSpace/pull/2342
+# https://github.com/nikitabobko/AeroSpace/issues/1311
+#
+# Installs over the brew cask copy of AeroSpace.app and the aerospace CLI.
+# Rollback: brew reinstall --cask aerospace
+# Note: brew upgrade will replace this patched build once upstream ships a fix.
+#
+# Codesign: defaults to the self-signed identity "aerospace-codesign-certificate"
+# (Keychain Access → Certificate Assistant → Create a Certificate… → Code Signing).
+# Override with AEROSPACE_CODESIGN_IDENTITY (e.g. an Apple Development identity, or
+# "-" for ad-hoc). Non-notarized signatures need Accessibility re-granted once.
+set -euo pipefail
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+TAG='v0.21.3-Beta'
+VERSION='0.21.3-Beta'
+SRC="${XDG_CACHE_HOME:-$HOME/.cache}/aerospace-src"
+PATCH="$HOME/.local/share/patches/aerospace-2342-focus-floating-race.patch"
+IDENTITY="${AEROSPACE_CODESIGN_IDENTITY:-aerospace-codesign-certificate}"
+APP_PATH='/Applications/AeroSpace.app'
+APP_BIN='/AeroSpace.app/Contents/MacOS/AeroSpace'
+
+die() {
+  echo "aerospace-build-patched: $*" >&2
+  exit 1
+}
+
+finishes() {
+  "$@" &
+  local pid=$!
+  local _
+  for _ in {1..20}; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      wait "$pid"
+      return $?
+    fi
+    sleep 0.1
+  done
+  kill -9 "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  return 1
+}
+
+cli_dest() {
+  local link dest
+  link="$(command -v aerospace 2>/dev/null || true)"
+  if [[ -n "$link" ]]; then
+    dest="$(readlink -f "$link" 2>/dev/null || true)"
+    if [[ -n "$dest" && -e "$dest" ]]; then
+      printf '%s\n' "$dest"
+      return 0
+    fi
+  fi
+  dest="/opt/homebrew/Caskroom/aerospace/${VERSION}/AeroSpace-v${VERSION}/bin/aerospace"
+  [[ -e "$dest" ]] || die "cannot locate installed aerospace CLI (expected $dest)"
+  printf '%s\n' "$dest"
+}
+
+[[ -f "$PATCH" ]] || die "missing patch: $PATCH"
+
+echo "==> preflight"
+xcodebuild -version >/dev/null || die "xcodebuild not available"
+swift --version >/dev/null || die "swift not available"
+if [[ "$IDENTITY" != '-' ]]; then
+  if ! security find-identity -v -p codesigning 2>/dev/null | grep -Fq "$IDENTITY"; then
+    die "codesign identity not found: $IDENTITY
+Create it in Keychain Access (Certificate Assistant → Create a Certificate…,
+Name: aerospace-codesign-certificate, Identity Type: Self-Signed Root,
+Certificate Type: Code Signing), or set AEROSPACE_CODESIGN_IDENTITY=- for ad-hoc.
+See https://github.com/nikitabobko/AeroSpace/blob/main/dev-docs/development.md"
+  fi
+fi
+
+echo "==> source $TAG at $SRC"
+if [[ ! -d "$SRC/.git" ]]; then
+  mkdir -p "$(dirname "$SRC")"
+  git clone --filter=blob:none https://github.com/nikitabobko/AeroSpace.git "$SRC"
+fi
+cd "$SRC"
+git fetch --tags --force
+git checkout -f "$TAG"
+git clean -fdx -e .deps
+
+echo "==> apply PR #2342"
+git apply --check "$PATCH"
+git apply "$PATCH"
+git -c user.name=local -c user.email=local@localhost commit -qam 'Apply PR #2342'
+
+echo "==> generate"
+# Use Homebrew bash 5+ when available; AeroSpace's script/setup.sh requires it.
+if [[ -x /opt/homebrew/bin/bash ]]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+fi
+./generate.sh \
+  --build-version "$VERSION" \
+  --codesign-identity "$IDENTITY" \
+  --generate-git-hash
+
+echo "==> build CLI (swift release)"
+swift build -c release --product aerospace
+
+echo "==> build app (xcodebuild Release)"
+(
+  cd xcode
+  log="../.release-xcodebuild.log"
+  mkdir -p "$(dirname "$log")"
+  if command -v xcbeautify >/dev/null 2>&1; then
+    /usr/bin/xcrun xcodebuild clean build \
+      -scheme AeroSpace \
+      -destination 'generic/platform=macOS' \
+      -configuration Release \
+      -derivedDataPath .xcode-build \
+      2>&1 | tee "$log" | xcbeautify --quiet
+  else
+    /usr/bin/xcrun xcodebuild clean build \
+      -scheme AeroSpace \
+      -destination 'generic/platform=macOS' \
+      -configuration Release \
+      -derivedDataPath .xcode-build
+  fi
+)
+
+built_app='xcode/.xcode-build/Build/Products/Release/AeroSpace.app'
+built_cli='.build/release/aerospace'
+[[ -d "$built_app" ]] || die "missing built app: $built_app"
+[[ -x "$built_cli" ]] || die "missing built CLI: $built_cli"
+
+echo "==> codesign"
+codesign -s "$IDENTITY" --force --deep "$built_app" 2>/dev/null || \
+  codesign -s "$IDENTITY" --force "$built_app"
+codesign -s "$IDENTITY" --force "$built_cli"
+codesign -v "$built_app"
+codesign -v "$built_cli"
+
+dest_cli="$(cli_dest)"
+echo "==> install (app → $APP_PATH, CLI → $dest_cli)"
+pkill -f 'plugins/aerospace.sh' 2>/dev/null || true
+pkill -f '/aerospace-focus' 2>/dev/null || true
+pkill -x aerospace 2>/dev/null || true
+pkill -9 -f "$APP_BIN" 2>/dev/null || true
+for _ in {1..20}; do
+  pgrep -f "$APP_BIN" >/dev/null || break
+  sleep 0.1
+done
+if pgrep -f "$APP_BIN" >/dev/null; then
+  die "AeroSpace did not exit"
+fi
+
+rm -rf "$APP_PATH"
+cp -R "$built_app" "$APP_PATH"
+cp "$built_cli" "$dest_cli"
+chmod +x "$dest_cli"
+# Keep brew's aerospace symlink executable; clear quarantine if present.
+xattr -d com.apple.quarantine "$APP_PATH" 2>/dev/null || true
+xattr -d com.apple.quarantine "$dest_cli" 2>/dev/null || true
+
+echo "==> launch"
+if ! open -a AeroSpace; then
+  die "failed to launch AeroSpace"
+fi
+
+ok=0
+# Accessibility re-prompt after re-sign can delay the first successful CLI reply.
+for _ in {1..100}; do
+  if finishes aerospace list-workspaces --focused >/dev/null 2>&1; then
+    ok=1
+    break
+  fi
+  sleep 0.1
+done
+[[ "$ok" -eq 1 ]] || die "AeroSpace did not respond after install (re-grant Accessibility if prompted)"
+
+sketchybar --trigger aerospace_workspace_change 2>/dev/null || true
+
+echo
+aerospace --version
+echo
+echo "aerospace-build-patched: installed $VERSION with PR #2342"
+echo "If keybindings stop working, re-grant Accessibility to AeroSpace in"
+echo "System Settings → Privacy & Security → Accessibility."
+echo "Rollback: brew reinstall --cask aerospace"
