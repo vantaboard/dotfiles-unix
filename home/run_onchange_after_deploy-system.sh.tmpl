@@ -39,6 +39,17 @@ deploy_file() {
   sudo install -Dm"$mode" "$src" "$dest"
 }
 
+# Package upgrades replace files the distro owns (the 26.04 upgrade put stock
+# sway.desktop back, so GDM launched vanilla sway and rejected the swayfx
+# config). Divert once so later package updates write to the .distro name.
+divert_package_file() {
+  local dest="$1"
+  if dpkg-divert --list "$dest" | grep -q .; then
+    return 0
+  fi
+  sudo dpkg-divert --local --rename --divert "${dest}.distro" --add "$dest"
+}
+
 deploy_dir_file() {
   local src="$1"
   local dest="$2"
@@ -124,6 +135,7 @@ fi
 if has_deploy sway_session; then
   deploy_file "$SOURCE/bin/sway-session" /usr/local/bin/sway-session 755
   deploy_file "$SOURCE/bin/wait-dock-mst" /usr/local/bin/wait-dock-mst 755
+  divert_package_file /usr/share/wayland-sessions/sway.desktop
   deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop
   deploy_dir_file "$SOURCE/systemd/logind.conf.d/ignore-lid-switch.conf" \
     /etc/systemd/logind.conf.d/ignore-lid-switch.conf
