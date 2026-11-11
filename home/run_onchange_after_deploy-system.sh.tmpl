@@ -9,6 +9,7 @@ SOURCE="{{ .chezmoi.sourceDir }}/system"
 
 # hash: {{ $deploy | toYaml | sha256sum }}
 # hash: {{ include "system/bin/sway-session" | sha256sum }}
+# hash: {{ include "system/bin/sway" | sha256sum }}
 # hash: {{ include "system/gdm3/custom.conf" | sha256sum }}
 # hash: {{ include "system/wayland-sessions/sway.desktop" | sha256sum }}
 # hash: {{ include "system/grub/default" | sha256sum }}
@@ -134,6 +135,7 @@ fi
 
 if has_deploy sway_session; then
   deploy_file "$SOURCE/bin/sway-session" /usr/local/bin/sway-session 755
+  deploy_file "$SOURCE/bin/sway" /usr/local/bin/sway 755
   deploy_file "$SOURCE/bin/wait-dock-mst" /usr/local/bin/wait-dock-mst 755
   divert_package_file /usr/share/wayland-sessions/sway.desktop
   deploy_file "$SOURCE/wayland-sessions/sway.desktop" /usr/share/wayland-sessions/sway.desktop

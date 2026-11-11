@@ -88,4 +88,4 @@ if [[ -x "$SWAYFX_BIN" ]]; then
   exec "$SWAYFX_BIN" --unsupported-gpu "$@"
 fi
 
-exec sway --unsupported-gpu "$@"
+exec /usr/bin/sway --unsupported-gpu "$@"

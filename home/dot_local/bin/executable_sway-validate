@@ -43,6 +43,7 @@ check "swaylock config exists" test -f "$HOME/.config/swaylock/config"
 check "wayland env file exists" test -f "$HOME/.config/environment.d/wayland.conf"
 check "GDM sway session exists" test -f /usr/share/wayland-sessions/sway.desktop
 check "sway-session wrapper installed" test -x /usr/local/bin/sway-session
+check "sway command uses session wrapper" grep -qF 'exec /usr/local/bin/sway-session' /usr/local/bin/sway
 check "GDM sway desktop uses session wrapper" grep -qF 'Exec=/usr/local/bin/sway-session' /usr/share/wayland-sessions/sway.desktop
 if [[ -f /etc/gdm3/custom.conf ]]; then
     check "GDM Wayland enabled" grep -qE '^WaylandEnable=true' /etc/gdm3/custom.conf

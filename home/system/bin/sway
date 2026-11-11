@@ -1,0 +1,4 @@
+#!/bin/bash
+# TTY logins run `sway`, which otherwise resolves to Ubuntu's /usr/bin/sway.
+# That binary rejects the swayfx config. Always enter through the session wrapper.
+exec /usr/local/bin/sway-session "$@"
