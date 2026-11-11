@@ -956,8 +956,32 @@ install_swayfx() {
     [[ "$(printf '%s\n%s\n' "$min" "$ver" | sort -V | head -1)" == "$min" ]]
   }
 
+  # Stale libwayland in ~/.local shadows the distro copy via sway-session's
+  # LD_LIBRARY_PATH. Mesa's libEGL then fails to dlopen (e.g. missing
+  # wl_fixes_interface), NVIDIA EGL is the only ICD left, and swayfx tries to
+  # create that EGL display on the Intel DRM fd — "Failed to create renderer".
+  remove_local_wayland() {
+    rm -f "$LOCAL_PREFIX"/lib/x86_64-linux-gnu/libwayland-*.so*
+    rm -f "$LOCAL_PREFIX"/lib/libwayland-*.so*
+    rm -f "$LOCAL_PREFIX"/lib/x86_64-linux-gnu/pkgconfig/wayland-*.pc
+    rm -f "$LOCAL_PREFIX"/lib/pkgconfig/wayland-*.pc
+  }
+
+  system_pkg_version_ge() {
+    local pkg="$1" min="$2"
+    local ver
+    # Ignore ~/.local pkgconfig so a stale local wayland cannot satisfy the check.
+    ver="$(PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig \
+      pkg-config --modversion "$pkg" 2>/dev/null || true)"
+    [[ -n "$ver" ]] || return 1
+    [[ "$(printf '%s\n%s\n' "$min" "$ver" | sort -V | head -1)" == "$min" ]]
+  }
+
   ensure_local_wayland() {
-    pkg_version_ge wayland-server 1.23.1 && return 0
+    if system_pkg_version_ge wayland-server 1.23.1; then
+      remove_local_wayland
+      return 0
+    fi
     if ! command -v git >/dev/null 2>&1 || ! command -v meson >/dev/null 2>&1; then
       echo "WARN: need git/meson to build wayland ${WAYLAND_VERSION} for swayfx"
       return 1
