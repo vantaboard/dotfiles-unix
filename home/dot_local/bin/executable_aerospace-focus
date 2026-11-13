@@ -17,42 +17,36 @@ focused() {
 
 # refocus <workspace...>: if focus is not on any of the given workspaces, focus
 # the focused app's first window on one of them.
+# Each aerospace CLI call lays out every workspace, so this checks once.
+# Polling here is what made Mod+number feel late.
 refocus() {
   local ws app target
-  for _ in {1..6}; do
-    read -r ws app < <(focused '%{workspace} %{app-bundle-id}')
-    [[ -n "${ws:-}" ]] || return 0
-    if ! printf '%s\n' "$@" | grep -Fxq "$ws"; then
-      for want in "$@"; do
-        target="$(aerospace list-windows --workspace "$want" \
-          --app-bundle-id "$app" --format '%{window-id}' |
-          grep -Fxv "${origin_win:-none}" | head -1)"
-        [[ -n "$target" ]] && break
-      done
-      [[ -n "${target:-}" ]] || return 0
-      for _ in {1..3}; do
-        aerospace focus --window-id "$target"
-        [[ "$(focused '%{window-id}')" == "$target" ]] && return 0
-        sleep 0.05
-      done
-      return 0
-    fi
-    sleep 0.05
+  read -r ws app < <(focused '%{workspace} %{app-bundle-id}')
+  [[ -n "${ws:-}" ]] || return 0
+  printf '%s\n' "$@" | grep -Fxq "$ws" && return 0
+  for want in "$@"; do
+    target="$(aerospace list-windows --workspace "$want" \
+      --app-bundle-id "$app" --format '%{window-id}' |
+      grep -Fxv "${origin_win:-none}" | head -1)"
+    [[ -n "$target" ]] && break
   done
+  [[ -n "${target:-}" ]] || return 0
+  aerospace focus --window-id "$target"
 }
 
 action="${1:?usage: aerospace-focus left|right|up|down|dfs-next|dfs-prev|workspace <name>}"
 
-origin_ws="$(aerospace list-workspaces --focused)"
-origin_win="$(focused '%{window-id}')"
-
 if [[ "$action" == workspace ]]; then
   target_ws="${2:?usage: aerospace-focus workspace <name>}"
+  # Switch first. Queries before this delay the workspace change itself.
   aerospace workspace "$target_ws" || exit $?
   origin_win=""
   refocus "$target_ws"
   exit 0
 fi
+
+origin_ws="$(aerospace list-workspaces --focused)"
+origin_win="$(focused '%{window-id}')"
 
 if aerospace focus --boundaries workspace --boundaries-action fail "$action" 2>/dev/null; then
   refocus "$origin_ws"

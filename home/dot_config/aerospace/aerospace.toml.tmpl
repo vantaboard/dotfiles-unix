@@ -14,9 +14,10 @@ exec-on-workspace-change = [
   '-c',
   'sketchybar --trigger aerospace_workspace_change',
 ]
-on-focus-changed = [
-  'exec-and-forget sketchybar --trigger aerospace_workspace_change',
-]
+# Workspace highlight does not depend on which window is focused.
+# on-focus-changed would run the bar script on every focus move, and each
+# aerospace query lays out every workspace.
+on-focus-changed = []
 {{- else }}
 after-startup-command = []
 {{- end }}

@@ -69,7 +69,7 @@ if command -v aerospace >/dev/null 2>&1; then
     --set spaces.watcher \
       drawing=on \
       updates=on \
-      update_freq=1 \
+      update_freq=0 \
       label.drawing=off \
       icon.drawing=off \
       background.drawing=off \

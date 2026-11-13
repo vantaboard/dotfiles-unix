@@ -7,21 +7,23 @@ FG_DIM=0xff666666
 FG_FOCUS=0xffeeeeee
 BG_FOCUS=0xff083905
 
-focused="$(aerospace list-workspaces --focused --format '%{workspace}' 2>/dev/null | head -1 || true)"
-occupied="$(aerospace list-windows --all --format '%{workspace}' 2>/dev/null | awk 'NF && !seen[$0]++')"
-visible="$(aerospace list-workspaces --monitor all --visible --format '%{workspace}' 2>/dev/null | awk 'NF && !seen[$0]++')"
-# workspace|sketchybar-display
-placement="$(aerospace list-workspaces --all --format '%{workspace}|%{monitor-appkit-nsscreen-screens-id}' 2>/dev/null || true)"
+# Occupied workspaces, plus any workspace actually on screen (an empty
+# focused workspace is not occupied). Two workspace queries replace
+# list-windows --all, which laid out every window.
+occupied="$(aerospace list-workspaces --monitor all --empty no \
+  --format '%{workspace}|%{monitor-appkit-nsscreen-screens-id}|%{workspace-is-focused}' 2>/dev/null || true)"
+visible="$(aerospace list-workspaces --monitor all --visible \
+  --format '%{workspace}|%{monitor-appkit-nsscreen-screens-id}|%{workspace-is-focused}' 2>/dev/null || true)"
+placement="$(printf '%s\n%s\n' "$occupied" "$visible" | awk -F'|' 'NF && !seen[$1]++')"
+focused="$(awk -F'|' '$3 == "true" { print $1; exit }' <<<"$placement")"
 
-in_list() {
-  local sid="$1" list="$2"
-  [[ -n "$list" ]] && grep -Fxq "$sid" <<<"$list"
+shown() {
+  awk -F'|' -v s="$1" '$1 == s { found = 1 } END { exit !found }' <<<"$placement"
 }
 
 display_for() {
-  local sid="$1" line display
-  line="$(awk -F'|' -v s="$sid" '$1 == s { print; exit }' <<<"$placement")"
-  display="${line#*|}"
+  local display
+  display="$(awk -F'|' -v s="$1" '$1 == s { print $2; exit }' <<<"$placement")"
   if [[ "$display" =~ ^[1-9][0-9]*$ ]]; then
     printf '%s' "$display"
   fi
@@ -65,7 +67,7 @@ hide_space() {
 }
 
 for sid in 1 2 3 4 5 6 7 8 9; do
-  if in_list "$sid" "$occupied" || in_list "$sid" "$visible"; then
+  if shown "$sid"; then
     show_space "$sid"
   else
     hide_space "$sid"
