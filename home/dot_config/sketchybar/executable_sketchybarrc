@@ -80,9 +80,11 @@ if command -v aerospace >/dev/null 2>&1; then
 fi
 
 ##### Right side ###############################################################
+# volume_change already carries the level. Polling launched two osascript
+# processes every 5s, and those stacked when osascript was slow.
 sketchybar --add item volume right \
   --set volume \
-    update_freq=5 \
+    update_freq=0 \
     script="${PLUGIN_DIR}/volume.sh" \
     label.color="$FG" \
   --subscribe volume volume_change
